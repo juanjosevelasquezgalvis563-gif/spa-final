@@ -32,6 +32,7 @@ const router = Router();
 router.post('/registrar', registro);
 router.put('/registrarr',middleware,actualizarDatos);
 
+
 router.post('/login', login);
 router.get('/me', middleware, me);
 
