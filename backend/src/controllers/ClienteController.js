@@ -42,7 +42,12 @@ export async function obtenerCliente(req, res) {
              ON citas.usuario_id = usuarios.id
              INNER JOIN servicios
              ON citas.servicio_id = servicios.id
-             WHERE citas.usuario_id = ?`,
+             WHERE citas.usuario_id = ?
+             ORDER BY
+             citas.fecha,
+             citas.hora
+             ASC`,
+             
             [usuarioId]
 
         );
@@ -172,3 +177,32 @@ export async function CitaRealizar(req, res) {
     }
 }
 
+export async function ultimasCitas(req, res) {
+   try{
+     const usuarioId = req.user.id;
+    const [cliente] = await db.promise().query(
+        `select 
+           citas.id,
+           citas.fecha,
+           citas.hora,
+           usuarios.nombre as empleado,
+           servicios.nombre as servicio,
+           citas.estado
+        from citas
+           inner join usuarios
+           on citas.empleado_id = usuarios.id
+           inner join servicios
+           on citas.servicio_id = servicios.id
+           where citas.usuario_id = ?
+        order by 
+          citas.fecha,
+          citas.hora
+        DESC
+       `,
+       [usuarioId]
+    );
+    res.json(cliente);
+   }catch(error){
+    return res.status(401).json({ error: "No se pudo obtener las ultimas citas" });
+   }
+}
