@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import db from '../config/db.js';
 
 export async function registro(req, res) {
+   
     try {
         const { nombre, telefono, email, password, rol } = req.body;
         if (!nombre || !telefono || !email || !password || !rol) {
