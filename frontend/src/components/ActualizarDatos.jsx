@@ -7,7 +7,6 @@ export  function ActualizarDatos() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
-
   const token = localStorage.getItem("token");
  
  
