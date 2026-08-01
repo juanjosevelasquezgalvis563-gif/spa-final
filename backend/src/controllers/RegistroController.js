@@ -71,6 +71,7 @@ export async function actualizarDatos(req, res) {
         if (!nombre || !telefono || !email || !password) {
             return res.status(400).json({ error: "Para actualizar tus datos es obligatorio completar todos los campos" });
         }
+        
         let tieneMayuscula = false;
         let tieneMinuscula = false;
         let tieneNumero = false;
