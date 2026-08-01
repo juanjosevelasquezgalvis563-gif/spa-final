@@ -7,6 +7,7 @@ export  function Registro() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
  
+  
 
   async function handleSubmit(e) {
     e.preventDefault();
