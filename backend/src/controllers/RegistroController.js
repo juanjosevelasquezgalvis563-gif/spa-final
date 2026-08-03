@@ -4,9 +4,9 @@ import db from '../config/db.js';
 export async function registro(req, res) {
     
     try {
-        const { nombre, telefono, email, password, rol } = req.body;
-        if (!nombre || !telefono || !email || !password || !rol) {
-            return res.status(400).json({ message: "Todos los campos son obligatorios" });
+        const { nombre, telefono, email, password } = req.body;
+        if (!nombre || !telefono || !email || !password ) {
+            return res.status(401).json({ error: "Todos los campos son obligatorios" });
         }
         let tieneMayuscula = false;
         let tieneMinuscula = false;
@@ -28,19 +28,19 @@ export async function registro(req, res) {
             }
         }
         if (!tieneMayuscula) {
-            return res.status(400).json({ message: "La contraseña debe tener al menos una mayuscula" });
+            return res.status(400).json({ error: "La contraseña debe tener al menos una mayuscula" });
         }
         else if (!tieneMinuscula) {
-            return res.status(400).json({ message: "La contraseña debe tener al menos una minuscula" });
+            return res.status(400).json({ error: "La contraseña debe tener al menos una minuscula" });
         }
         else if (!tieneNumero) {
-            return res.status(400).json({ message: "La contraseña debe tener al menos un numero" });
+            return res.status(400).json({ error: "La contraseña debe tener al menos un numero" });
         }
         else if (!tieneCaracterEspecial) {
-            return res.status(400).json({ message: "La contraseña debe tener al menos un caracter especial" });
+            return res.status(400).json({ error: "La contraseña debe tener al menos un caracter especial" });
         }
         else if (password.length < 8) {
-            return res.status(400).json({ message: "La contraseña debe tener al menos 8 caracteres" });
+            return res.status(400).json({ errror: "La contraseña debe tener al menos 8 caracteres" });
         }
 
         const [usuario] = await db.promise().query(
@@ -48,15 +48,15 @@ export async function registro(req, res) {
             [email]
         );
         if (usuario.length > 0) {
-            return res.status(400).json({ message: "Este usuario ya esta registrado" });
+            return res.status(401).json({ error: "Este usuario ya esta registrado" });
         }
         const hash = await bcrypt.hash(password, 10);
 
         await db.promise().query(
-            'INSERT INTO usuarios (nombre,telefono,email,password,rol) VALUES (?,?,?,?,?)',
-            [nombre, telefono, email, hash, 'empleado']
+            'INSERT INTO usuarios (nombre,telefono,email,password) VALUES (?,?,?,?)',
+            [nombre, telefono, email, hash]
         );
-        return res.status(201).json({ message: "Usuario registrado correctamente" });
+        return res.status(200).json({ message: "Usuario registrado correctamente" });
 
     } catch (error) {
         return res.status(500).json({ message: error.message });
