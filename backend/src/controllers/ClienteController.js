@@ -75,10 +75,10 @@ export async function cancelarSuCita(req, res) {
 export async function actualizarCita(req, res) {
     try {
         const id = req.params.id;
-        const { fecha, hora, empleado_id, servicio_id } = req.body;
+        const { fecha, hora, empleado_id, servicio_id} = req.body;
         await db.promise().query(
-            'UPDATE citas SET fecha=?,hora=? ,empleado_id=?, servicio_id=? WHERE id=?',
-            [fecha, hora, empleado_id, servicio_id, id]
+            'UPDATE citas SET fecha=?,hora=? ,empleado_id=?, servicio_id=?,estado=? WHERE id=?',
+            [fecha, hora, empleado_id, servicio_id,'pendiente', id]
         );
 
 
