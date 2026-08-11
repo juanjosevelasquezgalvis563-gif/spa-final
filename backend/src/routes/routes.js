@@ -21,6 +21,7 @@ import {citasPendientes} from "../controllers/ClienteController.js"
 import { citasComfirmadas } from "../controllers/ClienteController.js";
 import {citasFinalizadas} from "../controllers/ClienteController.js";
 import { CitaRealizar } from "../controllers/ClienteController.js";
+import { ultimasCitas } from "../controllers/ClienteController.js";
 import { middlewareCliente } from "../middlewares/middlewareCliente.js";
 
 
@@ -46,6 +47,7 @@ router.get('/cliente/citasPendientes',middlewareCliente,citasPendientes);
 router.get('/cliente/citasComfirmadas',middlewareCliente,citasComfirmadas);
 router.get('/cliente/citasFinalizadas',middlewareCliente,citasFinalizadas);
 router.get('/cliente/citaRealizar',middlewareCliente,CitaRealizar);
+router.get('/cliente/ultimasCitas',middlewareCliente,ultimasCitas);
 
 router.get('/empleado',middlewareEmpleado,empleado);
 router.put('/empleado/comfirmar/:id',middlewareEmpleado,comfirmarCita);
