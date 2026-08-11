@@ -40,8 +40,14 @@ export async function registro(req, res) {
             return res.status(400).json({ error: "La contraseña debe tener al menos un caracter especial" });
         }
         else if (password.length < 8) {
-            return res.status(400).json({ errror: "La contraseña debe tener al menos 8 caracteres" });
+            return res.status(400).json({ error: "La contraseña debe tener al menos 8 caracteres" });
         }
+
+        if(nombre.length < 10){
+            return res.status(400).json({ error: "El nombre debe tener al menos 10 caracteres" });
+        }
+
+
 
         const [usuario] = await db.promise().query(
             'SELECT id FROM usuarios WHERE email=?',

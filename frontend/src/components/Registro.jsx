@@ -31,6 +31,7 @@ export  function Registro() {
       const data = await response.json();
 
       if (response.ok) {
+        console.log(data.error);
         setMessage(data.message);
 
        
@@ -39,7 +40,7 @@ export  function Registro() {
         setEmail("");
         setPassword("");
       } else {
-        setMessage(data.message);
+        setMessage(data.error);
       }
     } catch (error) {
       setMessage(error.message);
