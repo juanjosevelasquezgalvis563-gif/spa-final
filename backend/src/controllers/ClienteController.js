@@ -8,8 +8,8 @@ export async function cliente(req, res) {
             return res.status(400).json({ error: 'Todos los campos son requeridos' });
         }
         const [horaExistente] = await db.promise().query(
-            'SELECT * FROM citas WHERE hora =? AND empleado_id =?',
-            [hora, empleado_id]
+            'SELECT * FROM citas WHERE fecha=? AND hora =? AND empleado_id =?',
+            [fecha,hora, empleado_id]
         );
         if (horaExistente.length > 0) {
             return res.status(400).json({ error: 'El empleado ya tiene una cita a esa hora, Por favor ingresa otra hora' });
@@ -158,8 +158,8 @@ export async function CitaRealizar(req, res) {
             ON citas.empleado_id = usuarios.id
             INNER JOIN servicios
             ON citas.servicio_id = servicios.id
-            WHERE citas.estado IN ('pendiente', 'confirmada')
-            AND citas.usuario_id = ?
+            WHERE citas.usuario_id = ?
+            AND citas.estado IN ('pendiente', 'confirmada')
             ORDER BY
             CASE
             WHEN estado = 'pendiente' THEN 2
@@ -195,10 +195,7 @@ export async function ultimasCitas(req, res) {
            on citas.servicio_id = servicios.id
            where citas.usuario_id = ?
         order by 
-          citas.fecha,
-          citas.hora
-        DESC
-       `,
+          citas.fecha DESC, `,
        [usuarioId]
     );
     res.json(cliente);
