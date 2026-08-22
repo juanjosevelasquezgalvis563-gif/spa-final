@@ -181,169 +181,174 @@ export function Cliente() {
 
   }, [])
 
-return (
-  <div className="dashboard">
+  return (
+    <div className="dashboard">
 
-    <aside className="sidebar">
+      <aside className="sidebar">
 
-      <h2 className="logo">JC Alta Peluqueria</h2>
+        <h2 className="logo">JC Alta Peluqueria</h2>
 
-      <button onClick={() => navigate("/citas")}>
-        Mis citas
-      </button>
+        <button onClick={() => navigate("/citas")}>
+          Mis citas
+        </button>
 
-      <button onClick={() => navigate("/cita")}>
-        Agendar cita
-      </button>
+        <button onClick={() => navigate("/cita")}>
+          Agendar cita
+        </button>
 
-      <button>
-        Mi perfil
-      </button>
+        <button>
+          Mi perfil
+        </button>
 
-      <button onClick={() => navigate("/login")}>
-        Cerrar sesión
-      </button>
+        <button onClick={() => {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+        }}>
+          Cerrar sesión
+        </button>
 
-    </aside>
+      </aside>
 
-    <main className="contenido">
+      <main className="contenido">
 
-      <div className="bienvenida">
-        <h1>Hola, {user.nombre} 👋</h1>
-        <p>Bienvenido a tu panel de JC Alta Peluqueria.</p>
-      </div>
-
-      <div className="cards">
-
-        <div className="card">
-          <h4>Total de citas</h4>
-          <h2>{cantidad && cantidad.total_citas}</h2>
-          <span>Todas tus citas</span>
+        <div className="bienvenida">
+          <h1>Hola, {user.nombre} 👋</h1>
+          <p>Bienvenido a tu panel de JC Alta Peluqueria.</p>
         </div>
 
-        <div className="card naranja">
-          <h4>Pendientes</h4>
-          <h2>{pendientes && pendientes.citas_pendientes}</h2>
-          <span>Por confirmar</span>
+        <div className="cards">
+
+          <div className="card">
+            <h4>Total de citas</h4>
+            <h2>{cantidad && cantidad.total_citas}</h2>
+            <span>Todas tus citas</span>
+          </div>
+
+          <div className="card naranja">
+            <h4>Pendientes</h4>
+            <h2>{pendientes && pendientes.citas_pendientes}</h2>
+            <span>Por confirmar</span>
+          </div>
+
+          <div className="card verde">
+            <h4>Confirmadas</h4>
+            <h2>{confirmadas && confirmadas.citas_confirmadas}</h2>
+            <span>Próximas citas</span>
+          </div>
+
+          <div className="card azul">
+            <h4>Finalizadas</h4>
+            <h2>{finalizadas && finalizadas.citas_finalizadas}</h2>
+            <span>Completadas</span>
+          </div>
+
         </div>
 
-        <div className="card verde">
-          <h4>Confirmadas</h4>
-          <h2>{confirmadas && confirmadas.citas_confirmadas}</h2>
-          <span>Próximas citas</span>
-        </div>
 
-        <div className="card azul">
-          <h4>Finalizadas</h4>
-          <h2>{finalizadas && finalizadas.citas_finalizadas}</h2>
-          <span>Completadas</span>
-        </div>
+        <div className="panel-superior">
 
-      </div>
+          <div className="citas-realizar">
+            <h4>📅 Próxima cita</h4>
 
-     
-      <div className="panel-superior">
+            <div className="cita-info">
 
-        <div className="citas-realizar">
-          <h4>📅 Próxima cita</h4>
+              <h3>Fecha</h3>
+              <p>{realizar && realizar.fecha.split("T")[0]}</p>
 
-          <div className="cita-info">
+              <h3>Hora</h3>
+              <p>{realizar && realizar.hora.slice(0, 5)}</p>
 
-            <h3>Fecha</h3>
-            <p>{realizar && realizar.fecha}</p>
+              <h3>Servicio</h3>
+              <p>{realizar && realizar.servicio}</p>
 
-            <h3>Hora</h3>
-            <p>{realizar && realizar.hora}</p>
+              <h3>Empleado</h3>
+              <p>{realizar && realizar.empleado}</p>
 
-            <h3>Servicio</h3>
-            <p>{realizar && realizar.servicio}</p>
+              <h3>Estado</h3>
+              <span className="estado">
+                {realizar && realizar.estado}
+              </span>
 
-            <h3>Empleado</h3>
-            <p>{realizar && realizar.empleado}</p>
+            </div>
+          </div>
 
-            <h3>Estado</h3>
-            <span className="estado">
-              {realizar && realizar.estado}
-            </span>
+          <div className="acciones">
+
+            <button className="accion" onClick={() => navigate("/cita")}>
+              📅
+              <div>
+                <h3>Agendar nueva cita</h3>
+                <p>Reserva tu próximo servicio</p>
+              </div>
+            </button>
+
+            <button className="accion" onClick={() => navigate("/citas")}>
+              📋
+              <div>
+                <h3>Ver mis citas</h3>
+                <p>Consulta tu historial completo</p>
+              </div>
+            </button>
+
+            <button className="accion" onClick={() => navigate("/perfil")}>
+              👤
+              <div>
+                <h3>Editar mi perfil</h3>
+                <p>Actualiza tus datos personales</p>
+              </div>
+            </button>
 
           </div>
-        </div>
-
-        <div className="acciones">
-
-          <button className="accion" onClick={() => navigate("/cita")}>
-            📅
-            <div>
-              <h3>Agendar nueva cita</h3>
-              <p>Reserva tu próximo servicio</p>
-            </div>
-          </button>
-
-          <button className="accion" onClick={() => navigate("/citas")}>
-            📋
-            <div>
-              <h3>Ver mis citas</h3>
-              <p>Consulta tu historial completo</p>
-            </div>
-          </button>
-
-          <button className="accion" onClick={() => navigate("/perfil")}>
-            👤
-            <div>
-              <h3>Editar mi perfil</h3>
-              <p>Actualiza tus datos personales</p>
-            </div>
-          </button>
 
         </div>
 
-      </div>
 
-   
 
-      <div className="ultimas-citas">
+        <div className="ultimas-citas">
 
-        <h3>📋 Mis últimas citas</h3>
+          <h3>📋 Mis últimas citas</h3>
 
-        <table>
+          <table>
 
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Hora</th>
-              <th>Empleado</th>
-              <th>Servicio</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-
-          <tbody>
-
-            {ultimas.map((cita) => (
-
-              <tr key={cita.id}>
-                <td>{cita.fecha.split("T")[0]}</td>
-                <td>{cita.hora.slice(0, 5)}</td>
-                <td>{cita.empleado}</td>
-                <td>{cita.servicio}</td>
-                <td>
-                  <span className={`estado ${cita.estado}`}>
-                    {cita.estado}
-                  </span>
-                </td>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Empleado</th>
+                <th>Servicio</th>
+                <th>Estado</th>
               </tr>
+            </thead>
 
-            ))}
+            <tbody>
 
-          </tbody>
+              {ultimas.map((citas) => (
+                
 
-        </table>
+                <tr key={citas.id}>
+                  <td>{citas.fecha.split("T")[0]}</td>
+                  <td>{citas.hora.slice(0, 5)}</td>
+                  <td>{citas.empleado}</td>
+                  <td>{citas.servicio}</td>
+                  <td>
+                    <span className={`estado ${citas.estado}`}>
+                      {citas.estado}
+                    </span>
+                  </td>
+                </tr>
 
-      </div>
+              ))}
 
-    </main>
+            </tbody>
 
-  </div>
-);
+          </table>
+
+        </div>
+
+      </main>
+
+    </div>
+  );
 }
 export default Cliente;

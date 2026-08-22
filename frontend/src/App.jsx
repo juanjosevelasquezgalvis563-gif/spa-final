@@ -8,7 +8,8 @@ import Empleado from "./components/Empleado";
 import Reprogramar from "./components/Reprogramar";
 import Cita from "./components/Cita";
 import MisCitas from "./components/MisCitas";
-import ActualizarDatos from "./components/ActualizarDatos"
+import ActualizarDatos from "./components/ActualizarDatos";
+import CitasEmpleado from "./components/CitasEmpleado";
 
 
 
@@ -27,6 +28,8 @@ function App() {
       <Route path="/citas" element={<MisCitas />} />
       <Route path="/empleado" element={<Empleado />} />
       <Route path="/reprogramar/:id" element={<Reprogramar />} />
+      <Route path="/citasEmpleado" element={<CitasEmpleado />} />
+
 
     
       

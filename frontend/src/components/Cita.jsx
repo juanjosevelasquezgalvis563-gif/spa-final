@@ -41,6 +41,7 @@ export function Cita() {
         SetHora("");
         SetEmpleadoId("");
         SetServicioId("");
+        SetMessage("");
       } else {
         SetMessage(data.error);
       }

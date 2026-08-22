@@ -1,183 +1,193 @@
 import React, { useEffect, useState } from "react";
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export function Empleado() {
-  const [empleado, SetEmpleado] = useState([]);
+  const [hoy, SetCitasHoy] = useState(null);
+  const [pendientes, SetPendientes] = useState(null);
+  const [finalizadas, SetFinalizadas] = useState(null);
+  const [realizar, SetRealizar] = useState(null);
   const [message, SetMessage] = useState("");
+
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
-  async function obtenerEmpleado() {
+  async function citasHoy() {
     try {
-      const response = await fetch("http://localhost:3000/inser/empleado", {
+      const response = await fetch("http://localhost:3000/inser/empleado/citasHoy", {
         method: "GET",
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
       });
-
       const data = await response.json();
+      if (response.ok) {
+        SetCitasHoy(data);
 
-      if (!response.ok) {
-       navigate('/login')
-        return;
       } else {
-        SetEmpleado(data);
-       
+        SetMessage(data.error);
       }
+    } catch (error) {
+      SetMessage(error.message);
+    }
+
+  }
+
+  async function citasPendientesEmpleado() {
+    try {
+      const response = await fetch("http://localhost:3000/inser/empleado/citasPendientesEmpleado", {
+        method: "GET",
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      const data = await response.json();
+      if (response.ok) {
+        SetPendientes(data);
+      }
+    } catch (error) {
+      SetMessage(error.message);
+    }
+  }
+
+  async function citasFinalizadasEmpleado() {
+    try {
+      const response = await fetch("http://localhost:3000/inser/empleado/citasFinalizadasEmpleado", {
+        method: "GET",
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      const data = await response.json();
+      if (response.ok) {
+        SetFinalizadas(data);
+      }
+    } catch (error) {
+      SetMessage(error.message);
+    }
+  }
+
+  async function citasRealizar() {
+    try {
+      const response = await fetch("http://localhost:3000/inser/empleado/citaRealizarEmpleado", {
+        method: "GET",
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        SetRealizar(data);
+      }
+      else {
+        SetMessage(data.error);
+      }
+
     } catch (error) {
       SetMessage(error.message);
     }
   }
 
   useEffect(() => {
-    obtenerEmpleado();
+    citasHoy();
+    citasPendientesEmpleado();
+    citasFinalizadasEmpleado();
+    citasRealizar();
   }, []);
 
-  async function comfirmar(id) {
-    try {
-      const response = await fetch(
-        `http://localhost:3000/inser/empleado/comfirmar/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (response.ok) {
-        SetMessage(data.message);
-        obtenerEmpleado();
-      } else {
-        SetMessage(data.error);
-      }
-    } catch (error) {
-      SetMessage(error.message);
-    }
-  }
-
-  async function finalizar(id) {
-    try {
-      const response = await fetch(
-        `http://localhost:3000/inser/empleado/finalizar/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (response.ok) {
-        SetMessage(data.message);
-        obtenerEmpleado();
-      } else {
-        SetMessage(data.error);
-      }
-    } catch (error) {
-      SetMessage(error.message);
-    }
-  }
-
-  async function cancelar(id) {
-    try {
-      const response = await fetch(
-        `http://localhost:3000/inser/empleado/cancelar/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (response.ok) {
-        SetMessage(data.message);
-        obtenerEmpleado();
-      } else {
-        SetMessage(data.error);
-      }
-    } catch (error) {
-      SetMessage(error.message);
-    }
-  }
 
   return (
-    <div className="empleado-container">
+    <div className="layout-dashboard">
+      <aside className="sidebar">
+        <h1 className="sidebar-title">JC Alta<br />Peluqueria</h1>
+        <nav className="sidebar-menu">
+          <button className="menu-btn" onClick={() => navigate('/citasEmpleado')}>Gestionar mis citas</button>
+          <button onClick={() => {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            navigate("/login");
+          }}>
+            Cerrar sesión
+          </button>
+        </nav>
+      </aside>
 
-      {message && (
-        <p className="empleado-message">
-          {message}
-        </p>
-      )}
+      <main className="main-content">
+        <div className="header-user">
+          <h2>Hola 👋</h2>
+          <p>Bienvenido a tu panel de JC Alta Peluqueria.</p>
+        </div>
 
-      <div className="empleado-lista">
+        {message && (
+          <p className="empleado-message">
+            {message}
+          </p>
+        )}
 
-        {empleado.map((citas) => (
-          <div key={citas.id} className="empleado-card">
-
-            <p>
-              <strong>Fecha:</strong> {citas.fecha}
-            </p>
-
-            <p>
-              <strong>Hora:</strong> {citas.hora}
-            </p>
-
-            <p>
-              <strong>Cliente:</strong> {citas.nombre_cliente}
-            </p>
-
-            <p>
-              <strong>Servicio:</strong> {citas.nombre_servicio}
-            </p>
-
-            <p>
-              <strong>Estado:</strong>
-              <span className="estado-cita">
-                {citas.estado}
-              </span>
-            </p>
-
-            <div className="empleado-botones">
-
-              <button
-                className="btn-confirmar"
-                onClick={() => comfirmar(citas.id)}
-              >
-                Confirmar cita
-              </button>
-
-              <button
-                className="btn-finalizar"
-                onClick={() => finalizar(citas.id)}
-              >
-                Finalizar cita
-              </button>
-
-              <button
-                className="btn-cancelar"
-                onClick={() => cancelar(citas.id)}
-              >
-                Cancelar cita
-              </button>
-
-            </div>
-
+        <div className="cards-grid">
+          <div className="citas-hoy-card card-stat">
+            <h2>Citas de hoy</h2>
+            <p className="citas-hoy-numero">{hoy && hoy.Hoy}</p>
+            <span className="card-subtext">Citas programadas</span>
           </div>
-        ))}
 
-      </div>
+          <div className="citas-pendientes-card card-stat">
+            <h2>Citas Pendientes</h2>
+            <p className="citas-pendientes-numero">{pendientes && pendientes.Pendientes}</p>
+            <span className="card-subtext">Por confirmar</span>
+          </div>
+
+          <div className="citas-finalizadas-card card-stat">
+            <h2>Citas Finalizadas</h2>
+            <p className="citas-finalizadas-numero">{finalizadas && finalizadas.Finalizadas}</p>
+            <span className="card-subtext">Completadas</span>
+          </div>
+        </div>
+
+        <div className="panel-empleado-grid">
+  
+          <div className="proxima-cita-card">
+            <h2>🗓️ Próxima cita</h2>
+            <div className="cita-fila">
+              <span className="cita-label">Fecha</span>
+              <span className="cita-valor">{realizar && realizar.fecha.split("T")[0]}</span>
+            </div>
+            <div className="cita-fila">
+              <span className="cita-label">Hora</span>
+              <span className="cita-valor">{realizar && realizar.hora.slice(0, 5)}</span>
+            </div>
+            <div className="cita-fila">
+              <span className="cita-label">Cliente</span>
+              <span className="cita-valor">{realizar && realizar.cliente}</span>
+            </div>
+            <div className="cita-fila">
+              <span className="cita-label">Servicio</span>
+              <span className="cita-valor">{realizar && realizar.servicio}</span>
+            </div>
+            <div className="cita-fila">
+              <span className="cita-label">Estado</span>
+              <span className="cita-valor estado-bold">{realizar && realizar.estado}</span>
+            </div>
+          </div>
+
+          
+          <div className="acciones-empleado">
+            <button onClick={() => navigate('/citasEmpleado')} className="accion-btn">
+              <span>📅</span>
+              <div>
+                <h3>Gestionar Citas</h3>
+  
+              </div>
+            </button>
+          </div>
+        </div>
+
+
+
+      </main>
     </div>
   );
 }
