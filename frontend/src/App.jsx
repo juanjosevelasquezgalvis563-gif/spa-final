@@ -30,7 +30,6 @@ function App() {
       <Route path="/reprogramar/:id" element={<Reprogramar />} />
       <Route path="/citasEmpleado" element={<CitasEmpleado />} />
 
-
     
       
     </Routes>
