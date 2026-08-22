@@ -11,6 +11,10 @@ import { middlewareEmpleado } from "../middlewares/middlewareEmpleado.js";
 import { comfirmarCita } from "../controllers/EmpleadoController.js";
 import { finalizarCita } from "../controllers/EmpleadoController.js";
 import { cancelarCita } from "../controllers/EmpleadoController.js";
+import { citasHoy } from "../controllers/EmpleadoController.js";
+import {citasPendientesEmpleado} from "../controllers/EmpleadoController.js";
+import {citasFinalizadasEmpleado} from "../controllers/EmpleadoController.js";
+import {citaRealizarEmpleado} from "../controllers/EmpleadoController.js";
 
 import { cliente} from "../controllers/ClienteController.js"
 import { obtenerCliente} from "../controllers/ClienteController.js";
@@ -53,6 +57,10 @@ router.get('/empleado',middlewareEmpleado,empleado);
 router.put('/empleado/comfirmar/:id',middlewareEmpleado,comfirmarCita);
 router.put('/empleado/finalizar/:id',middlewareEmpleado,finalizarCita);
 router.put('/empleado/cancelar/:id',middlewareEmpleado,cancelarCita);
+router.get('/empleado/citasHoy',middlewareEmpleado,citasHoy);
+router.get('/empleado/citasPendientesEmpleado',middlewareEmpleado,citasPendientesEmpleado);
+router.get('/empleado/citasFinalizadasEmpleado',middlewareEmpleado,citasFinalizadasEmpleado);
+router.get('/empleado/citaRealizarEmpleado',middlewareEmpleado,citaRealizarEmpleado);
 
 
 
