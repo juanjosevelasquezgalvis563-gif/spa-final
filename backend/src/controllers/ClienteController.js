@@ -60,6 +60,17 @@ export async function obtenerCliente(req, res) {
 export async function cancelarSuCita(req, res) {
     try {
         const id = req.params.id;
+        cont[citas] = await db.promise().query(
+            'SELECT estado FROM citas WHERE id = ?',
+            [id]
+        );
+        if(citas.length === 0){
+            return res.status(403).json({ message: 'Cita no encontrada' });
+        }
+        const cita = citas[0];
+        if(cita.estado === 'finalizada'){
+            return res.status(403).json({ message: 'No se puede cancelar una cita finalizada' });
+        }
         await db.promise().query(
             'UPDATE citas SET estado = ? WHERE id = ?',
             ['cancelada', id]
@@ -161,13 +172,13 @@ export async function CitaRealizar(req, res) {
             WHERE citas.usuario_id = ?
             AND citas.estado IN ('pendiente', 'confirmada')
             ORDER BY
-            CASE
-            WHEN estado = 'pendiente' THEN 2
-            WHEN estado = 'confirmada' THEN 1
-            END,
+            citas.fecha ASC,
             citas.hora ASC,
-            citas.fecha ASC
-            LIMIT 1; `,
+            CASE
+            WHEN estado = 'confirmada' THEN 1
+            WHEN estado = 'pendiente' THEN 2
+            END
+            LIMIT 1 `,
             [usuarioId]
         );
         res.json(CitaRealizar[0]);
@@ -180,25 +191,26 @@ export async function CitaRealizar(req, res) {
 export async function ultimasCitas(req, res) {
    try{
      const usuarioId = req.user.id;
-    const [cliente] = await db.promise().query(
-        `select 
+    const [citas] = await db.promise().query(
+        `SELECT 
            citas.id,
            citas.fecha,
            citas.hora,
            usuarios.nombre as empleado,
            servicios.nombre as servicio,
            citas.estado
-        from citas
-           inner join usuarios
-           on citas.empleado_id = usuarios.id
-           inner join servicios
-           on citas.servicio_id = servicios.id
-           where citas.usuario_id = ?
-        order by 
-          citas.fecha DESC, `,
+          FROM citas
+            JOIN usuarios
+           ON citas.empleado_id = usuarios.id
+            JOIN servicios
+           ON citas.servicio_id = servicios.id
+           WHERE citas.usuario_id = ?
+          order by 
+          citas.fecha DESC,
+          citas.hora DESC`,
        [usuarioId]
     );
-    res.json(cliente);
+    res.json(citas);
    }catch(error){
     return res.status(401).json({ error: "No se pudo obtener las ultimas citas" });
    }
