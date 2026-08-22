@@ -10,7 +10,6 @@ export function Cita() {
   const [servicioId, SetServicioId] = useState("");
   const [message, SetMessage] = useState("");
   
-
   const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
 
