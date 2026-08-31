@@ -1,0 +1,16 @@
+services:
+  backend:
+    build: ./backend
+    container_name: velure-spa
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./backend/.env
+
+  frontend:
+    build: ./frontend
+    container_name: velure-spa-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
