@@ -12,6 +12,7 @@ export function Cliente() {
   const [finalizadas, SetFinalizadas] = useState(null);
   const [realizar, SetRealizar] = useState(null);
   const [ultimas, SetUltimasCitas] = useState([])
+
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
@@ -30,8 +31,8 @@ export function Cliente() {
         },
       })
       const data = await response.json();
-      if (!response.ok) {
-        navigate('/login')
+      if (response.ok) {
+        SetCantidad(data);
         return;
       } else {
         SetCantidad(data);
@@ -169,6 +170,8 @@ export function Cliente() {
       const data = await response.json();
       if (response.ok) {
         SetUltimasCitas(data);
+      }else{
+        SetMessage(data.error)
       }
     } catch (error) {
       SetMessage(error.message)
