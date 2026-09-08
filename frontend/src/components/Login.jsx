@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export function Login() {
   const [email, setEmail] = useState("");
@@ -30,11 +30,9 @@ export function Login() {
         if (data.user.rol === "administrador") {
           navigate("/admin");
         }
-
         if (data.user.rol === "cliente") {
           navigate("/cliente");
         }
-
         if (data.user.rol === "empleado") {
           navigate("/empleado");
         }
@@ -49,30 +47,45 @@ export function Login() {
   return (
     <div className="login-container">
       <form onSubmit={handleSubmit} className="login-form">
+        <div className="login-header">
+          <h2 className="login-title">Bienvenido a Jc Alta Peluqueria</h2>
+          
+        </div>
 
-        <h2 className="login-title">Iniciar sesión</h2>
+        <div className="login-group">
+          <label>Correo electrónico</label>
+          <input
+            type="email"
+            placeholder="tucorreo@ejemplo.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="login-input"
+            required
+          />
+        </div>
 
-        <input
-          type="email"
-          placeholder="Correo electrónico"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="login-input"
-          required
-        />
-
-        <input
-          type="password"
-          placeholder="Contraseña"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="login-input"
-          required
-        />
+        <div className="login-group">
+          <label>Contraseña</label>
+          <input
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="login-input"
+            required
+          />
+        </div>
 
         <button type="submit" className="login-button">
           Iniciar sesión
         </button>
+
+        
+        <div className="login-footer-links">
+          <Link to="/forgot-password" className="forgot-password">
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </div>
 
         {message && <p className="login-message">{message}</p>}
       </form>
