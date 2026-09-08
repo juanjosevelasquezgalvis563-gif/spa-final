@@ -26,6 +26,7 @@ export function Empleado() {
 
       } else {
         SetMessage(data.error);
+        navigate("/login")
       }
     } catch (error) {
       SetMessage(error.message);
