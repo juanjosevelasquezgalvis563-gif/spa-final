@@ -5,7 +5,6 @@ import {  useState } from "react";
 export function Cita() {
   const [fecha, SetFecha] = useState("");
   const [hora, SetHora] = useState("");
-  const [cliente, SetCliente] = useState([]);
   const [empleadoId, SetEmpleadoId] = useState("");
   const [servicioId, SetServicioId] = useState("");
   const [message, SetMessage] = useState("");
