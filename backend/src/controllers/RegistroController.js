@@ -52,7 +52,7 @@ export async function registro(req, res) {
             [email]
         );
         if (usuario.length > 0) {
-            return res.status(400).json({ error: "Este usuario ya esta registrado" });
+            return res.status(400).json({ error: "Este usuario ya esta registrado en el sistema" });
         }
         const hash = await bcrypt.hash(password, 10);
 
