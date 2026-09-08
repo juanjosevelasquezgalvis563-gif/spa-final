@@ -1,6 +1,4 @@
-import React from 'react'
-import { useEffect } from 'react';
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 export function CitasEmpleado() {
     const [empleado, SetEmpleado] = useState([]);
@@ -19,23 +17,25 @@ export function CitasEmpleado() {
             const data = await response.json();
 
             if (!response.ok) {
-                navigate('/login')
+                 navigate('/login');
                 return;
             } else {
                 SetEmpleado(data);
-
             }
+
         } catch (error) {
             SetMessage(error.message);
         }
     }
-    useEffect(()=>{
+
+    useEffect(() => {
         obtenerEmpleado();
-    })
+    }, []);
 
     async function comfirmar(id) {
         try {
-            const response = await fetch(`http://localhost:3000/inser/empleado/comfirmar/${id}`,
+            const response = await fetch(
+                `http://localhost:3000/inser/empleado/comfirmar/${id}`,
                 {
                     method: "PUT",
                     headers: {
@@ -53,6 +53,7 @@ export function CitasEmpleado() {
             } else {
                 SetMessage(data.message);
             }
+
         } catch (error) {
             SetMessage(error.message);
         }
@@ -60,7 +61,8 @@ export function CitasEmpleado() {
 
     async function finalizar(id) {
         try {
-            const response = await fetch(`http://localhost:3000/inser/empleado/finalizar/${id}`,
+            const response = await fetch(
+                `http://localhost:3000/inser/empleado/finalizar/${id}`,
                 {
                     method: "PUT",
                     headers: {
@@ -78,6 +80,7 @@ export function CitasEmpleado() {
             } else {
                 SetMessage(data.message);
             }
+
         } catch (error) {
             SetMessage(error.message);
         }
@@ -85,7 +88,8 @@ export function CitasEmpleado() {
 
     async function cancelar(id) {
         try {
-            const response = await fetch(`http://localhost:3000/inser/empleado/cancelar/${id}`,
+            const response = await fetch(
+                `http://localhost:3000/inser/empleado/cancelar/${id}`,
                 {
                     method: "PUT",
                     headers: {
@@ -103,6 +107,7 @@ export function CitasEmpleado() {
             } else {
                 SetMessage(data.message);
             }
+
         } catch (error) {
             SetMessage(error.message);
         }
@@ -110,29 +115,41 @@ export function CitasEmpleado() {
 
     return (
         <div>
+
+            
+            {message && (
+                <div className="mensaje-cita">
+                    {message}
+                </div>
+            )}
+
             <div className="empleado-lista">
 
                 {empleado.map((citas) => (
                     <div key={citas.id} className="empleado-card">
 
                         <p>
-                            <strong>Fecha:</strong> {citas.fecha.split("T")[0]}
+                            <strong>Fecha:</strong>{" "}
+                            {citas.fecha.split("T")[0]}
                         </p>
 
                         <p>
-                            <strong>Hora:</strong> {citas.hora.slice(0, 5)}
+                            <strong>Hora:</strong>{" "}
+                            {citas.hora.slice(0, 5)}
                         </p>
 
                         <p>
-                            <strong>Cliente:</strong> {citas.nombre_cliente}
+                            <strong>Cliente:</strong>{" "}
+                            {citas.nombre_cliente}
                         </p>
 
                         <p>
-                            <strong>Servicio:</strong> {citas.nombre_servicio}
+                            <strong>Servicio:</strong>{" "}
+                            {citas.nombre_servicio}
                         </p>
 
                         <p>
-                            <strong>Estado:</strong>
+                            <strong>Estado:</strong>{" "}
                             <span className="estado-cita">
                                 {citas.estado}
                             </span>
@@ -167,7 +184,6 @@ export function CitasEmpleado() {
                 ))}
 
             </div>
-
 
         </div>
     );
