@@ -60,13 +60,14 @@ export async function obtenerCliente(req, res) {
 export async function cancelarSuCita(req, res) {
     try {
         const id = req.params.id;
-        cont[citas] = await db.promise().query(
+        const[citas] = await db.promise().query(
             'SELECT estado FROM citas WHERE id = ?',
             [id]
         );
         if(citas.length === 0){
             return res.status(403).json({ message: 'Cita no encontrada' });
         }
+        
         const cita = citas[0];
         if(cita.estado === 'finalizada'){
             return res.status(403).json({ message: 'No se puede cancelar una cita finalizada' });
@@ -87,15 +88,33 @@ export async function actualizarCita(req, res) {
     try {
         const id = req.params.id;
         const { fecha, hora, empleado_id, servicio_id} = req.body;
+        const [citas] = await db.promise().query(
+            'SELECT estado FROM citas WHERE id=?',
+            [id]
+        );
+
+        if(citas.length === 0){
+            return res.status(403).json({ message: 'Cita no encontrada' });
+        }
+
+        const cita = citas[0];
+
+        if(cita.estado === 'finalizada'){
+            return res.status(403).json({ message: 'No se puede reprogramar una cita finalizada' });
+        }
+        if(cita.estado === 'cancelada'){
+            return res.status(403).json({ message: 'No se puede reprogramar una cita cancelada' });
+        }
+
         await db.promise().query(
             'UPDATE citas SET fecha=?,hora=? ,empleado_id=?, servicio_id=?,estado=? WHERE id=?',
             [fecha, hora, empleado_id, servicio_id,'pendiente', id]
         );
-
-
         return res.status(200).json({ message: 'Cita actualizada exitosamente' });
+        
+
     } catch (error) {
-        return res.status(500).json({ error: "No se pudo actualizar tu cita" });
+        return res.status(403).json({ error: "No se pudo actualizar tu cita" });
     }
 }
 
