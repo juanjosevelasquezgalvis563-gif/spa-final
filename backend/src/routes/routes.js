@@ -6,6 +6,7 @@ import {login, me} from "../controllers/LoginController.js";
 import {middleware} from "../middlewares/middleware.js";
 
 
+
 import {empleado} from "../controllers/EmpleadoController.js";
 import { middlewareEmpleado } from "../middlewares/middlewareEmpleado.js";
 import { comfirmarCita } from "../controllers/EmpleadoController.js";
@@ -28,7 +29,12 @@ import { CitaRealizar } from "../controllers/ClienteController.js";
 import { ultimasCitas } from "../controllers/ClienteController.js";
 import { middlewareCliente } from "../middlewares/middlewareCliente.js";
 
+import {admin} from "../controllers/AdminController.js";
+import {middlewareAdmin} from "../middlewares/middlewareAdmin.js";
 
+
+import { forgotPassword } from "../controllers/RecuperaPassword.js";
+import { resetPassword } from "../controllers/RecuperaPassword.js";
 
 
 
@@ -61,6 +67,13 @@ router.get('/empleado/citasHoy',middlewareEmpleado,citasHoy);
 router.get('/empleado/citasPendientesEmpleado',middlewareEmpleado,citasPendientesEmpleado);
 router.get('/empleado/citasFinalizadasEmpleado',middlewareEmpleado,citasFinalizadasEmpleado);
 router.get('/empleado/citaRealizarEmpleado',middlewareEmpleado,citaRealizarEmpleado);
+
+router.get('/administrador',middlewareAdmin,admin);
+
+
+
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 
 
 
