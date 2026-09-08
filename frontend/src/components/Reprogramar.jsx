@@ -37,7 +37,7 @@ export function Reprogramar() {
       if (response.ok) {
         SetMessage(data.message);
       } else {
-        SetMessage(data.error);
+        SetMessage(data.message);
       }
     } catch (error) {
       SetMessage(error.message);
