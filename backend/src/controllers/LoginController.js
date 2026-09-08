@@ -19,8 +19,9 @@ export async function login(req,res){
         
         const valido = await bcrypt.compare(password,user.password);
         if(!valido){
-            return res.status(400).json({message: 'Credenciales incorrectas'});
+            return res.status(403).json({message: 'Credenciales incorrectas'});
         }
+
         const token = jwt.sign(
            {id:user.id, nombre:user.nombre, email:user.email, rol:user.rol},
             process.env.JWT_SECRET,
