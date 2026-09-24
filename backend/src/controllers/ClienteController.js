@@ -191,6 +191,7 @@ export async function cantidadDeCitas(req, res) {
     }
 }
 
+
 export async function citasPendientes(req, res) {
     try {
         const usuarioId = req.user.id;
