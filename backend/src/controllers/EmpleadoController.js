@@ -93,6 +93,7 @@ export async function citasFinalizadasEmpleado(req, res) {
 }
 
 
+
 export async function comfirmarCita(req, res) {
     try {
         const empleadoId = req.user.id;
