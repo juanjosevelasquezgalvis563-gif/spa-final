@@ -1,11 +1,11 @@
 import bcrypt from 'bcrypt';
-import db from '../config/db.js';
+import Usuario from '../models/Usuario.js'
 
 export async function registro(req, res) {
-    
+
     try {
         const { nombre, telefono, email, password } = req.body;
-        if (!nombre || !telefono || !email || !password ) {
+        if (!nombre || !telefono || !email || !password) {
             return res.status(400).json({ error: "Todos los campos son obligatorios" });
         }
         let tieneMayuscula = false;
@@ -43,24 +43,30 @@ export async function registro(req, res) {
             return res.status(400).json({ error: "La contraseña debe tener al menos 8 caracteres" });
         }
 
-        if(nombre.length <= 8){
+        if (nombre.length <= 8) {
             return res.status(400).json({ error: "El nombre debe tener al menos 8 caracteres" });
         }
 
-        const [usuario] = await db.promise().query(
-            'SELECT id FROM usuarios WHERE email=?',
-            [email]
-        );
-        if (usuario.length > 0) {
+        const usuario = await Usuario.findOne({
+            where: {
+                email: email
+            }
+        });
+
+
+        if (usuario) {
             return res.status(400).json({ error: "Este usuario ya esta registrado en el sistema" });
         }
         const hash = await bcrypt.hash(password, 10);
 
-        await db.promise().query(
-            'INSERT INTO usuarios (nombre,telefono,email,password) VALUES (?,?,?,?)',
-            [nombre, telefono, email, hash,]
-        );
-        return res.status(200).json({ message: "Usuario registrado correctamente" });
+        await Usuario.create({
+            nombre: nombre,
+            telefono: telefono,
+            email: email,
+            password: hash
+
+        });
+        return res.status(201).json({ message: "Usuario registrado correctamente" });
 
     } catch (error) {
         return res.status(500).json({ message: error.message });
@@ -76,7 +82,7 @@ export async function actualizarDatos(req, res) {
             return res.status(400).json({ error: "Para actualizar tus datos es obligatorio completar todos los campos" });
         }
 
-        if(nombre.length <= 8){
+        if (nombre.length <= 8) {
             return res.status(400).json({ error: "El nombre debe tener al menos 8 caracteres" });
         }
 
@@ -115,21 +121,34 @@ export async function actualizarDatos(req, res) {
             return res.status(400).json({ error: "La contraseña debe tener al menos 8 caracteres" });
         }
 
-        const [emailExistente] = await db.promise().query(
-            'SELECT id FROM usuarios WHERE email = ? AND id != ?',
-            [email, usuarioId]
-        );
-        if (emailExistente.length > 0) {
+        const emailExistente = await Usuario.findOne({
+            where: {
+                email: email
+            }
+        });
+        if (emailExistente && emailExistente.id !== usuarioId) {
             return res.status(400).json({ error: "El correo electrónico ya está en uso por otro usuario" });
         }
 
         const hash = await bcrypt.hash(password, 10);
-        await db.promise().query(
-            'UPDATE usuarios SET nombre=?,telefono=?,email=?,password=? WHERE id=?',
-            [nombre, telefono, email, hash, usuarioId]
+
+        await Usuario.update(
+            {
+                nombre: nombre,
+                telefono: telefono,
+                email: email,
+                password: hash,
+            },
+            {
+                where: {
+                    id: usuarioId
+                }
+            }
+
+
         );
-      
-        return res.status(200).json({ message: "Datos actualizados correctamente" });
+        return res.status(204).json({ message: "Datos actualizados correctamente" });
+
     } catch (error) {
         return res.status(500).json({ error: "Error al actualizar los datos" });
     }
