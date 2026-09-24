@@ -1,24 +1,53 @@
-import db from '../config/db.js';
+import Servicio from '../models/servicios.js';
+import Cita from '../models/citas.js';
+import Usuario from '../models/Usuario.js';
+import { Op } from "sequelize";
+
+
+export async function servicios(req, res) {
+    try {
+        const servicio = await Servicio.findAll({
+            attributes: ['nombre', 'precio', 'image'],
+
+        });
+        res.json(servicio);
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
 
 export async function cliente(req, res) {
 
     try {
-        const { fecha, hora, usuario_id, empleado_id, servicio_id } = req.body;
-        if (!fecha || !hora || !usuario_id || !empleado_id || !servicio_id) {
+        const usuarioId = req.user.id;
+        const { fecha, hora, empleado_id, servicio_id } = req.body;
+        if (!fecha || !hora || !empleado_id || !servicio_id) {
             return res.status(400).json({ error: 'Todos los campos son requeridos' });
         }
-        const [horaExistente] = await db.promise().query(
-            'SELECT * FROM citas WHERE fecha=? AND hora =? AND empleado_id =?',
-            [fecha,hora, empleado_id]
-        );
-        if (horaExistente.length > 0) {
+        const horaExistente = await Cita.findOne({
+            where: {
+                fecha: fecha,
+                hora: hora,
+                empleado_id: empleado_id
+            }
+
+        });
+
+        if (horaExistente) {
             return res.status(400).json({ error: 'El empleado ya tiene una cita a esa hora, Por favor ingresa otra hora' });
         }
-        await db.promise().query(
-            'INSERT INTO citas (fecha, hora, usuario_id, empleado_id, servicio_id) VALUES (?, ?, ?, ?, ?)',
-            [fecha, hora, usuario_id, empleado_id, servicio_id]
-        );
+        await Cita.create({
+            fecha,
+            hora,
+            usuario_id:usuarioId,
+            empleado_id,
+            servicio_id,
+            estado: 'pendiente'
+        });
         return res.status(201).json({ message: 'Cita creada exitosamente' });
+
+
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }
@@ -29,52 +58,68 @@ export async function obtenerCliente(req, res) {
 
         const usuarioId = req.user.id;
 
-        const [clientes] = await db.promise().query(
-            `SELECT
-             citas.id,
-             citas.fecha,
-             citas.hora,
-             citas.estado,
-             usuarios.nombre AS nombre_cliente,
-             servicios.nombre AS servicio_ofrecido
-             FROM citas
-             INNER JOIN usuarios
-             ON citas.usuario_id = usuarios.id
-             INNER JOIN servicios
-             ON citas.servicio_id = servicios.id
-             WHERE citas.usuario_id = ?
-             ORDER BY
-             citas.fecha,
-             citas.hora
-             ASC`,
-             
-            [usuarioId]
+        const clientes = await Cita.findAll({
+            where: {
+                usuario_id: usuarioId
+            },
 
-        );
-        res.json(clientes);
+            include: [
+                {
+                    model: Usuario,
+                    as: "cliente",
+                    attributes: ["nombre"]
+                },
+                {
+                    model: Servicio,
+                    attributes: ["nombre"]
+                }
+            ],
+
+            order: [
+                ["fecha", "ASC"],
+                ["hora", "ASC"]
+            ]
+        });
+
+        return res.json(clientes);
+
     } catch (error) {
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({
+            error: error.message
+        });
     }
 }
 
 export async function cancelarSuCita(req, res) {
     try {
+        const usuarioId = req.user.id;
         const id = req.params.id;
-        const[citas] = await db.promise().query(
-            'SELECT estado FROM citas WHERE id = ?',
-            [id]
-        );
-        if(citas.length === 0){
+        const cita = await Cita.findOne({
+            where: {
+                id: id,
+                usuario_id: usuarioId,
+
+            }
+        });
+
+        if (!cita) {
             return res.status(403).json({ message: 'Cita no encontrada' });
         }
-        
-        const cita = citas[0];
-        if(cita.estado === 'finalizada'){
+
+        if (cita.estado === 'finalizada') {
             return res.status(403).json({ message: 'No se puede cancelar una cita finalizada' });
         }
-        await db.promise().query(
-            'UPDATE citas SET estado = ? WHERE id = ?',
-            ['cancelada', id]
+        await Cita.update(
+            {
+                estado: 'cancelada'
+
+            },
+            {
+                where: {
+                    id: id,
+                    usuario_id: usuarioId
+                }
+            }
         );
 
         return res.json({ message: 'Cita cancelada exitosamente' });
@@ -86,32 +131,45 @@ export async function cancelarSuCita(req, res) {
 
 export async function actualizarCita(req, res) {
     try {
+        const usuarioId = req.user.id;
         const id = req.params.id;
-        const { fecha, hora, empleado_id, servicio_id} = req.body;
-        const [citas] = await db.promise().query(
-            'SELECT estado FROM citas WHERE id=?',
-            [id]
-        );
+        const { fecha, hora, empleado_id, servicio_id } = req.body;
 
-        if(citas.length === 0){
+        const cita = await Cita.findOne({
+            where: {
+                id: id,
+                usuario_id: usuarioId,
+            }
+        });
+
+        if (!cita) {
             return res.status(403).json({ message: 'Cita no encontrada' });
         }
 
-        const cita = citas[0];
-
-        if(cita.estado === 'finalizada'){
+        if (cita.estado === 'finalizada') {
             return res.status(403).json({ message: 'No se puede reprogramar una cita finalizada' });
         }
-        if(cita.estado === 'cancelada'){
+        if (cita.estado === 'cancelada') {
             return res.status(403).json({ message: 'No se puede reprogramar una cita cancelada' });
         }
 
-        await db.promise().query(
-            'UPDATE citas SET fecha=?,hora=? ,empleado_id=?, servicio_id=?,estado=? WHERE id=?',
-            [fecha, hora, empleado_id, servicio_id,'pendiente', id]
+        await Cita.update(
+            {
+                fecha,
+                hora,
+                empleado_id,
+                servicio_id,
+                estado: 'pendiente'
+            },
+            {
+                where: {
+                    id: id,
+                    usuario_id: usuarioId
+                }
+            }
         );
         return res.status(200).json({ message: 'Cita actualizada exitosamente' });
-        
+
 
     } catch (error) {
         return res.status(403).json({ error: "No se pudo actualizar tu cita" });
@@ -121,11 +179,12 @@ export async function actualizarCita(req, res) {
 export async function cantidadDeCitas(req, res) {
     try {
         const usuarioId = req.user.id;
-        const [CantidadCitas] = await db.promise().query(
-            'SELECT COUNT(citas.id) as total_citas FROM citas WHERE usuario_id=?',
-            [usuarioId]
-        );
-        res.json(CantidadCitas[0]);
+        const CantidadCitas = await Cita.count({
+            where: {
+                usuario_id: usuarioId
+            }
+        });
+        res.json(CantidadCitas);
 
     } catch (error) {
         return res.status(500).json({ error: "No se pudo obtener la cantidad de citas" });
@@ -135,72 +194,80 @@ export async function cantidadDeCitas(req, res) {
 export async function citasPendientes(req, res) {
     try {
         const usuarioId = req.user.id;
-        const [CitasPendientes] = await db.promise().query(
-            'SELECT COUNT(citas.id) as citas_pendientes FROM citas WHERE usuario_id=? AND estado=?',
-            [usuarioId, 'pendiente']
-        );
-        res.json(CitasPendientes[0]);
+        const citasPendientes = await Cita.count({
+            where: {
+                usuario_id: usuarioId,
+                estado: 'pendiente'
+            }
+        });
+        res.json(citasPendientes);
+
     } catch (error) {
-        return res.status(500).json({ error: "No se pudo obtener la cantidad de citas pendientes" });
+        return res.status(403).json({ error: "No se pudo obtener la cantidad de citas pendientes" });
     }
 }
 
-export async function citasComfirmadas(req, res) {
+export async function citasConfirmadas(req, res) {
     try {
         const usuarioId = req.user.id;
-        const [CitasComfirmadas] = await db.promise().query(
-            'SELECT COUNT(citas.id) as citas_confirmadas FROM citas WHERE usuario_id=? AND estado=?',
-            [usuarioId, 'confirmada']
-        );
-        res.json(CitasComfirmadas[0]);
+        const citasConfirmadas = await Cita.count({
+            where: {
+                usuario_id: usuarioId,
+                estado: 'confirmada'
+            }
+        });
+        res.json(citasConfirmadas);
+
     } catch (error) {
-        return res.status(500).json({ error: "No se pudo obtener la cantidad de citas comfrimadas" });
+        return res.status(403).json({ error: "No se pudo obtener la cantidad de citas confirmadas" });
     }
 }
 
 export async function citasFinalizadas(req, res) {
     try {
         const usuarioId = req.user.id;
-        const [CitasFinalizadas] = await db.promise().query(
-            'SELECT COUNT(citas.id) as citas_finalizadas FROM citas WHERE usuario_id=? AND estado=?',
-            [usuarioId, 'finalizada']
-        );
-        res.json(CitasFinalizadas[0]);
+        const citasFinalizadas = await Cita.count({
+            where: {
+                usuario_id: usuarioId,
+                estado: 'finalizada'
+            }
+        });
+        res.json(citasFinalizadas);
+
     } catch (error) {
-        return res.status(500).json({ error: "No se pudo obtener la cantidad de citas finalizadas" });
+        return res.status(403).json({ error: "No se pudo obtener la cantidad de citas finalizadas" });
     }
 }
 
 export async function CitaRealizar(req, res) {
     try {
         const usuarioId = req.user.id;
-        const [CitaRealizar] = await db.promise().query(
-            `
-            SELECT
-               citas.id,
-               citas.fecha,
-               citas.hora,
-               servicios.nombre AS servicio,
-               usuarios.nombre AS empleado,
-               citas.estado
-            FROM citas
-            INNER JOIN usuarios
-            ON citas.empleado_id = usuarios.id
-            INNER JOIN servicios
-            ON citas.servicio_id = servicios.id
-            WHERE citas.usuario_id = ?
-            AND citas.estado IN ('pendiente', 'confirmada')
-            ORDER BY
-            citas.fecha ASC,
-            citas.hora ASC,
-            CASE
-            WHEN estado = 'confirmada' THEN 1
-            WHEN estado = 'pendiente' THEN 2
-            END
-            LIMIT 1 `,
-            [usuarioId]
-        );
-        res.json(CitaRealizar[0]);
+        const CitaRealizar = await Cita.findOne({
+            where: {
+                usuario_id: usuarioId,
+                estado: {
+                    [Op.in]: ['pendiente', 'confirmada']
+                }
+            },
+            include: [
+                {
+                    model: Usuario,
+                    as: 'empleado',
+                    attributes: ['nombre']
+                },
+                {
+                    model: Servicio,
+                    attributes: ['nombre']
+                }
+            ],
+
+            order: [
+                ['fecha', 'ASC'],
+                ['hora', 'ASC']
+            ]
+
+        });
+        res.json(CitaRealizar);
 
     } catch (error) {
         return res.status(401).json({ error: "No se pudo obtener la sigueinte cita a realizar" });
@@ -208,29 +275,32 @@ export async function CitaRealizar(req, res) {
 }
 
 export async function ultimasCitas(req, res) {
-   try{
-     const usuarioId = req.user.id;
-    const [citas] = await db.promise().query(
-        `SELECT 
-           citas.id,
-           citas.fecha,
-           citas.hora,
-           usuarios.nombre as empleado,
-           servicios.nombre as servicio,
-           citas.estado
-          FROM citas
-            JOIN usuarios
-           ON citas.empleado_id = usuarios.id
-            JOIN servicios
-           ON citas.servicio_id = servicios.id
-           WHERE citas.usuario_id = ?
-          order by 
-          citas.fecha DESC,
-          citas.hora DESC`,
-       [usuarioId]
-    );
-    res.json(citas);
-   }catch(error){
-    return res.status(401).json({ error: "No se pudo obtener las ultimas citas" });
-   }
+    try {
+        const usuarioId = req.user.id;
+        const citas = await Cita.findAll({
+            where: {
+                usuario_id: usuarioId,
+            },
+            include: [
+                {
+                    model: Usuario,
+                    as: 'empleado',
+                    attributes: ['nombre']
+                },
+                {
+                    model: Servicio,
+                    attributes: ['nombre']
+
+                }
+            ],
+            order: [
+                ['fecha', 'DESC'],
+                ['hora', 'DESC']
+            ]
+
+        });
+        res.json(citas);
+    } catch (error) {
+        return res.status(401).json({ error: "No se pudo obtener las ultimas citas" });
+    }
 }
