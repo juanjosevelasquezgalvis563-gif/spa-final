@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 export  function Registro() {
   const [nombre, setNombre] = useState("");
@@ -31,7 +31,7 @@ export  function Registro() {
       const data = await response.json();
 
       if (response.ok) {
-        console.log(data.error);
+        
         setMessage(data.message);
 
        
@@ -40,12 +40,22 @@ export  function Registro() {
         setEmail("");
         setPassword("");
       } else {
-        setMessage(data.error);
+        setMessage(data.message);
       }
     } catch (error) {
-      setMessage(error.message);
+      setMessage('Error de conexion con el servidor');
     }
   }
+
+  useEffect(() => {
+    if (!message) return;
+
+    const temporizador = setTimeout(() => {
+      setMessage("");
+    }, 4000);
+
+    return () => clearTimeout(temporizador);
+  }, [message]);
 
   return (
     <div className="registro-container">
