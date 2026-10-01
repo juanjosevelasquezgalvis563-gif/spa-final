@@ -1,30 +1,36 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+
 
 export function CitasEmpleado() {
     const [empleado, SetEmpleado] = useState([]);
     const [message, SetMessage] = useState("");
-    const token = localStorage.getItem('token');
+    
+
+
+
 
     async function obtenerEmpleado() {
         try {
             const response = await fetch("http://localhost:3000/inser/empleado", {
                 method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+                credentials:'include',
             });
 
             const data = await response.json();
 
-            if (!response.ok) {
-                 navigate('/login');
+            if (response.ok) {
+                  SetEmpleado(data);
                 return;
-            } else {
-                SetEmpleado(data);
+            }else{
+                SetMessage(data.message);
             }
 
+           
+
         } catch (error) {
-            SetMessage(error.message);
+            SetMessage('Error de conexión con el servidor');
         }
     }
 
@@ -32,16 +38,23 @@ export function CitasEmpleado() {
         obtenerEmpleado();
     }, []);
 
+    useEffect(() => {
+        if (!message) return;
+
+        const temporizador = setTimeout(() => {
+            SetMessage("");
+        }, 4000);
+
+        return () => clearTimeout(temporizador);
+    }, [message]);
+
     async function comfirmar(id) {
         try {
             const response = await fetch(
                 `http://localhost:3000/inser/empleado/comfirmar/${id}`,
                 {
                     method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
+                    credentials:'include',
                 }
             );
 
@@ -50,12 +63,12 @@ export function CitasEmpleado() {
             if (response.ok) {
                 SetMessage(data.message);
                 obtenerEmpleado();
-            } else {
+            }else{
                 SetMessage(data.message);
             }
 
         } catch (error) {
-            SetMessage(error.message);
+            SetMessage('Error de conexión con el servidor');
         }
     }
 
@@ -65,10 +78,7 @@ export function CitasEmpleado() {
                 `http://localhost:3000/inser/empleado/finalizar/${id}`,
                 {
                     method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
+                    credentials:'include',
                 }
             );
 
@@ -77,12 +87,12 @@ export function CitasEmpleado() {
             if (response.ok) {
                 SetMessage(data.message);
                 obtenerEmpleado();
-            } else {
+            }else{
                 SetMessage(data.message);
             }
 
         } catch (error) {
-            SetMessage(error.message);
+            SetMessage('Error de conexión con el servidor');
         }
     }
 
@@ -92,10 +102,7 @@ export function CitasEmpleado() {
                 `http://localhost:3000/inser/empleado/cancelar/${id}`,
                 {
                     method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
+                    credentials:'include',
                 }
             );
 
@@ -104,12 +111,12 @@ export function CitasEmpleado() {
             if (response.ok) {
                 SetMessage(data.message);
                 obtenerEmpleado();
-            } else {
+            }else{
                 SetMessage(data.message);
             }
 
         } catch (error) {
-            SetMessage(error.message);
+            SetMessage('Error de conexión con el servidor');
         }
     }
 
@@ -140,12 +147,12 @@ export function CitasEmpleado() {
 
                         <p>
                             <strong>Cliente:</strong>{" "}
-                            {citas.nombre_cliente}
+                            {citas.cliente?.nombre}
                         </p>
 
                         <p>
                             <strong>Servicio:</strong>{" "}
-                            {citas.nombre_servicio}
+                            {citas.Servicio?.nombre}
                         </p>
 
                         <p>
