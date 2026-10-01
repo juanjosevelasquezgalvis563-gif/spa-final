@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 export function Login() {
@@ -14,9 +14,9 @@ export function Login() {
     try {
       const response = await fetch("http://localhost:3000/inser/login", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          
         },
         body: JSON.stringify({ email, password }),
       });
@@ -24,11 +24,10 @@ export function Login() {
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-
+        
         if (data.user.rol === "administrador") {
           navigate("/admin");
+
         }
         if (data.user.rol === "cliente") {
           navigate("/cliente");
@@ -40,9 +39,19 @@ export function Login() {
         setMessage(data.message);
       }
     } catch (error) {
-      setMessage(error.message);
+      setMessage('Error de conexion con el servidor');
     }
   }
+
+  useEffect(() => {
+    if (!message) return;
+
+    const temporizador = setTimeout(() => {
+      setMessage("");
+    }, 4000);
+
+    return () => clearTimeout(temporizador);
+  }, [message]);
 
   return (
     <div className="login-container">
