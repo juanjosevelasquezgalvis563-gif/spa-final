@@ -1,6 +1,9 @@
 import Usuario from "./Usuario.js";
 import Cita from "./citas.js";
 import Servicio from "./servicios.js";
+import Producto from "./productos.js";
+import Compra from "./compras.js";
+import PasswordReset from "./password_resets.js";
 
 
 Usuario.hasMany(Cita, {
@@ -36,4 +39,24 @@ Servicio.hasMany(Cita, {
 
 Cita.belongsTo(Servicio, {
     foreignKey: "servicio_id"
+});
+
+
+Usuario.hasMany(PasswordReset, {
+    foreignKey: "usuario_id",
+    as: "recuperaciones"
+});
+
+
+PasswordReset.belongsTo(Usuario, {
+    foreignKey: "usuario_id",
+    as: "usuario"
+});
+
+Producto.hasMany(Compra,{
+    foreignKey:'producto_id'
+});
+
+Compra.belongsTo(Producto,{
+    foreignKey:'producto_id'
 });
