@@ -28,7 +28,7 @@ export async function empleado(req, res) {
         res.json(citas);
 
     } catch (error) {
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ message:'Error al obtener las citas'});
     }
 }
 
@@ -54,7 +54,7 @@ export async function citasHoy(req, res) {
 
     } catch (error) {
         return res.status(500).json({
-            error: "No se pudo obtener las citas de hoy"
+            message: "No se pudo obtener las citas de hoy"
         });
     }
 }
@@ -72,7 +72,7 @@ export async function citasPendientesEmpleado(req, res) {
         res.json(citasPendientesEmpleado);
 
     } catch (error) {
-        return res.status(500).json({ error: "no se pudo obtener las citas pendientes" });
+        return res.status(500).json({ message: "no se pudo obtener las citas pendientes" });
     }
 }
 
@@ -88,7 +88,7 @@ export async function citasFinalizadasEmpleado(req, res) {
         res.json(citasFinalizadas);
 
     } catch (error) {
-        return res.status(500).json({ error: "no se pudo obtener las citas finalizadas" });
+        return res.status(500).json({ message: "no se pudo obtener las citas finalizadas" });
     }
 }
 
@@ -134,7 +134,7 @@ export async function comfirmarCita(req, res) {
         return res.status(200).json({ message: 'Cita confirmada' });
 
     } catch (error) {
-        return res.status(401).json({ error: 'error al comfirmar la cita' });
+        return res.status(401).json({ message: 'error al comfirmar la cita' });
     }
 
 }
@@ -179,7 +179,7 @@ export async function cancelarCita(req, res) {
         return res.status(200).json({ message: "Cita cancelada" });
 
     } catch (error) {
-        return res.status(500).json({ error: "No se pudo cancelar la cita" });
+        return res.status(500).json({ message: "No se pudo cancelar la cita" });
     }
 
 }
@@ -213,7 +213,7 @@ export async function finalizarCita(req, res) {
 
         return res.status(200).json({ message: 'Cita finalizada' });
     } catch (error) {
-        return res.status(500).json({ error: 'Error al finalizar la cita' });
+        return res.status(500).json({ message: 'Error al finalizar la cita' });
     }
 }
 
@@ -246,9 +246,11 @@ export async function citaRealizarEmpleado(req, res) {
             ]
 
         });
-        res.json(citaRealizarEmpleado)
+        return res.json(citaRealizarEmpleado)
 
     } catch (error) {
-        return res.status(403).json({ error: "no se pudieron obtener las citas" })
+        return res.status(403).json({ message: "no se pudieron obtener las citas" })
     }
 }
+
+
