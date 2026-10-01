@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 export function Reprogramar() {
@@ -8,7 +8,7 @@ export function Reprogramar() {
   const [servicioId, SetServicioId] = useState("");
   const [message, SetMessage] = useState("");
 
-  const token = localStorage.getItem("token");
+  
   const { id } = useParams();
 
   async function handleSubmit(e) {
@@ -19,9 +19,9 @@ export function Reprogramar() {
         `http://localhost:3000/inser/cliente/actualizar/${id}`,
         {
           method: "PUT",
+          credentials:'include',
           headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
           },
           body: JSON.stringify({
             fecha,
@@ -40,9 +40,19 @@ export function Reprogramar() {
         SetMessage(data.message);
       }
     } catch (error) {
-      SetMessage(error.message);
+      SetMessage('Error de conexion con el servidor');
     }
   }
+
+  useEffect(() => {
+    if (!message) return;
+
+    const temporizador = setTimeout(() => {
+      SetMessage("");
+    }, 4000);
+
+    return () => clearTimeout(temporizador);
+  }, [message]);
 
   return (
     <div className="cliente-container">
