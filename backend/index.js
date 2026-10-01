@@ -15,7 +15,11 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet());
 
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        `http://${process.env.FRONTEND_IP || "192.168.1.4"}:5173`
+    ],
     credentials: true
 }));
 
