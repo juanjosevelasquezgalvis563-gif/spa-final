@@ -21,31 +21,46 @@ function Carousel() {
   ];
 
   return (
-    <Swiper
-      modules={[Autoplay, Pagination]}
-      slidesPerView={1}
-      loop={true}
-      autoplay={{
-        delay: 3000,
-        disableOnInteraction: false,
-      }}
-      pagination={{ clickable: true }}
-    >
-      {slides.map((slide, index) => (
-        <SwiperSlide key={index}>
-          <div
-            className="slide"
-            style={{
-              backgroundImage: `url(${slide.image})`,
-            }}
-          >
-            <div className="overlay">
-              <h1>{slide.title}</h1>
-            </div>
-          </div>
-        </SwiperSlide>
-      ))}
-    </Swiper>
+    <section className="showcase" id="showcase">
+      <div className="showcase-head">
+        <span className="showcase-tag">Nuestros espacios</span>
+
+        <h2>Un ambiente pensado para ti</h2>
+
+        <p>
+          Cada rincón de Velure Spa está diseñado para que disfrutes
+          una experiencia relajante, elegante y completamente personalizada.
+        </p>
+      </div>
+
+      <div className="showcase-carousel">
+        <Swiper
+          modules={[Autoplay, Pagination]}
+          slidesPerView={1}
+          loop={true}
+          autoplay={{
+            delay: 4500,
+            disableOnInteraction: false,
+          }}
+          pagination={{ clickable: true }}
+        >
+          {slides.map((slide, index) => (
+            <SwiperSlide key={index}>
+              <div
+                className="slide"
+                style={{
+                  backgroundImage: `url(${slide.image})`,
+                }}
+              >
+                <div className="overlay">
+                  <h3>{slide.title}</h3>
+                </div>
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
+    </section>
   );
 }
 
