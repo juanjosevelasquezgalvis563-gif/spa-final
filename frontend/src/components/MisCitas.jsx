@@ -3,33 +3,35 @@ import { useState } from 'react'
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'
 
+
+
 export function MisCitas() {
 
     const [cliente, SetCliente] = useState([]);
     const [message, SetMessage] = useState("");
-    const token = localStorage.getItem("token");
+
     const navigate = useNavigate();
+
+
+
 
     async function obtenerCliente() {
         try {
-            const response = await fetch('http://localhost:3000/inser/cliente', {
+            const response = await fetch("http://localhost:3000/inser/cliente", {
                 method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
+                credentials: 'include',
             })
 
             const data = await response.json();
 
             if (response.ok) {
                 SetCliente(data);
-            } else {
-                SetMessage(data.error);
+            }else{
+                SetMessage(data.message);
             }
 
         } catch (error) {
-            SetMessage(error.message);
+            SetMessage('Error de conexion con el servidor');
         }
     }
 
@@ -39,10 +41,7 @@ export function MisCitas() {
                 `http://localhost:3000/inser/cliente/cancelar/${id}`,
                 {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`,
-                    },
+                    credentials: 'include',
                 }
             )
 
@@ -51,18 +50,28 @@ export function MisCitas() {
             if (response.ok) {
                 SetMessage(data.message);
                 obtenerCliente();
-            } else {
+            }else{
                 SetMessage(data.message);
             }
 
         } catch (error) {
-            SetMessage(error.message);
+            SetMessage('Error de conexion con el servidor');
         }
     }
 
     useEffect(() => {
         obtenerCliente();
     }, [])
+
+    useEffect(() => {
+        if (!message) return;
+
+        const temporizador = setTimeout(() => {
+            SetMessage("");
+        }, 4000);
+
+        return () => clearTimeout(temporizador);
+    }, [message])
 
     return (
         <div className="mis-citas-container">
@@ -74,7 +83,7 @@ export function MisCitas() {
                 </div>
 
 
-               
+
 
                 {message && (
                     <div className="mensaje-cita">
@@ -105,9 +114,9 @@ export function MisCitas() {
 
                                 <tr key={clientes.id}>
 
-                                    <td>{clientes.nombre_cliente}</td>
+                                    <td>{clientes.cliente.nombre}</td>
 
-                                    <td>{clientes.servicio_ofrecido}</td>
+                                    <td>{clientes.Servicio.nombre}</td>
 
                                     <td>
                                         {clientes.fecha.split("T")[0]}
@@ -118,7 +127,7 @@ export function MisCitas() {
                                     </td>
 
                                     <td>
-                                        <span className={`estado ${clientes.estado}`}>
+                                        <span className={"estado ${clientes.estado}"}>
                                             {clientes.estado}
                                         </span>
                                     </td>
@@ -146,6 +155,16 @@ export function MisCitas() {
                                     </td>
 
                                 </tr>
+
+
+
+
+
+
+
+
+
+
 
                             ))}
 
