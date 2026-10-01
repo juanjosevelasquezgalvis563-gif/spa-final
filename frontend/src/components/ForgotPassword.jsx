@@ -1,10 +1,16 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 export function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  function showMessage(text, isError = true) {
+    setMessage(text);
+    setError(isError);
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -25,20 +31,38 @@ export function ForgotPassword() {
         }
       );
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
-      if (response.ok) {
-        setMessage(data.message);
-      } else {
-        setMessage(data.message);
+      if (!response.ok) {
+        showMessage(
+          data.message || "No se pudo enviar el enlace de recuperación"
+        );
+        return;
       }
+
+      showMessage(
+        data.message || "Se ha enviado el enlace de recuperación a tu correo",
+        false
+      );
+
+      setEmail("");
     } catch (error) {
       console.error(error);
-      setMessage("Error al conectar con el servidor");
+      showMessage("Error al conectar con el servidor");
     } finally {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (!message) return;
+
+    const temporizador = setTimeout(() => {
+      setMessage("");
+    }, 4000);
+
+    return () => clearTimeout(temporizador);
+  }, [message]);
 
   return (
     <div className="forgot-container">
@@ -62,13 +86,17 @@ export function ForgotPassword() {
         </button>
 
         {/* Enlace opcional para volver al login */}
-        <div style={{ textAlign: "center", marginTop: "15px" }}>
-          <Link to="/" className="forgot-password" style={{ display: "inline", fontSize: "13px" }}>
+        <div className="forgot-back">
+          <Link to="/" className="forgot-password">
             Volver al inicio de sesión
           </Link>
         </div>
 
-        {message && <p>{message}</p>}
+        {message && (
+          <p className={error ? "reset-message error" : "reset-message success"}>
+            {message}
+          </p>
+        )}
       </form>
     </div>
   );
