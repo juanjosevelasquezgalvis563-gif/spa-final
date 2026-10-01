@@ -1,5 +1,7 @@
-import React, { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams, Link } from "react-router-dom";
+
+const MIN_CARACTERES = 6;
 
 export function ResetPassword() {
   const { token } = useParams();
@@ -8,21 +10,27 @@ export function ResetPassword() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  function showMessage(text, isError = true) {
+    setMessage(text);
+    setError(isError);
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setMessage("");
 
-   
-    if (password !== confirmPassword) {
-      setMessage("Las contraseñas no coinciden");
+    if (password.length < MIN_CARACTERES) {
+      showMessage(
+        `La contraseña debe tener mínimo ${MIN_CARACTERES} caracteres`
+      );
       return;
     }
 
-    
-    if (password.length < 6) {
-      setMessage("La contraseña debe tener mínimo 6 caracteres");
+    if (password !== confirmPassword) {
+      showMessage("Las contraseñas no coinciden");
       return;
     }
 
@@ -43,27 +51,47 @@ export function ResetPassword() {
         }
       );
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
-      if (response.ok) {
-        setMessage(data.message);
-        setTimeout(() => {
-          navigate("/login"); 
-        }, 2000);
-      } else {
-        setMessage(data.message);
+      if (!response.ok) {
+        showMessage(
+          data.message || "No se pudo cambiar la contraseña"
+        );
+        return;
       }
+
+      showMessage(
+        data.message || "Contraseña actualizada correctamente",
+        false
+      );
+
+      setPassword("");
+      setConfirmPassword("");
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
     } catch (error) {
       console.error(error);
-      setMessage("Error al conectar con el servidor");
+      showMessage("Error al conectar con el servidor");
     } finally {
       setLoading(false);
     }
   }
 
+  useEffect(() => {
+    if (!message) return;
+
+    const temporizador = setTimeout(() => {
+      setMessage("");
+    }, 4000);
+
+    return () => clearTimeout(temporizador);
+  }, [message]);
+
   return (
     <div className="reset-container">
-      <form onSubmit={handleSubmit} className="reset-form">
+      <form onSubmit={handleSubmit} className="reset-form" noValidate>
         <h2>Cambiar contraseña</h2>
 
         <p>Ingresa tu nueva contraseña para continuar.</p>
@@ -73,6 +101,8 @@ export function ResetPassword() {
           placeholder="Nueva contraseña"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          minLength={MIN_CARACTERES}
+          autoComplete="new-password"
           required
         />
 
@@ -81,6 +111,8 @@ export function ResetPassword() {
           placeholder="Confirmar contraseña"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
+          minLength={MIN_CARACTERES}
+          autoComplete="new-password"
           required
         />
 
@@ -88,7 +120,17 @@ export function ResetPassword() {
           {loading ? "Cambiando..." : "Cambiar contraseña"}
         </button>
 
-        {message && <p>{message}</p>}
+        {message && (
+          <p className={error ? "reset-message error" : "reset-message success"}>
+            {message}
+          </p>
+        )}
+
+        <div className="forgot-back">
+          <Link to="/forgot-password" className="forgot-password">
+            Solicitar un nuevo enlace
+          </Link>
+        </div>
       </form>
     </div>
   );
