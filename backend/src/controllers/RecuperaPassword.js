@@ -1,8 +1,13 @@
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 import nodemailer from "nodemailer";
+import { Op } from "sequelize";
+import Usuario from "../models/Usuario.js";
+import PasswordReset from "../models/password_resets.js";
 
-import db from "../config/db.js";
+
+const MINUTOS_EXPIRACION = 15;
+
 
 
 
@@ -20,15 +25,15 @@ export async function forgotPassword(req, res) {
         }
 
 
-        const [usuarios] = await db.promise().query(
-            `SELECT id, email
-             FROM usuarios
-             WHERE email = ?`,
-            [email]
-        );
+        const usuarios = await Usuario.findOne({
+            attributes: ['id', 'email'],
+            where: {
+                email: email
+            }
+        });
 
 
-        if (usuarios.length === 0) {
+        if (!usuarios) {
 
             return res.status(404).json({
                 message: "No existe un usuario con ese correo"
@@ -37,7 +42,6 @@ export async function forgotPassword(req, res) {
         }
 
 
-        const usuario = usuarios[0];
 
 
        
@@ -47,19 +51,21 @@ export async function forgotPassword(req, res) {
 
 
       
-        await db.promise().query(
-            `INSERT INTO password_resets
-            (usuario_id, token, expires_at)
-            VALUES (
-                ?,
-                ?,
-                DATE_ADD(NOW(), INTERVAL 15 MINUTE)
-            )`,
-            [
-                usuario.id,
-                token
-            ]
+        const expiraEn = new Date(
+            Date.now() + MINUTOS_EXPIRACION * 60 * 1000
         );
+
+        await PasswordReset.destroy({
+            where: {
+                usuario_id: usuarios.id
+            }
+        });
+
+        await PasswordReset.create({
+            usuario_id: usuarios.id,
+            token: token,
+            expires_at: expiraEn
+        });
 
 
      
@@ -77,14 +83,14 @@ export async function forgotPassword(req, res) {
 
        
         const enlace =
-            `http://localhost:5173/reset-password/${token}`;
+            `${process.env.FRONTEND_URL}/reset-password/${token}`;
 
 
         await transporter.sendMail({
 
             from: process.env.EMAIL_USER,
 
-            to: usuario.email,
+            to: usuarios.email,
 
             subject: "Recuperación de contraseña",
 
@@ -171,35 +177,30 @@ export async function resetPassword(req, res) {
         }
 
 
-        const [tokens] = await db.promise().query(
+        if (nuevaPassword.length < 6) {
 
-            `SELECT
-                id,
-                usuario_id,
-                token,
-                expires_at
-             FROM password_resets
-             WHERE token = ?
-             AND expires_at > NOW()
-             LIMIT 1`,
+            return res.status(400).json({
 
-            [token]
+                message:
+                    "La contraseña debe tener mínimo 6 caracteres"
 
-        );
+            });
+
+        }
 
 
-        console.log(
-            "Token recibido:",
-            token
-        );
+        const recuperacion = await PasswordReset.findOne({
+            where: {
+                token: token,
+                expires_at: {
+                    [Op.gt]: new Date()
+                }
+            }
+        });
 
-        console.log(
-            "Resultado token:",
-            tokens
-        );
 
-
-        if (tokens.length === 0) {
+      
+        if (!recuperacion) {
 
             return res.status(400).json({
 
@@ -211,10 +212,6 @@ export async function resetPassword(req, res) {
         }
 
 
-        const recuperacion = tokens[0];
-
-
-      
         const passwordHash =
             await bcrypt.hash(
                 nuevaPassword,
@@ -222,31 +219,23 @@ export async function resetPassword(req, res) {
             );
 
 
-        await db.promise().query(
-
-            `UPDATE usuarios
-             SET password = ?
-             WHERE id = ?`,
-
-            [
-                passwordHash,
-                recuperacion.usuario_id
-            ]
-
+        await Usuario.update(
+            {
+                password: passwordHash
+            },
+            {
+                where: {
+                    id: recuperacion.usuario_id
+                }
+            }
         );
 
 
-        
-        await db.promise().query(
-
-            `DELETE FROM password_resets
-             WHERE id = ?`,
-
-            [
-                recuperacion.id
-            ]
-
-        );
+        await PasswordReset.destroy({
+            where: {
+                id: recuperacion.id
+            }
+        });
 
 
         res.status(200).json({
