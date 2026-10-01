@@ -13,7 +13,7 @@ export async function servicios(req, res) {
         res.json(servicio);
 
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ message:'Error al obtener los servicios' });
     }
 }
 
@@ -22,34 +22,43 @@ export async function cliente(req, res) {
     try {
         const usuarioId = req.user.id;
         const { fecha, hora, empleado_id, servicio_id } = req.body;
+
         if (!fecha || !hora || !empleado_id || !servicio_id) {
-            return res.status(400).json({ error: 'Todos los campos son requeridos' });
+            return res.status(400).json({ message: 'Todos los campos son requeridos' });
         }
+
+        const horaNormalizada = `${hora.length === 5 ? hora + ':00' : hora}`;
+
         const horaExistente = await Cita.findOne({
             where: {
+                hora: horaNormalizada,
                 fecha: fecha,
-                hora: hora,
-                empleado_id: empleado_id
+                empleado_id: empleado_id,
+                estado: { [Op.in]: ['pendiente', 'confirmada'] }
             }
-
         });
 
         if (horaExistente) {
-            return res.status(400).json({ error: 'El empleado ya tiene una cita a esa hora, Por favor ingresa otra hora' });
+            return res.status(400).json({ message: 'El empleado ya tiene una cita a esa hora, Por favor ingresa otra hora' });
         }
+
         await Cita.create({
             fecha,
-            hora,
-            usuario_id:usuarioId,
+            hora: horaNormalizada,
+            usuario_id: usuarioId,
             empleado_id,
             servicio_id,
             estado: 'pendiente'
         });
+
         return res.status(201).json({ message: 'Cita creada exitosamente' });
 
-
     } catch (error) {
-        return res.status(500).json({ error: error.message });
+        
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            return res.status(400).json({ message: 'El empleado ya tiene una cita a esa hora, Por favor ingresa otra hora' });
+        }
+        return res.status(500).json({ message: 'No se pudo crear la cita' });
     }
 }
 
@@ -85,7 +94,7 @@ export async function obtenerCliente(req, res) {
 
     } catch (error) {
         return res.status(500).json({
-            error: error.message
+            message:' Error al obtener las citas del cliente'
         });
     }
 }
@@ -124,7 +133,7 @@ export async function cancelarSuCita(req, res) {
 
         return res.json({ message: 'Cita cancelada exitosamente' });
     } catch (error) {
-        return res.status(500).json({ error: "Error al cancelar su cita" });
+        return res.status(500).json({ message: "Error al cancelar su cita" });
     }
 
 }
@@ -172,7 +181,7 @@ export async function actualizarCita(req, res) {
 
 
     } catch (error) {
-        return res.status(403).json({ error: "No se pudo actualizar tu cita" });
+        return res.status(403).json({ message: "No se pudo actualizar tu cita" });
     }
 }
 
@@ -187,7 +196,7 @@ export async function cantidadDeCitas(req, res) {
         res.json(CantidadCitas);
 
     } catch (error) {
-        return res.status(500).json({ error: "No se pudo obtener la cantidad de citas" });
+        return res.status(500).json({ message: "No se pudo obtener la cantidad de citas" });
     }
 }
 
@@ -204,7 +213,7 @@ export async function citasPendientes(req, res) {
         res.json(citasPendientes);
 
     } catch (error) {
-        return res.status(403).json({ error: "No se pudo obtener la cantidad de citas pendientes" });
+        return res.status(403).json({ message: "No se pudo obtener la cantidad de citas pendientes" });
     }
 }
 
@@ -220,7 +229,7 @@ export async function citasConfirmadas(req, res) {
         res.json(citasConfirmadas);
 
     } catch (error) {
-        return res.status(403).json({ error: "No se pudo obtener la cantidad de citas confirmadas" });
+        return res.status(403).json({ message: "No se pudo obtener la cantidad de citas confirmadas" });
     }
 }
 
@@ -236,7 +245,7 @@ export async function citasFinalizadas(req, res) {
         res.json(citasFinalizadas);
 
     } catch (error) {
-        return res.status(403).json({ error: "No se pudo obtener la cantidad de citas finalizadas" });
+        return res.status(403).json({ message: "No se pudo obtener la cantidad de citas finalizadas" });
     }
 }
 
@@ -271,7 +280,7 @@ export async function CitaRealizar(req, res) {
         res.json(CitaRealizar);
 
     } catch (error) {
-        return res.status(401).json({ error: "No se pudo obtener la sigueinte cita a realizar" });
+        return res.status(401).json({ message: "No se pudo obtener la sigueinte cita a realizar" });
     }
 }
 
@@ -302,6 +311,6 @@ export async function ultimasCitas(req, res) {
         });
         res.json(citas);
     } catch (error) {
-        return res.status(401).json({ error: "No se pudo obtener las ultimas citas" });
+        return res.status(401).json({ message: "No se pudo obtener las ultimas citas" });
     }
 }
