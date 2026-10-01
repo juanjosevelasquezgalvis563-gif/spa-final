@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 
 export  function ActualizarDatos() {
@@ -7,7 +7,7 @@ export  function ActualizarDatos() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
-  const token = localStorage.getItem("token");
+  
  
  
 
@@ -17,9 +17,9 @@ export  function ActualizarDatos() {
     try {
       const response = await fetch("http://localhost:3000/inser/registrarr", {
         method: "PUT",
+        credentials:'include',
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           nombre,
@@ -43,9 +43,19 @@ export  function ActualizarDatos() {
         setMessage(data.message);
       }
     } catch (error) {
-      setMessage(error.message);
+      setMessage('Error de conexion con el servidor');
     }
   }
+
+  useEffect(() => {
+    if (!message) return;
+
+    const temporizador = setTimeout(() => {
+      setMessage("");
+    }, 4000);
+
+    return () => clearTimeout(temporizador);
+  }, [message]);
 
   return (
     <div className="registro-container">
