@@ -22,6 +22,10 @@ export async function empleado(req, res) {
                     attributes: ['nombre']
                 }
 
+            ],
+            order:[
+                ['fecha', 'DESC'],
+                ['hora', 'ASC']
             ]
 
         });
@@ -36,14 +40,19 @@ export async function empleado(req, res) {
 export async function citasHoy(req, res) {
     try {
         const empleadoId = req.user.id;
+        const ahora = new Date();
+        const inicioHoy = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth(), ahora.getUTCDate(), 0, 0, 0));
+        const finHoy = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth(), ahora.getUTCDate() + 1, 0, 0, 0));
 
+       
         const cantidad = await Cita.count({
             where: {
                 empleado_id: empleadoId,
+                estado: { [Op.in]: ['pendiente', 'confirmada'] },
 
                 fecha: {
-                    [Op.gte]: new Date(new Date().setHours(0, 0, 0, 0)),
-                    [Op.lt]: new Date(new Date().setHours(24, 0, 0, 0))
+                    [Op.gte]: inicioHoy,
+                    [Op.lt]: finHoy
                 }
             }
         });
