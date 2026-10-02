@@ -85,7 +85,7 @@ export async function obtenerCliente(req, res) {
             ],
 
             order: [
-                ["fecha", "ASC"],
+                ["fecha", "DESC"],
                 ["hora", "ASC"]
             ]
         });
@@ -305,7 +305,7 @@ export async function ultimasCitas(req, res) {
             ],
             order: [
                 ['fecha', 'DESC'],
-                ['hora', 'DESC']
+                ['hora', 'ASC']
             ]
 
         });
