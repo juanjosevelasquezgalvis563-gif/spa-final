@@ -4,11 +4,49 @@ import Usuario from '../models/Usuario.js';
 export async function registro(req, res) {
 
     try {
-        const { nombre, telefono, email, password } = req.body;
+        const { nombre, telefono, email, password, captchaToken } = req.body;
+
+        if (!captchaToken) {
+            return res.status(400).json({
+                message: "Completa la verificación CAPTCHA"
+            });
+        }
+
+        
+        const respuestaCaptcha = await fetch(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: new URLSearchParams({
+                    secret: process.env.TURNSTILE_SECRET_KEY,
+                    response: captchaToken
+                })
+            }
+        );
+
+        
+        if (!respuestaCaptcha.ok) {
+            return res.status(502).json({
+                message: "No se pudo verificar el CAPTCHA"
+            });
+        }
+
+        const resultadoCaptcha = await respuestaCaptcha.json();
+
+        
+        if (!resultadoCaptcha.success) {
+            return res.status(400).json({
+                message: "La verificación CAPTCHA falló"
+            });
+        }
+
 
         if (!nombre || !telefono || !email || !password) {
             return res.status(400).json({
-                error: "Todos los campos son obligatorios"
+                message: "Todos los campos son obligatorios"
             });
         }
 
@@ -45,39 +83,39 @@ export async function registro(req, res) {
 
         if (!tieneMayuscula) {
             return res.status(400).json({
-                error: "La contraseña debe tener al menos una mayúscula"
+                message: "La contraseña debe tener al menos una mayúscula"
             });
         }
         else if (!tieneMinuscula) {
             return res.status(400).json({
-                error: "La contraseña debe tener al menos una minúscula"
+                message: "La contraseña debe tener al menos una minúscula"
             });
         }
         else if (!tieneNumero) {
             return res.status(400).json({
-                error: "La contraseña debe tener al menos un número"
+                message: "La contraseña debe tener al menos un número"
             });
         }
         else if (!tieneCaracterEspecial) {
             return res.status(400).json({
-                error: "La contraseña debe tener al menos un caracter especial"
+                message: "La contraseña debe tener al menos un caracter especial"
             });
         }
         else if (password.length < 8) {
             return res.status(400).json({
-                error: "La contraseña debe tener al menos 8 caracteres"
+                message: "La contraseña debe tener al menos 8 caracteres"
             });
         }
 
         if (nombre.length < 5) {
             return res.status(400).json({
-                error: "El nombre debe tener al menos 5 caracteres"
+                message: "El nombre debe tener al menos 5 caracteres"
             });
         }
 
         if (telefono.length < 10) {
             return res.status(400).json({
-                error: "El teléfono debe tener al menos 10 caracteres"
+                messsage: "El teléfono debe tener al menos 10 caracteres"
             });
         }
 
@@ -89,7 +127,7 @@ export async function registro(req, res) {
 
         if (usuario) {
             return res.status(400).json({
-                error: "Este usuario ya está registrado en el sistema"
+                message: "Este usuario ya está registrado en el sistema"
             });
         }
 
@@ -99,7 +137,8 @@ export async function registro(req, res) {
             nombre: nombre,
             telefono: telefono,
             email: email,
-            password: hash
+            password: hash,
+            rol: 'cliente'
         });
 
         return res.status(201).json({
@@ -124,19 +163,19 @@ export async function actualizarDatos(req, res) {
 
         if (!nombre || !telefono || !email || !password) {
             return res.status(400).json({
-                error: "Para actualizar tus datos es obligatorio completar todos los campos"
+                message: "Para actualizar tus datos es obligatorio completar todos los campos"
             });
         }
 
         if (nombre.length < 5) {
             return res.status(400).json({
-                error: "El nombre debe tener al menos 5 caracteres"
+                message: "El nombre debe tener al menos 5 caracteres"
             });
         }
 
         if (telefono.length < 10) {
             return res.status(400).json({
-                error: "El teléfono debe tener al menos 10 caracteres"
+                message: "El teléfono debe tener al menos 10 caracteres"
             });
         }
 
@@ -216,7 +255,8 @@ export async function actualizarDatos(req, res) {
                 nombre: nombre,
                 telefono: telefono,
                 email: email,
-                password: hash
+                password: hash,
+                rol: 'cliente'
             },
             {
                 where: {
