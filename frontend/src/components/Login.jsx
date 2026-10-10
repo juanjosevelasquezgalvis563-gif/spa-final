@@ -1,5 +1,7 @@
+
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 
 export function Login() {
   const [email, setEmail] = useState("");
@@ -7,6 +9,16 @@ export function Login() {
   const [message, setMessage] = useState("");
 
   const navigate = useNavigate();
+
+  function redirigirUsuario(user) {
+    if (user.rol === "administrador") {
+      navigate("/admin");
+    } else if (user.rol === "cliente") {
+      navigate("/cliente");
+    } else if (user.rol === "empleado") {
+      navigate("/empleado");
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -24,22 +36,40 @@ export function Login() {
       const data = await response.json();
 
       if (response.ok) {
-        
-        if (data.user.rol === "administrador") {
-          navigate("/admin");
-
-        }
-        if (data.user.rol === "cliente") {
-          navigate("/cliente");
-        }
-        if (data.user.rol === "empleado") {
-          navigate("/empleado");
-        }
+        redirigirUsuario(data.user);
       } else {
         setMessage(data.message);
       }
     } catch (error) {
-      setMessage('Error de conexion con el servidor');
+      setMessage("Error de conexión con el servidor");
+    }
+  }
+
+  async function handleGoogleSuccess(credentialResponse) {
+    try {
+      const response = await fetch(
+        "http://localhost:3000/inser/auth/google",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            credential: credentialResponse.credential,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        redirigirUsuario(data.user);
+      } else {
+        setMessage(data.message || "No se pudo iniciar sesión con Google");
+      }
+    } catch (error) {
+      setMessage("Error de conexión con el servidor");
     }
   }
 
@@ -57,8 +87,9 @@ export function Login() {
     <div className="login-container">
       <form onSubmit={handleSubmit} className="login-form">
         <div className="login-header">
-          <h2 className="login-title">Bienvenido a Jc Alta Peluqueria</h2>
-          
+          <h2 className="login-title">
+            Bienvenido a Jc Alta Peluquería
+          </h2>
         </div>
 
         <div className="login-group">
@@ -89,11 +120,24 @@ export function Login() {
           Iniciar sesión
         </button>
 
-        
         <div className="login-footer-links">
           <Link to="/forgot-password" className="forgot-password">
             ¿Olvidaste tu contraseña?
           </Link>
+        </div>
+
+        <div className="login-google">
+          
+
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => {
+              setMessage("No se pudo iniciar sesión con Google");
+            }}
+            text="continue_with"
+            shape="rectangular"
+            width="280"
+          />
         </div>
 
         {message && <p className="login-message">{message}</p>}
