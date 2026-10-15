@@ -38,7 +38,7 @@ export function ResetPassword() {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/inser/reset-password",
+        `http://${window.location.hostname}:3000/inser/reset-password`,
         {
           method: "POST",
           headers: {
