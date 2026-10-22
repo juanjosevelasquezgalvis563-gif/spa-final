@@ -813,6 +813,13 @@ button {
     transform: translateY(-2px);
 }
 
+.login-google {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 18px;
+}
+
 .forgot-password {
     display: block;
     text-align: center;
@@ -4255,3 +4262,365 @@ button:hover {
     }
 }
 
+
+/* Fidelización */
+
+.fidelizacion {
+  margin-top: 30px;
+  display: grid;
+  gap: 22px;
+  color: #30253a;
+}
+
+.fidelizacion-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28px;
+  border-radius: 18px;
+  background: linear-gradient(120deg, #30213d, #59406a);
+  color: #fff;
+}
+
+.fidelizacion-etiqueta {
+  color: #e5ce98;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.fidelizacion-cabecera h2 {
+  margin: 10px 0;
+  font-size: 28px;
+}
+
+.fidelizacion-cabecera p {
+  margin: 0;
+  color: #e1d7e8;
+}
+
+.fidelizacion-icono {
+  font-size: 42px;
+  color: #e5ce98;
+}
+
+.puntos-resumen {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 28px;
+  border: 1px solid #e8deed;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 5px 20px rgba(48, 33, 61, 0.05);
+}
+
+.puntos-resumen span {
+  color: #75697e;
+  font-size: 14px;
+}
+
+.puntos-resumen h2 {
+  margin: 10px 0;
+  color: #6c4a82;
+  font-size: 38px;
+}
+
+.puntos-resumen p {
+  margin: 0;
+  color: #827889;
+  font-size: 13px;
+}
+
+.puntos-icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: #f5edda;
+  color: #a4833d;
+  font-size: 30px;
+}
+
+.como-ganar-puntos,
+.historial-puntos {
+  padding: 24px;
+  border: 1px solid #eee7f1;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.como-ganar-puntos h3,
+.historial-puntos h3 {
+  margin: 0 0 20px;
+  font-size: 18px;
+}
+
+.beneficio-puntos {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px 0;
+}
+
+.beneficio-puntos + .beneficio-puntos {
+  border-top: 1px solid #f0eaf3;
+}
+
+.beneficio-puntos > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #f5eff8;
+  font-size: 21px;
+}
+
+.beneficio-puntos h4,
+.movimiento-info h4 {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+.beneficio-puntos p {
+  margin: 0;
+  color: #817587;
+  font-size: 13px;
+}
+
+.movimiento-puntos {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 0;
+  border-top: 1px solid #f0eaf3;
+}
+
+.movimiento-icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #f5eff8;
+  font-size: 19px;
+}
+
+.movimiento-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.movimiento-info h4 {
+  overflow-wrap: anywhere;
+}
+
+.movimiento-info span {
+  color: #8a7f91;
+  font-size: 12px;
+}
+
+.puntos-ganados {
+  color: #27845b;
+  white-space: nowrap;
+}
+
+.puntos-restados {
+  color: #c04d52;
+  white-space: nowrap;
+}
+
+.sin-puntos {
+  padding: 20px;
+  border-radius: 12px;
+  background: #faf7fc;
+  color: #796c83;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+@media (max-width: 600px) {
+  .fidelizacion-cabecera,
+  .puntos-resumen {
+    padding: 20px;
+  }
+
+  .fidelizacion-cabecera h2 {
+    font-size: 23px;
+  }
+
+  .puntos-resumen h2 {
+    font-size: 32px;
+  }
+
+  .como-ganar-puntos,
+  .historial-puntos {
+    padding: 18px;
+  }
+}
+
+
+
+/* Sección de reseñas */
+.formulario-resena {
+    background: #ffffff;
+    padding: 28px;
+    margin-top: 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(55, 30, 75, 0.08);
+    border: 1px solid #eee5f3;
+}
+
+.formulario-resena h2 {
+    color: #43265e;
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.formulario-resena > p {
+    color: #777;
+    margin-bottom: 20px;
+}
+
+/* Etiquetas */
+.formulario-resena label {
+    display: block;
+    color: #43265e;
+    font-weight: 600;
+    margin: 18px 0 8px;
+}
+
+/* Selector de citas */
+.formulario-resena select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ded2e8;
+    border-radius: 8px;
+    background: #fff;
+    color: #333;
+    font-size: 14px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.formulario-resena select:focus {
+    border-color: #8054a6;
+}
+
+/* Estrellas de calificación */
+.estrellas-resena {
+    display: flex;
+    gap: 8px;
+    margin: 5px 0 15px;
+}
+
+.estrellas-resena button {
+    background: transparent;
+    border: none;
+    color: #d4a72c;
+    font-size: 32px;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.2s;
+}
+
+.estrellas-resena button:hover {
+    transform: scale(1.15);
+}
+
+/* Campo del comentario */
+.formulario-resena textarea {
+    width: 100%;
+    min-height: 110px;
+    padding: 12px;
+    border: 1px solid #ded2e8;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    resize: vertical;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.formulario-resena textarea:focus {
+    border-color: #8054a6;
+}
+
+/* Botón publicar */
+.formulario-resena > button {
+    margin-top: 18px;
+    padding: 12px 22px;
+    background: #563475;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.formulario-resena > button:hover {
+    background: #704794;
+}
+
+/* Reseñas publicadas */
+.resenas-publicadas {
+    margin-top: 35px;
+    padding-top: 22px;
+    border-top: 1px solid #eee5f3;
+}
+
+.resenas-publicadas h3 {
+    color: #43265e;
+    font-size: 19px;
+    margin-bottom: 18px;
+}
+
+.resenas-publicadas > div {
+    background: #faf7fc;
+    border: 1px solid #eee5f3;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.resenas-publicadas > div p:first-child {
+    color: #d4a72c;
+    font-size: 20px;
+    letter-spacing: 2px;
+    margin: 0 0 10px;
+}
+
+.resenas-publicadas > div p:last-child {
+    color: #555;
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+/* Adaptación para celulares */
+@media (max-width: 600px) {
+    .formulario-resena {
+        padding: 18px;
+        margin-top: 20px;
+    }
+
+    .formulario-resena h2 {
+        font-size: 21px;
+    }
+
+    .estrellas-resena button {
+        font-size: 28px;
+    }
+
+    .formulario-resena > button {
+        width: 100%;
+    }
+}
