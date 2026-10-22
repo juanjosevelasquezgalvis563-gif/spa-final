@@ -1,6 +1,7 @@
 import Cita from '../models/citas.js';
 import Servicio from '../models/servicios.js';
 import Usuario from '../models/Usuario.js';
+import MovimientoPuntos from '../models/MovimientoPuntos.js';
 import { Op } from "sequelize";
 
 export async function empleado(req, res) {
@@ -193,38 +194,74 @@ export async function cancelarCita(req, res) {
 
 }
 
+
 export async function finalizarCita(req, res) {
     try {
         const empleadoId = req.user.id;
         const id = req.params.id;
-        const finalizarCita = await Cita.findOne({
-            where:{
-                id:id,
-                empleado_id:empleadoId
+
+        const cita = await Cita.findOne({
+            where: {
+                id: id,
+                empleado_id: empleadoId
             }
         });
 
-        if (!finalizarCita) {
-            return res.status(404).json({ message: 'Cita no encontrada' });
+        if (!cita) {
+            return res.status(404).json({
+                message: 'Cita no encontrada'
+            });
         }
+
+        if (cita.estado !== 'confirmada') {
+            return res.status(400).json({
+                message: 'La cita debe estar confirmada'
+            });
+        }
+
+        const servicio = await Servicio.findByPk(cita.servicio_id);
+
+        if (!servicio) {
+            return res.status(404).json({
+                message: 'Servicio no encontrado'
+            });
+        }
+
         await Cita.update(
-            {
-                estado: 'finalizada'
-            },
+            { estado: 'finalizada' },
             {
                 where: {
                     id: id,
                     empleado_id: empleadoId
                 }
             }
-
         );
 
-        return res.status(200).json({ message: 'Cita finalizada' });
+        const puntos = Math.floor(Number(servicio.precio) / 1000);
+
+        if (puntos > 0) {
+            await MovimientoPuntos.create({
+                usuario_id: cita.usuario_id,
+                cita_id: cita.id,
+                tipo: 'acumulacion',
+                puntos: puntos,
+                descripcion: `Puntos por el servicio: ${servicio.nombre}`
+            });
+        }
+
+        return res.status(200).json({
+            message: 'Cita finalizada',
+            puntos_ganados: puntos
+        });
+
     } catch (error) {
-        return res.status(500).json({ message: 'Error al finalizar la cita' });
+        console.error(error);
+        return res.status(500).json({
+            message: 'Error al finalizar la cita'
+        });
     }
 }
+
 
 export async function citaRealizarEmpleado(req, res) {
     try {

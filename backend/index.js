@@ -6,20 +6,26 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import authRoutes from "./src/routes/routes.js";
 import db from "./src/config/db.js";
+import { iniciarRecordatorios } from "./src/controllers/recordatorios.js";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(helmet());
-
+app.use(
+  helmet({
+    crossOriginOpenerPolicy: {
+      policy: "same-origin-allow-popups",
+    },
+  })
+);
 app.use(cors({
     origin: [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
-        `http://${process.env.FRONTEND_IP || "192.168.1.4"}:5173`
-    ],
+        process.env.FRONTEND_URL
+    ].filter(Boolean),
     credentials: true
 }));
 
@@ -42,6 +48,11 @@ try {
     app.listen(PORT, () => {
         console.log(`Servidor backend activo en http://localhost:${PORT}`);
     });
+
+     
+    iniciarRecordatorios();
+
+    console.log("Recordatorios automáticos iniciados");
 
 } catch (error) {
     console.error("Error al conectar con la base de datos:", error);

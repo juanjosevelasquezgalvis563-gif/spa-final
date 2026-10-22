@@ -1,7 +1,7 @@
 import {Router} from "express";
 import { registro } from "../controllers/RegistroController.js";
 import {actualizarDatos} from "../controllers/RegistroController.js";
-import {login, me} from "../controllers/LoginController.js";
+import {login, me,loginGoogle} from "../controllers/LoginController.js";
 
 import {middleware} from "../middlewares/middleware.js";
 
@@ -29,6 +29,10 @@ import {citasFinalizadas} from "../controllers/ClienteController.js";
 import { CitaRealizar } from "../controllers/ClienteController.js";
 import { ultimasCitas } from "../controllers/ClienteController.js";
 import { middlewareCliente } from "../middlewares/middlewareCliente.js";
+import { crearResena } from "../controllers/ReseñaController.js";
+import { obtenerResenas } from "../controllers/ReseñaController.js";
+import { obtenerFidelizacion } from "../controllers/FidelizacionController.js";
+import { obtenerCitasParaResena } from "../controllers/ClienteController.js";
 
 import {admin} from "../controllers/AdminController.js";
 import {middlewareAdmin} from "../middlewares/middlewareAdmin.js";
@@ -42,11 +46,25 @@ import { historialCompras } from "../controllers/AdminController.js";
 
 import { forgotPassword } from "../controllers/RecuperaPassword.js";
 import { resetPassword } from "../controllers/RecuperaPassword.js";
+import {
+    forgotPasswordIpLimiter,
+    forgotPasswordEmailLimiter
+} from "../middlewares/rateLimiter.js";
+import rateLimit from "express-rate-limit";
 
 
 
 
 const router = Router();
+
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    message:{
+        message: "Demasiadas solicitudes. Intenta de nuevo en 15 minutos."
+    }
+})
 
 
 
@@ -54,7 +72,8 @@ router.post('/registrar', registro);
 router.put('/registrarr',middleware,actualizarDatos);
 
 
-router.post('/login', login);
+router.post('/login',loginLimiter, login);
+router.post('/auth/google', loginGoogle);
 router.get('/me', middleware, me);
 router.post("/logout", (req, res) => {
     res.clearCookie("token");
@@ -76,6 +95,10 @@ router.get('/cliente/citasComfirmadas',middlewareCliente,citasConfirmadas);
 router.get('/cliente/citasFinalizadas',middlewareCliente,citasFinalizadas);
 router.get('/cliente/citaRealizar',middlewareCliente,CitaRealizar);
 router.get('/cliente/ultimasCitas',middlewareCliente,ultimasCitas);
+router.post("/cliente/resenas", middlewareCliente, crearResena);
+router.get("/cliente/resenas",middlewareCliente, obtenerResenas);
+router.get("/cliente/fidelizacion", middlewareCliente, obtenerFidelizacion);
+router.get("/cliente/citasParaResena",middlewareCliente,obtenerCitasParaResena);
 
 router.get('/empleado',middlewareEmpleado,empleado);
 router.put('/empleado/comfirmar/:id',middlewareEmpleado,comfirmarCita);
@@ -98,7 +121,12 @@ router.get('/administrador/historialCompras',middlewareAdmin,historialCompras);
 
 
 
-router.post('/forgot-password', forgotPassword);
+router.post(
+    '/forgot-password',
+    forgotPasswordEmailLimiter,
+    forgotPasswordIpLimiter,
+    forgotPassword
+);
 router.post('/reset-password', resetPassword);
 
 

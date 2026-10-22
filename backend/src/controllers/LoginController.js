@@ -1,4 +1,3 @@
-
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import Usuario from "../models/Usuario.js";
@@ -55,11 +54,13 @@ export async function login(req, res) {
         });
 
         return res.json({
+            token,
             user: {
                 id: user.id,
                 nombre: user.nombre,
                 email: user.email,
                 rol: user.rol
+                
             }
         });
 

@@ -10,12 +10,12 @@ const Usuario = db.define("Usuario", {
 
     nombre: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
 
     telefono: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
 
     email: {

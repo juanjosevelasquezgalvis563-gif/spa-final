@@ -1,6 +1,7 @@
 import Servicio from '../models/servicios.js';
 import Cita from '../models/citas.js';
 import Usuario from '../models/Usuario.js';
+import Resena from '../models/reseña.js';
 import { Op } from "sequelize";
 
 
@@ -17,29 +18,39 @@ export async function servicios(req, res) {
     }
 }
 
-export async function cliente(req, res) {
 
+export async function cliente(req, res) {
     try {
         const usuarioId = req.user.id;
         const { fecha, hora, empleado_id, servicio_id } = req.body;
 
         if (!fecha || !hora || !empleado_id || !servicio_id) {
-            return res.status(400).json({ message: 'Todos los campos son requeridos' });
+            return res.status(400).json({
+                message: "Todos los campos son requeridos"
+            });
         }
 
-        const horaNormalizada = `${hora.length === 5 ? hora + ':00' : hora}`;
+        const horaNormalizada = hora.length === 5
+            ? `${hora}:00`
+            : hora;
 
+        // Verificar si el empleado ya tiene una cita
+        // en esa misma fecha y hora.
         const horaExistente = await Cita.findOne({
             where: {
+                fecha,
                 hora: horaNormalizada,
-                fecha: fecha,
-                empleado_id: empleado_id,
-                estado: { [Op.in]: ['pendiente', 'confirmada'] }
+                empleado_id,
+                estado: {
+                    [Op.in]: ["pendiente", "confirmada"]
+                }
             }
         });
 
         if (horaExistente) {
-            return res.status(400).json({ message: 'El empleado ya tiene una cita a esa hora, Por favor ingresa otra hora' });
+            return res.status(400).json({
+                message: "El empleado ya tiene una cita a esa hora. Por favor, elige otra hora."
+            });
         }
 
         await Cita.create({
@@ -48,19 +59,28 @@ export async function cliente(req, res) {
             usuario_id: usuarioId,
             empleado_id,
             servicio_id,
-            estado: 'pendiente'
+            estado: "pendiente"
         });
 
-        return res.status(201).json({ message: 'Cita creada exitosamente' });
+        return res.status(201).json({
+            message: "Cita creada exitosamente"
+        });
 
     } catch (error) {
-        
-        if (error.name === 'SequelizeUniqueConstraintError') {
-            return res.status(400).json({ message: 'El empleado ya tiene una cita a esa hora, Por favor ingresa otra hora' });
+        console.error("Error al crear la cita:", error);
+
+        if (error.name === "SequelizeUniqueConstraintError") {
+            return res.status(400).json({
+                message: "El empleado ya tiene una cita a esa hora. Por favor, elige otra hora."
+            });
         }
-        return res.status(500).json({ message: 'No se pudo crear la cita' });
+
+        return res.status(500).json({
+            message: "No se pudo crear la cita"
+        });
     }
 }
+
 
 export async function obtenerCliente(req, res) {
     try {
@@ -313,4 +333,52 @@ export async function ultimasCitas(req, res) {
     } catch (error) {
         return res.status(401).json({ message: "No se pudo obtener las ultimas citas" });
     }
+}
+
+
+export async function obtenerCitasParaResena(req, res) {
+  try {
+    const usuarioId = req.user.id;
+
+    const citas = await Cita.findAll({
+      where: {
+        usuario_id: usuarioId,
+        estado: "finalizada"
+      },
+      include: [
+        {
+          model: Servicio,
+          attributes: ["nombre"]
+        }
+      ],
+      order: [
+        ["fecha", "DESC"],
+        ["hora", "DESC"]
+      ]
+    });
+
+    const resenas = await Resena.findAll({
+      where: {
+        usuario_id: usuarioId
+      },
+      attributes: ["cita_id"]
+    });
+
+    const citasCalificadas = resenas.map(
+      (resena) => Number(resena.cita_id)
+    );
+
+    const citasSinResena = citas.filter(
+      (cita) => !citasCalificadas.includes(Number(cita.id))
+    );
+
+    return res.status(200).json(citasSinResena);
+
+  } catch (error) {
+    console.error("Error al consultar citas para reseña:", error);
+
+    return res.status(500).json({
+      message: "Error al consultar las citas para calificar"
+    });
+  }
 }

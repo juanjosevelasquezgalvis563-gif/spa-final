@@ -1,16 +1,19 @@
-# React + Vite
+# Proyecto de agendamiento de citas y control de inventario de un spa
+Error 1:Al principio se podia registrar usuarios ya registrados,osea un email que estaba regitrado en la base de datos se podia volver a registrar otra vez.Lo solucione haciendo una consulta trayendo id de la db con email y haviendo la validacion si usuario esta mas de una vez osea es mayor a 1 que devuelva un mensaje que ese usuario ya esta registrado.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Error 2:Error de envio de datos podia ingresar el nombre y darle registrar y quedaba guardado correctamente.Pero lo solucione agregando validaciones para campo diciendo que el campo es obligatorio y que no puede estar vacio.
 
-Currently, two official plugins are available:
+Error 3:errores de validacion de datos al principio,no tenia una cantidad limitad de caracteres para el ingreso de un nombre,y no tenia una cantidad de caracteres para la contraseña pues se podia agregar infinidades de caracteres.
+Lo solucione agregando validaciones de minimo cuantos caracteres podia ingresar en el nombre y la contraseña.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Error 4: Error de roles en el acceso de rutas,al principio se podia acceder a todas las rutas sin importar el rol que tenia el usuario,lo solucione agregando validaciones de roles para que solo los usuarios con rol clientes podian acceder a las rutas de clientes,que solo los usuarios con rol administrador podian acceder a las rutas de administrador y que solo los usuarios con rol empleado podian acceder a las rutas de empleado.
 
-## React Compiler
+Error 5:Error al  momento de agendar una cita,al ´principio se podia agendar una cita sin importar si a esa hora ya estaba agendada una cita,lo solucione agregando validaciones de horario para que no se pudiera agendar una cita en una hora que ya estaba agendada.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Error 6:Error al momento de cancelar una cita sin importar el estado en el que se encontrara por ejemplo uan cita en estado finalizada ya no se puede cancelar y hice la prueba y si se podia cancelar sin importar ya su estado finalizado.
 
-## Expanding the ESLint configuration
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+
+
+
