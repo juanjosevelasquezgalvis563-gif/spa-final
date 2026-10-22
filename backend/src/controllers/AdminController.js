@@ -112,7 +112,6 @@ export async function productosDelete(req, res) {
 
 
 
-
 export async function comprasAdmin(req, res) {
     try {
 
