@@ -12,7 +12,7 @@ export function Hero() {
 
         <h1>
           Descubre tu mejor versión en
-          <span> JC Alta Peluquería</span>
+          <span> JC Alta Peluquería </span>
         </h1>
 
         <p>
