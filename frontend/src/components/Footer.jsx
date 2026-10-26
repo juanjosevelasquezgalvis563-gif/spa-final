@@ -1,4 +1,5 @@
 import React from 'react';
+import logo from '../assets/image.png';
 
 
 export default function Footer() {
@@ -8,7 +9,11 @@ export default function Footer() {
 
         <div className="footer-brand">
           <span className="footer-tagline">Belleza, Cosmetica y cuidado personal</span>
-          <h2> JC ALTA PELUQUERIA</h2>
+          <img
+           src={logo}
+           alt="Logo de JC Alta Peluquería"
+           className="logo-peluqueria"
+          />
           <div className="footer-line"></div>
           <p>
             Creamos experiencias de belleza pensadas para
