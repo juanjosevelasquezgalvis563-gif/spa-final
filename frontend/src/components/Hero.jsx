@@ -7,9 +7,7 @@ export function Hero() {
   return (
     <section className="hero" id="inicio">
       <div className="hero-content">
-        <span className="hero-tag">
-          ✨ Belleza • Estilo • Elegancia
-        </span>
+        
 
         <h1>
           Descubre tu mejor versión en
