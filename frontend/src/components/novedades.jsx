@@ -49,7 +49,7 @@ export default function Novedades() {
 
       <a
         className="novedades-instagram"
-        href="https://www.instagram.com/"
+        href="https://www.instagram.com/jennifer_.correa/"
         target="_blank"
         rel="noreferrer"
       >
