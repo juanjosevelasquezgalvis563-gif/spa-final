@@ -1,5 +1,8 @@
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
+import imagenBelleza1 from '../assets/carousel1.jpg';
+import imagenBelleza2 from '../assets/carousel2.jpg';
+import imagenBelleza3 from '../assets/carousel3.jpg';
 
 import 'swiper/css';
 import 'swiper/css/pagination';
@@ -7,15 +10,15 @@ import 'swiper/css/pagination';
 function Carousel() {
   const slides = [
     {
-      image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1600',
+      image: imagenBelleza1,
       title: 'Belleza y Elegancia',
     },
     {
-      image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=1600',
+      image: imagenBelleza2,
       title: 'Spa & Relajación',
     },
     {
-      image: 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=1600',
+      image: imagenBelleza3,
       title: 'Transforma tu Estilo',
     },
   ];
@@ -28,8 +31,9 @@ function Carousel() {
         <h2>Un ambiente pensado para ti</h2>
 
         <p>
-          Cada rincón de Velure Spa está diseñado para que disfrutes
-          una experiencia relajante, elegante y completamente personalizada.
+          En Velure Spa, creemos que el bienestar es un arte. Por eso, hemos diseñado cada uno de nuestros rincones 
+          para ofrecerte una experiencia distinguida y profundamente relajante.
+          Conéctate con la tranquilidad y déjate consentir.
         </p>
       </div>
 
