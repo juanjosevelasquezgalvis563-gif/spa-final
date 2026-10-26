@@ -11,15 +11,15 @@ function Carousel() {
   const slides = [
     {
       image: imagenBelleza1,
-      title: 'Belleza y Elegancia',
+      title: 'Corte, Cepillado y Quimicos',
     },
     {
       image: imagenBelleza2,
-      title: 'Spa & Relajación',
+      title: 'Manicure y Pedicure',
     },
     {
       image: imagenBelleza3,
-      title: 'Transforma tu Estilo',
+      title: 'Masajes, Limpieza Facial y Tratamientos Corporales',
     },
   ];
 
