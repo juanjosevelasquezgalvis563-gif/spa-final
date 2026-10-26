@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import videoSpa from '../assets/video-inicio.mp4';
 
 export function Hero() {
   const navigate = useNavigate();
@@ -47,12 +48,15 @@ export function Hero() {
       </div>
 
       <div className="hero-image">
-        <img
-          src="https://images.unsplash.com/photo-1562322140-8baeececf3df?w=900&q=80"
+        <video
+          src= {videoSpa}
           alt="JC Alta Peluquería"
           loading="lazy"
-          width="900"
-          height="1125"
+          width="350"
+          height="350"
+          autoPlay
+          muted
+          loop
         />
 
         <div className="hero-badge">
