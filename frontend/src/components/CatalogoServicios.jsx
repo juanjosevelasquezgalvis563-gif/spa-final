@@ -1,52 +1,61 @@
+import DiseñoColorVideo from "../assets/diseños-color.mp4";
+import CorteCepilladoVideo from "../assets/corte-cepillado.mp4";
+import LimpiezaFacialVideo from "../assets/limpieza-facial.mp4";
+import KeratinaVideo from "../assets/keratina.mp4";
+import MaquillajeVideo from "../assets/maquillaje.mp4";
+import UñasManicureVideo from "../assets/uñas.jpeg";
+
+
+
 
 const servicios = [
-  {
+   {
     id: 1,
-    nombre: "Diseños De Color",
+    nombre: "Diseños de Color",
     descripcion:
-      "Cortes modernos y clásicos, adaptados a tu estilo y personalidad.",
+      "Dale vida a tu cabello con tonos, iluminaciones y cambios de color que resaltan tu belleza y estilo.",
     precio: "",
-    video: "",
+    video: DiseñoColorVideo,
   },
   {
     id: 2,
     nombre: "Corte y Cepillado",
     descripcion:
-      "Cortes con acabados detallados y estilos para cada ocasión.",
+      "Renueva tu imagen con cortes personalizados y un cepillado profesional para lucir un cabello hermoso y con movimiento.",
     precio: "",
-    video: "",
+    video: CorteCepilladoVideo,
   },
   {
     id: 3,
     nombre: "Limpieza Facial",
     descripcion:
-      "Perfilado y definición para una barba limpia y bien cuidada.",
+      "Consiente tu piel con una limpieza facial que ayuda a eliminar impurezas y deja tu rostro con una apariencia fresca y cuidada.",
     precio: "",
-    video: "",
+    video: LimpiezaFacialVideo,
   },
   {
     id: 4,
     nombre: "Keratina",
     descripcion:
-      "Encuentra un estilo que se adapte a tu imagen y personalidad.",
+      "Disfruta de un cabello más suave, manejable y brillante con un tratamiento diseñado para ayudar a controlar el frizz.",
     precio: "",
-    video: "",
+    video: KeratinaVideo,
   },
   {
     id: 5,
     nombre: "Maquillaje",
     descripcion:
-      "Encuentra un estilo que se adapte a tu imagen y personalidad.",
+      "Resalta tus facciones con un maquillaje que complemente tu estilo y te haga lucir espectacular en cada ocasión.",
     precio: "",
-    video: "",
+    video: MaquillajeVideo,
   },
   {
     id: 6,
     nombre: "Uñas y Manicure",
     descripcion:
-      "Encuentra un estilo que se adapte a tu imagen y personalidad.",
+      "Dale un toque especial a tus manos con el cuidado de tus uñas, acabados delicados y diseños que reflejan tu personalidad.",
     precio: "",
-    video: "",
+    imagen: UñasManicureVideo,
   },
 ];
 
@@ -77,6 +86,8 @@ export default function CatalogoServicios() {
                   playsInline
                   preload="metadata"
                 />
+              ) : servicio.imagen ? (
+                <img src={servicio.imagen} alt={servicio.nombre} />
               ) : (
                 <div className="catalogo-video-vacio">
                   <span className="catalogo-play">▶</span>
