@@ -71,7 +71,7 @@ function About() {
               <span className="about-caption-icon">✧</span>
               <div>
                 <span className="about-caption-title">
-                  La experiencia Velure
+                  La experiencia JC Alta Peluquería
                 </span>
                 <span className="about-caption-subtitle">
                   Un momento solo para ti
