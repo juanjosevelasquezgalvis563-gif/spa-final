@@ -3,6 +3,7 @@ import Carousel from './components/Carousel';
 import logo from './assets/image.png';
 import Footer from './components/Footer';
 import About from "./components/About.jsx";
+import CatalogoServicios from "./components/CatalogoServicios";
 import Novedades from './components/novedades';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -54,6 +55,7 @@ function App() {
       <main>
         <Hero />
         <About />
+        <CatalogoServicios />
         <Carousel />
         <Novedades />
       </main>
