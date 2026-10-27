@@ -15,10 +15,10 @@ export function Hero() {
         </h1>
 
         <p>
-          En JC Alta Peluquería ofrecemos una experiencia diseñada
-          para resaltar tu belleza y bienestar. Conoce nuestros servicios,
-          tratamientos capilares, cortes modernos y atención profesional en un
-          espacio pensado para ti.
+          En JC Alta Peluquería, realzamos tu belleza con servicios diseñados para ti. 
+          Descubre nuestros tratamientos capilares, diseños de color, cortes modernos, 
+          maquillaje y cuidado personal, con atención profesional y dedicación en cada detalle.
+          ¡Regálate una experiencia de belleza y bienestar que te haga brillar!
         </p>
 
         <div className="hero-buttons">
@@ -60,10 +60,7 @@ export function Hero() {
         <div className="hero-badge">
           <span className="hero-badge-icon" aria-hidden="true">✦</span>
 
-          <div>
-            <strong>Velure Spa</strong>
-            <span>JC Alta Peluquería</span>
-          </div>
+          
         </div>
       </div>
     </section>
