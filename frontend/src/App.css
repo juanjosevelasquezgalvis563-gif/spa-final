@@ -661,10 +661,10 @@ button {
     gap: clamp(36px, 5vw, 68px);
     padding: clamp(104px, 12vw, 140px) max(24px, calc((100% - var(--container)) / 2)) clamp(56px, 7vw, 90px);
     background:
-        radial-gradient(circle at 10% 20%, rgba(232, 221, 245, .9), transparent 42%),
-        radial-gradient(circle at 92% 85%, rgba(212, 175, 55, .18), transparent 45%),
-        linear-gradient(180deg, #FFFFFF 0%, var(--cream) 100%);
-    border-bottom: 1px solid rgba(43, 24, 63, .06);
+        radial-gradient(circle at 10% 20%, rgba(235, 235, 235, .7), transparent 42%),
+        radial-gradient(circle at 92% 85%, rgba(0, 0, 0, .04), transparent 45%),
+        linear-gradient(180deg, #FFFFFF 0%, #F7F7F7 100%);
+    border-bottom: 1px solid rgba(0, 0, 0, .08);
     scroll-margin-top: 90px;
 }
 
@@ -672,21 +672,25 @@ button {
     max-width: 620px;
 }
 
+/* ===== ETIQUETA SUPERIOR ===== */
+
 .hero-tag {
     display: inline-flex;
     align-items: center;
     gap: 10px;
     padding: 8px 18px;
     border-radius: var(--radius-pill);
-    background: var(--white);
-    border: 1px solid rgba(212, 175, 55, .45);
+    background: #FFFFFF;
+    border: 1px solid #DDDDDD;
     box-shadow: var(--shadow-sm);
-    color: var(--gold-deep);
+    color: #333333;
     font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 2.2px;
 }
+
+/* ===== TÍTULO ===== */
 
 .hero h1 {
     font-family: var(--font-display);
@@ -694,26 +698,30 @@ button {
     font-weight: 700;
     line-height: 1.08;
     letter-spacing: -1px;
-    color: var(--plum);
+    color: #111111;
     margin: 24px 0 20px;
 }
 
 .hero h1 span {
     display: inline-block;
-    background: linear-gradient(120deg, var(--gold-light) 0%, var(--gold-deep) 100%);
+    background: linear-gradient(120deg, #666666 0%, #111111 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
     font-style: italic;
 }
 
+/* ===== DESCRIPCIÓN ===== */
+
 .hero p {
     max-width: 55ch;
     font-size: clamp(1rem, 1.3vw, 1.125rem);
     line-height: 1.85;
-    color: var(--muted);
+    color: #555555;
     margin-bottom: 32px;
 }
+
+/* ===== BOTONES ===== */
 
 .hero-buttons {
     display: flex;
@@ -738,26 +746,29 @@ button {
 }
 
 .btn-primary {
-    border: none;
-    background: linear-gradient(135deg, var(--plum-soft), var(--plum));
-    color: var(--white);
-    box-shadow: var(--shadow-md);
+    border: 1px solid #111111;
+    background: #111111;
+    color: #FFFFFF;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .12);
 }
 
 .btn-primary:hover {
+    background: #333333;
+    border-color: #333333;
     transform: translateY(-3px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .16);
 }
 
 .btn-secondary {
-    border: 1px solid rgba(43, 24, 63, .16);
-    background: rgba(255, 255, 255, .8);
-    color: var(--plum);
+    border: 1px solid #CCCCCC;
+    background: rgba(255, 255, 255, .9);
+    color: #111111;
 }
 
 .btn-secondary:hover {
-    border-color: var(--gold);
-    color: var(--gold-deep);
+    border-color: #111111;
+    color: #111111;
+    background: #F1F1F1;
     transform: translateY(-3px);
     box-shadow: var(--shadow-sm);
 }
@@ -766,6 +777,8 @@ button {
 .btn-secondary:active {
     transform: translateY(0);
 }
+
+/* ===== IMAGEN ===== */
 
 .hero-image {
     position: relative;
@@ -778,8 +791,8 @@ button {
     position: absolute;
     inset: 10% -5% -7% 10%;
     border-radius: 58% 42% 46% 54%;
-    background: linear-gradient(135deg, var(--gold-light), var(--gold) 60%, var(--gold-deep));
-    opacity: .22;
+    background: linear-gradient(135deg, #EEEEEE, #CCCCCC 60%, #999999);
+    opacity: .35;
 }
 
 .hero-image img {
@@ -790,13 +803,15 @@ button {
     height: auto;
     object-fit: cover;
     border-radius: 28px;
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 20px 45px rgba(0, 0, 0, .14);
     transition: var(--t-slow);
 }
 
 .hero-image img:hover {
     transform: translateY(-6px);
 }
+
+/* ===== ETIQUETA SOBRE LA IMAGEN ===== */
 
 .hero-badge {
     position: absolute;
@@ -807,11 +822,11 @@ button {
     gap: 14px;
     padding: 14px 22px;
     border-radius: var(--radius-md);
-    background: rgba(255, 255, 255, .92);
+    background: rgba(255, 255, 255, .95);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(212, 175, 55, .3);
-    box-shadow: var(--shadow-md);
+    border: 1px solid #E0E0E0;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, .10);
     animation: float 5s ease-in-out infinite;
 }
 
@@ -822,8 +837,8 @@ button {
     height: 42px;
     flex: none;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--gold-light), var(--gold-deep));
-    color: var(--white);
+    background: #EEEEEE;
+    color: #111111;
     font-size: 18px;
 }
 
@@ -832,18 +847,19 @@ button {
     font-family: var(--font-display);
     font-size: 20px;
     line-height: 1.1;
-    color: var(--plum);
+    color: #111111;
 }
 
 .hero-badge span:last-child {
     font-size: 11.5px;
-    color: var(--muted);
+    color: #666666;
     text-transform: uppercase;
     letter-spacing: 1.4px;
 }
 
-@keyframes float {
+/* ===== ANIMACIÓN ===== */
 
+@keyframes float {
     0%,
     100% {
         transform: translateY(0);
@@ -853,6 +869,8 @@ button {
         transform: translateY(-10px);
     }
 }
+
+/* ===== CARACTERÍSTICAS ===== */
 
 .hero-features {
     display: grid;
@@ -867,9 +885,9 @@ button {
     gap: 10px;
     padding: 12px 18px;
     border-radius: var(--radius-sm);
-    background: rgba(255, 255, 255, .75);
-    border: 1px solid rgba(43, 24, 63, .07);
-    color: var(--plum);
+    background: rgba(255, 255, 255, .9);
+    border: 1px solid #E5E5E5;
+    color: #222222;
     font-size: 14px;
     font-weight: 500;
 }
@@ -882,12 +900,13 @@ button {
     height: 22px;
     flex: none;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--gold-light), var(--gold-deep));
-    color: var(--white);
+    background: #111111;
+    color: #FFFFFF;
     font-size: 12px;
     font-weight: 700;
 }
-/* ESTADÍSTICAS */
+
+/* ===== ESTADÍSTICAS ===== */
 
 .hero-stats {
     display: flex;
@@ -896,7 +915,7 @@ button {
     margin: 40px 0 0;
     padding: 26px 0 0;
     list-style: none;
-    border-top: 1px solid rgba(43, 24, 63, .1);
+    border-top: 1px solid #E0E0E0;
 }
 
 .hero-stats li {
@@ -910,20 +929,16 @@ button {
     font-size: 30px;
     font-weight: 700;
     line-height: 1;
-    color: var(--plum);
+    color: #111111;
 }
 
 .hero-stats span {
     font-size: 12.5px;
     font-weight: 500;
-    color: var(--muted);
+    color: #666666;
     text-transform: uppercase;
     letter-spacing: 1.1px;
 }
-
-
-
-
 /* =========================================================
   
 /* ==========================================
@@ -1762,8 +1777,8 @@ button {
 
 .servicio-button {
     border: none;
-    background: #5b35e5;
-    color: white;
+    background: white;
+    color: black;
     padding: 10px 20px;
     border-radius: 9px;
     font-family: 'Poppins', sans-serif;
@@ -1827,7 +1842,7 @@ button {
 
 .cita-input:focus {
     outline: none;
-    border-color: #5b35e5;
+    border-color: white;
     box-shadow: 0 0 0 3px rgba(91, 53, 229, 0.10);
 }
 
@@ -1842,8 +1857,8 @@ button {
     margin-top: 5px;
     border: none;
     border-radius: 10px;
-    background: #5b35e5;
-    color: white;
+    background:white;
+    color: black;
     font-family: 'Poppins', sans-serif;
     font-size: 15px;
     font-weight: 600;
@@ -5312,8 +5327,8 @@ button:hover {
   position: relative;
   width: 100%;
   padding: 100px 7% 80px;
-  background: #faf9f5;
-  color: #39483b;
+  background: #ffffff;
+  color: #111111;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -5336,7 +5351,7 @@ button:hover {
 .about-eyebrow {
   display: inline-block;
   margin-bottom: 24px;
-  color: #879477;
+  color: #666666;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 4px;
@@ -5348,12 +5363,12 @@ button:hover {
   font-size: clamp(36px, 4vw, 54px);
   line-height: 1.18;
   font-weight: 400;
-  color: #39483b;
+  color: #111111;
   text-align: left;
 }
 
 .about-title span {
-  color: #849477;
+  color: #555555;
   font-style: italic;
 }
 
@@ -5361,19 +5376,19 @@ button:hover {
   width: 65px;
   height: 2px;
   margin: 28px 0;
-  background: #a9b49b;
+  background: #222222;
 }
 
 .about-intro {
   margin-bottom: 12px;
   font-size: 17px;
   font-weight: 600;
-  color: #59694f;
+  color: #222222;
 }
 
 .about-description {
   margin: 0 0 18px;
-  color: #72776c;
+  color: #444444;
   font-size: 15px;
   line-height: 1.95;
   text-align: left;
@@ -5382,8 +5397,8 @@ button:hover {
 .about-quote {
   margin: 28px 0;
   padding-left: 18px;
-  border-left: 2px solid #a9b49b;
-  color: #68775e;
+  border-left: 2px solid #777777;
+  color: #444444;
   font-family: Georgia, "Times New Roman", serif;
   font-size: 17px;
   font-style: italic;
@@ -5398,18 +5413,22 @@ button:hover {
   justify-content: center;
   gap: 22px;
   padding: 15px 24px;
-  border: 1px solid #75866a;
+  border: 1px solid #111111;
   border-radius: 40px;
-  background: #75866a;
-  color: #fff;
+  background: #111111;
+  color: #ffffff;
   font-size: 13px;
   letter-spacing: 0.4px;
   cursor: pointer;
-  transition: background 0.3s ease, transform 0.3s ease;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease,
+    transform 0.3s ease;
 }
 
 .about-button:hover {
-  background: #435542;
+  background: #444444;
+  color: #ffffff;
   transform: translateY(-3px);
 }
 
@@ -5430,10 +5449,10 @@ button:hover {
   position: relative;
   width: 100%;
   padding: 12px;
-  border: 1px solid #e4e5d9;
+  border: 1px solid #dddddd;
   border-radius: 230px 230px 24px 24px;
-  background: #fff;
-  box-shadow: 0 20px 55px rgba(57, 72, 59, 0.10);
+  background: #ffffff;
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.10);
   box-sizing: border-box;
 }
 
@@ -5443,7 +5462,7 @@ button:hover {
   aspect-ratio: 4 / 5;
   object-fit: cover;
   border-radius: 220px 220px 16px 16px;
-  background: #e8ede3;
+  background: #f5f5f5;
 }
 
 .about-video-caption {
@@ -5462,8 +5481,8 @@ button:hover {
   height: 40px;
   flex-shrink: 0;
   border-radius: 50%;
-  background: #eef0e8;
-  color: #75866a;
+  background: #f0f0f0;
+  color: #222222;
   font-size: 22px;
 }
 
@@ -5474,13 +5493,13 @@ button:hover {
 
 .about-caption-title {
   margin-bottom: 5px;
-  color: #435542;
+  color: #111111;
   font-family: Georgia, "Times New Roman", serif;
   font-size: 15px;
 }
 
 .about-caption-subtitle {
-  color: #898d82;
+  color: #666666;
   font-size: 12px;
 }
 
@@ -5494,17 +5513,17 @@ button:hover {
   align-items: center;
   gap: 10px;
   padding: 15px 20px;
-  border: 1px solid #ecebe2;
+  border: 1px solid #dddddd;
   border-radius: 40px;
-  background: #fffefa;
-  color: #59694f;
-  box-shadow: 0 8px 30px rgba(57, 72, 59, 0.08);
+  background: #ffffff;
+  color: #222222;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.10);
   font-size: 12px;
 }
 
 .about-floating-note span {
   font-size: 20px;
-  color: #879477;
+  color: #333333;
 }
 
 /* ===== VALORES ===== */
@@ -5516,7 +5535,7 @@ button:hover {
   max-width: 1050px;
   margin: 100px auto 0;
   padding-top: 40px;
-  border-top: 1px solid #e7e7dc;
+  border-top: 1px solid #e5e5e5;
 }
 
 .about-value {
@@ -5531,14 +5550,14 @@ button:hover {
   height: 48px;
   margin-bottom: 12px;
   border-radius: 50%;
-  background: #edf0e7;
-  color: #75866a;
+  background: #f0f0f0;
+  color: #222222;
   font-size: 24px;
 }
 
 .about-value h3 {
   margin: 0 0 10px;
-  color: #435542;
+  color: #111111;
   font-family: Georgia, "Times New Roman", serif;
   font-size: 19px;
   font-weight: 400;
@@ -5546,7 +5565,7 @@ button:hover {
 
 .about-value p {
   margin: 0;
-  color: #7b8075;
+  color: #555555;
   font-size: 13px;
   line-height: 1.7;
 }
@@ -5615,7 +5634,6 @@ button:hover {
     margin-top: 65px;
   }
 }
-
 
 /* ==============================
    CATÁLOGO DE SERVICIOS
