@@ -37,7 +37,11 @@ function App() {
 
           <nav className="navbar-links" aria-label="Secciones">
             <a href="#inicio">Inicio</a>
-            <a href="#showcase">Galería</a>
+            <a href="#nosotros">Nosotros</a>
+            <a href="#catalogo-servicios">Nuestros Servicios</a>
+            <a href="#showcase">Ambientes</a>
+            <a href="#novedades">Novedades</a>
+            
           </nav>
 
           <nav className="auth-buttons" aria-label="Acceso de usuario">
