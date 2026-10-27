@@ -3,6 +3,8 @@ import Carousel from './components/Carousel';
 import logo from './assets/image.png';
 import Footer from './components/Footer';
 import About from "./components/About.jsx";
+import ComoLlegar from "./components/ComoLlegar";
+import Capacitaciones from "./components/Capacitaciones";
 import CatalogoServicios from "./components/CatalogoServicios";
 import Novedades from './components/novedades';
 import { useEffect, useState } from 'react';
@@ -40,6 +42,8 @@ function App() {
             <a href="#sobre-nosotros">Nosotros</a>
             <a href="#catalogo-servicios">Nuestros Servicios</a>
             <a href="#showcase">Ambientes</a>
+            <a href="#capacitaciones">Capacitaciones</a>
+            <a href="#ubicacion">Cómo Llegar</a>
             <a href="#novedades">Novedades</a>
             
           </nav>
@@ -61,6 +65,8 @@ function App() {
         <About />
         <CatalogoServicios />
         <Carousel />
+        <Capacitaciones />
+        <ComoLlegar />
         <Novedades />
       </main>
 
