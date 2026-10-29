@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken'
+import Usuario from '../models/Usuario.js';
 
-export function middlewareCliente(req,res,next){
+export async function middlewareCliente(req,res,next){
     const token = req.cookies.token;
     if(!token){
         return res.status(401).json({message: 'sin token'})
@@ -8,8 +9,18 @@ export function middlewareCliente(req,res,next){
 
     try{
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
-        req.user = decoded;
-        if(req.user.rol !== 'cliente'){
+        if (decoded.rol === 'administrador' && req.query.perfilId) {
+            const cliente = await Usuario.findOne({
+                attributes: ['id'],
+                where: { id: req.query.perfilId, rol: 'cliente' }
+            });
+            if (!cliente) {
+                return res.status(404).json({ message: 'No se encontró el perfil de cliente seleccionado.' });
+            }
+            req.user = { ...decoded, id: cliente.id };
+        } else if (decoded.rol === 'cliente') {
+            req.user = decoded;
+        } else {
             return res.status(403).json({message: 'no tienes permisos para acceder a esta ruta'})
         }
         next();
