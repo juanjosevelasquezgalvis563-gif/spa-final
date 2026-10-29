@@ -38,8 +38,10 @@ export function RutaProtegida({ children, rol }) {
 
         const data = await response.json();
         const usuario = data.user;
+        const perfilId = new URLSearchParams(location.search).get("perfilId");
 
-        if (rol && usuario?.rol !== rol) {
+        const administradorEnPerfil = usuario?.rol === "administrador" && Boolean(perfilId);
+        if (rol && usuario?.rol !== rol && !administradorEnPerfil) {
           if (vigente) setEstado("denegado");
           return;
         }
@@ -55,7 +57,7 @@ export function RutaProtegida({ children, rol }) {
     return () => {
       vigente = false;
     };
-  }, [rol]);
+  }, [rol, location.search]);
 
   if (estado === "cargando") {
     return (
