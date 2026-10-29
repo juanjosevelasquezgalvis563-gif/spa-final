@@ -1,5 +1,5 @@
 import {Router} from "express";
-import { registro } from "../controllers/RegistroController.js";
+import { obtenerCaptcha, registro, verificarCaptcha } from "../controllers/RegistroController.js";
 import {actualizarDatos} from "../controllers/RegistroController.js";
 import {login, me,loginGoogle} from "../controllers/LoginController.js";
 
@@ -41,6 +41,7 @@ import {productosUpdate} from "../controllers/AdminController.js";
 import { productosDelete } from "../controllers/AdminController.js";
 import { comprasAdmin } from "../controllers/AdminController.js";
 import { historialCompras } from "../controllers/AdminController.js";
+import { perfilesAdmin, perfilAdmin } from "../controllers/AdminController.js";
 
 
 
@@ -66,9 +67,24 @@ const loginLimiter = rateLimit({
     }
 })
 
+const captchaLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 30,
+    standardHeaders: true,
+    message: { message: "Demasiadas verificaciones. Intenta de nuevo más tarde." }
+});
+
+const registroLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 5,
+    standardHeaders: true,
+    message: { message: "Demasiados intentos de registro. Intenta de nuevo en 15 minutos." }
+});
 
 
-router.post('/registrar', registro);
+router.get('/captcha', captchaLimiter, obtenerCaptcha);
+router.post('/captcha/verificar', captchaLimiter, verificarCaptcha);
+router.post('/registrar', registroLimiter, registro);
 router.put('/registrarr',middleware,actualizarDatos);
 
 
@@ -110,6 +126,8 @@ router.get('/empleado/citasFinalizadasEmpleado',middlewareEmpleado,citasFinaliza
 router.get('/empleado/citaRealizarEmpleado',middlewareEmpleado,citaRealizarEmpleado);
 
 router.get('/administrador',middlewareAdmin,admin);
+router.get('/administrador/perfiles',middlewareAdmin,perfilesAdmin);
+router.get('/administrador/perfiles/:id',middlewareAdmin,perfilAdmin);
 router.get('/administrador/productos',middlewareAdmin,productosAdmin);
 router.put('/administrador/productos/:id',middlewareAdmin,productosUpdate);
 router.delete('/administrador/productos/:id',middlewareAdmin,productosDelete);
