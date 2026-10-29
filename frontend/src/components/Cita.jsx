@@ -151,9 +151,7 @@ export function Cita() {
                   {servicio.nombre}
                 </h2>
 
-                <p className="servicio-precio">
-                  ${servicio.precio}
-                </p>
+            
 
                 
 
