@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 
 
 export  function ActualizarDatos() {
@@ -7,6 +8,9 @@ export  function ActualizarDatos() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const location = useLocation();
+  const perfilId = new URLSearchParams(location.search).get("perfilId");
+  const perfilUrl = perfilId ? `?perfilId=${encodeURIComponent(perfilId)}` : "";
   
  
  
@@ -15,7 +19,7 @@ export  function ActualizarDatos() {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:3000/inser/registrarr", {
+      const response = await fetch(`http://localhost:3000/inser/registrarr${perfilUrl}`, {
         method: "PUT",
         credentials:'include',
         headers: {
