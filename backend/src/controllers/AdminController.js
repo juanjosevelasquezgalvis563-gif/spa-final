@@ -1,6 +1,69 @@
 import Usuario from "../models/Usuario.js";
 import Producto from "../models/productos.js";
 import Compra from "../models/compras.js";
+import Cita from "../models/citas.js";
+import Servicio from "../models/servicios.js";
+
+const ROLES_PERFIL_ADMIN = ['empleado', 'cliente'];
+
+export async function perfilesAdmin(req, res) {
+    try {
+        const rol = req.query.rol || 'empleado';
+        if (!ROLES_PERFIL_ADMIN.includes(rol)) {
+            return res.status(400).json({ message: 'El rol solicitado no se puede consultar desde este panel.' });
+        }
+
+        const usuarios = await Usuario.findAll({
+            attributes: ['id', 'nombre', 'telefono', 'email', 'rol'],
+            where: { rol },
+            order: [['nombre', 'ASC']]
+        });
+
+        return res.json(usuarios);
+    } catch (error) {
+        return res.status(500).json({ message: 'No se pudieron obtener los perfiles.' });
+    }
+}
+
+export async function perfilAdmin(req, res) {
+    try {
+        const rol = req.query.rol || 'empleado';
+        if (!ROLES_PERFIL_ADMIN.includes(rol)) {
+            return res.status(400).json({ message: 'El rol solicitado no se puede consultar desde este panel.' });
+        }
+
+        const usuario = await Usuario.findOne({
+            attributes: ['id', 'nombre', 'telefono', 'email', 'rol'],
+            where: { id: req.params.id, rol }
+        });
+
+        if (!usuario) {
+            return res.status(404).json({ message: 'No se encontró el perfil solicitado.' });
+        }
+
+        const esEmpleado = rol === 'empleado';
+        const citas = await Cita.findAll({
+            where: esEmpleado ? { empleado_id: usuario.id } : { usuario_id: usuario.id },
+            attributes: ['id', 'fecha', 'hora', 'estado'],
+            include: [
+                {
+                    model: Usuario,
+                    as: esEmpleado ? 'cliente' : 'empleado',
+                    attributes: ['id', 'nombre', 'email']
+                },
+                {
+                    model: Servicio,
+                    attributes: ['id', 'nombre', 'precio']
+                }
+            ],
+            order: [['fecha', 'DESC'], ['hora', 'ASC']]
+        });
+
+        return res.json({ usuario, citas });
+    } catch (error) {
+        return res.status(500).json({ message: 'No se pudo cargar el perfil seleccionado.' });
+    }
+}
 
 export async function admin(req, res) {
     try {
