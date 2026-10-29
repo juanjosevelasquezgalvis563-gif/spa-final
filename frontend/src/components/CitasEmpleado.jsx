@@ -1,19 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+
 
 
 
 export function CitasEmpleado() {
     const [empleado, SetEmpleado] = useState([]);
     const [message, SetMessage] = useState("");
-    
+    const location = useLocation();
+    const navigate = useNavigate();
+    const perfilId = new URLSearchParams(location.search).get("perfilId");
+    const perfilUrl = (url) => perfilId ? `${url}?perfilId=${encodeURIComponent(perfilId)}` : url;
 
 
 
 
     async function obtenerEmpleado() {
         try {
-            const response = await fetch("http://localhost:3000/inser/empleado", {
+            const response = await fetch(perfilUrl("http://localhost:3000/inser/empleado"), {
                 method: "GET",
                 credentials:'include',
             });
@@ -51,7 +55,7 @@ export function CitasEmpleado() {
     async function comfirmar(id) {
         try {
             const response = await fetch(
-                `http://localhost:3000/inser/empleado/comfirmar/${id}`,
+                perfilUrl(`http://localhost:3000/inser/empleado/comfirmar/${id}`),
                 {
                     method: "PUT",
                     credentials:'include',
@@ -75,7 +79,7 @@ export function CitasEmpleado() {
     async function finalizar(id) {
         try {
             const response = await fetch(
-                `http://localhost:3000/inser/empleado/finalizar/${id}`,
+                perfilUrl(`http://localhost:3000/inser/empleado/finalizar/${id}`),
                 {
                     method: "PUT",
                     credentials:'include',
@@ -99,7 +103,7 @@ export function CitasEmpleado() {
     async function cancelar(id) {
         try {
             const response = await fetch(
-                `http://localhost:3000/inser/empleado/cancelar/${id}`,
+                perfilUrl(`http://localhost:3000/inser/empleado/cancelar/${id}`),
                 {
                     method: "PUT",
                     credentials:'include',
@@ -122,6 +126,12 @@ export function CitasEmpleado() {
 
     return (
         <div>
+
+            {perfilId && (
+                <button type="button" className="admin-abrir-panel-perfil" onClick={() => navigate('/admin')}>
+                    Volver al panel administrador
+                </button>
+            )}
 
             
             {message && (
