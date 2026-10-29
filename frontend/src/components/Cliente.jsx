@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import logo from '../assets/image.png'; 
 
 export function Cliente() {
   const [message, SetMessage] = useState("");
@@ -286,7 +287,8 @@ export function Cliente() {
   return (
     <div className="dashboard">
       <aside className="sidebar">
-        <h2 className="logo">JC Alta Peluqueria</h2>
+        <h2 className="logo">
+  <img src={logo} alt="Logo JC Alta Peluquería" /></h2>
 
         <button onClick={() => navegarPerfil("/citas")}>
           Mis citas

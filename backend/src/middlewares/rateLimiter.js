@@ -1,4 +1,4 @@
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 
 // Límite por IP: evita que un mismo origen bombardee el endpoint
 // de recuperación de contraseña.
@@ -22,11 +22,12 @@ export const forgotPasswordEmailLimiter = rateLimit({
     legacyHeaders: false,
     // Si no hay email en el body, se usa la IP como respaldo.
     keyGenerator: (req) => {
-        const email = req.body && req.body.email;
-        return typeof email === "string"
-            ? email.toLowerCase()
-            : req.ip;
-    },
+    const email = req.body && req.body.email;
+
+    return typeof email === "string" && email.trim()
+        ? `email:${email.trim().toLowerCase()}`
+        : `ip:${ipKeyGenerator(req.ip)}`;
+},
     message: {
         message:
             "Ya solicitaste varios enlaces para este correo. Intenta de nuevo en 15 minutos."

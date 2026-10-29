@@ -2,6 +2,8 @@ import { DataTypes } from "sequelize";
 import db from "../config/db.js";
 
 
+
+
 const Cita = db.define('Cita', {
     id: {
         type: DataTypes.INTEGER,
