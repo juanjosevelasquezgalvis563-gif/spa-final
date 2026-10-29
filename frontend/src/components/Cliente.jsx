@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export function Cliente() {
   const [message, SetMessage] = useState("");
@@ -25,11 +25,15 @@ export function Cliente() {
   const [resenas, setResenas] = useState([]);
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const perfilId = new URLSearchParams(location.search).get("perfilId");
+  const perfilUrl = (url) => perfilId ? `${url}?perfilId=${encodeURIComponent(perfilId)}` : url;
+  const navegarPerfil = (url) => navigate(perfilUrl(url));
 
   async function cantidadCitas() {
     try {
       const response = await fetch(
-        'http://localhost:3000/inser/cliente/cantidadCitas',
+        perfilUrl('http://localhost:3000/inser/cliente/cantidadCitas'),
         { credentials: "include" }
       );
       const data = await response.json();
@@ -44,7 +48,7 @@ export function Cliente() {
   async function citasPendientes() {
     try {
       const response = await fetch(
-        'http://localhost:3000/inser/cliente/citasPendientes',
+        perfilUrl('http://localhost:3000/inser/cliente/citasPendientes'),
         { credentials: "include" }
       );
       const data = await response.json();
@@ -59,7 +63,7 @@ export function Cliente() {
   async function citasComfirmadas() {
     try {
       const response = await fetch(
-        'http://localhost:3000/inser/cliente/citasComfirmadas',
+        perfilUrl('http://localhost:3000/inser/cliente/citasComfirmadas'),
         { credentials: "include" }
       );
       const data = await response.json();
@@ -74,7 +78,7 @@ export function Cliente() {
   async function citasFinalizadas() {
     try {
       const response = await fetch(
-        'http://localhost:3000/inser/cliente/citasFinalizadas',
+        perfilUrl('http://localhost:3000/inser/cliente/citasFinalizadas'),
         { credentials: "include" }
       );
       const data = await response.json();
@@ -89,7 +93,7 @@ export function Cliente() {
   async function citasRealizar() {
     try {
       const response = await fetch(
-        'http://localhost:3000/inser/cliente/citaRealizar',
+        perfilUrl('http://localhost:3000/inser/cliente/citaRealizar'),
         { credentials: "include" }
       );
       const data = await response.json();
@@ -104,7 +108,7 @@ export function Cliente() {
   async function ultimasCitas() {
     try {
       const response = await fetch(
-        'http://localhost:3000/inser/cliente/ultimasCitas',
+        perfilUrl('http://localhost:3000/inser/cliente/ultimasCitas'),
         { credentials: "include" }
       );
       const data = await response.json();
@@ -119,7 +123,7 @@ export function Cliente() {
   async function obtenerFidelizacion() {
     try {
       const response = await fetch(
-        'http://localhost:3000/inser/cliente/fidelizacion',
+        perfilUrl('http://localhost:3000/inser/cliente/fidelizacion'),
         { credentials: "include" }
       );
 
@@ -146,7 +150,7 @@ export function Cliente() {
   async function obtenerResenas() {
     try {
       const response = await fetch(
-        'http://localhost:3000/inser/cliente/resenas',
+        perfilUrl('http://localhost:3000/inser/cliente/resenas'),
         { credentials: "include" }
       );
 
@@ -166,7 +170,7 @@ export function Cliente() {
   async function prepararCitasParaResena() {
     try {
       const response = await fetch(
-        'http://localhost:3000/inser/cliente/citasParaResena',
+        perfilUrl('http://localhost:3000/inser/cliente/citasParaResena'),
         { credentials: "include" }
       );
 
@@ -180,7 +184,7 @@ export function Cliente() {
       const citas = Array.isArray(data) ? data : data.citas || [];
 
       const responseResenas = await fetch(
-        'http://localhost:3000/inser/cliente/resenas',
+        perfilUrl('http://localhost:3000/inser/cliente/resenas'),
         { credentials: "include" }
       );
 
@@ -219,7 +223,7 @@ export function Cliente() {
 
     try {
       const response = await fetch(
-        'http://localhost:3000/inser/cliente/resenas',
+        perfilUrl('http://localhost:3000/inser/cliente/resenas'),
         {
           method: "POST",
           headers: {
@@ -284,19 +288,19 @@ export function Cliente() {
       <aside className="sidebar">
         <h2 className="logo">JC Alta Peluqueria</h2>
 
-        <button onClick={() => navigate("/citas")}>
+        <button onClick={() => navegarPerfil("/citas")}>
           Mis citas
         </button>
 
-        <button onClick={() => navigate("/cita")}>
+        <button onClick={() => navegarPerfil("/cita")}>
           Agendar cita
         </button>
 
-        <button onClick={() => navigate("/perfil")}>
+        <button onClick={() => navegarPerfil("/perfil")}>
           Mi perfil
         </button>
 
-        <button onClick={() => navigate("/login")}>
+        <button onClick={() => perfilId ? navigate("/admin") : navigate("/login")}>
           Cerrar sesión
         </button>
 
@@ -383,7 +387,7 @@ export function Cliente() {
           <div className="acciones">
             <button
               className="accion"
-              onClick={() => navigate("/cita")}
+              onClick={() => navegarPerfil("/cita")}
             >
               📅
               <div>
@@ -394,7 +398,7 @@ export function Cliente() {
 
             <button
               className="accion"
-              onClick={() => navigate("/citas")}
+              onClick={() => navegarPerfil("/citas")}
             >
               📋
               <div>
@@ -405,7 +409,7 @@ export function Cliente() {
 
             <button
               className="accion"
-              onClick={() => navigate("/perfil")}
+              onClick={() => navegarPerfil("/perfil")}
             >
               👤
               <div>
