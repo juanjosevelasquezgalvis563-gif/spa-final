@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 
 
@@ -13,6 +13,9 @@ export function Empleado() {
     const [message, SetMessage] = useState("");
 
     const navigate = useNavigate();
+    const location = useLocation();
+    const perfilId = new URLSearchParams(location.search).get("perfilId");
+    const perfilUrl = (url) => perfilId ? `${url}?perfilId=${encodeURIComponent(perfilId)}` : url;
 
 
  
@@ -23,7 +26,7 @@ export function Empleado() {
         try {
 
             const response = await fetch(
-                "http://localhost:3000/inser/empleado/citasHoy",
+                perfilUrl("http://localhost:3000/inser/empleado/citasHoy"),
                 {
                     method: "GET",
                     credentials: "include"
@@ -46,7 +49,7 @@ export function Empleado() {
         try {
 
             const response = await fetch(
-                "http://localhost:3000/inser/empleado/citasPendientesEmpleado",
+                perfilUrl("http://localhost:3000/inser/empleado/citasPendientesEmpleado"),
                 {
                     method: "GET",
                     credentials: "include"
@@ -69,7 +72,7 @@ export function Empleado() {
         try {
 
             const response = await fetch(
-                "http://localhost:3000/inser/empleado/citasFinalizadasEmpleado",
+                perfilUrl("http://localhost:3000/inser/empleado/citasFinalizadasEmpleado"),
                 {
                     method: "GET",
                     credentials: "include"
@@ -92,7 +95,7 @@ export function Empleado() {
         try {
 
             const response = await fetch(
-                "http://localhost:3000/inser/empleado/citaRealizarEmpleado",
+                perfilUrl("http://localhost:3000/inser/empleado/citaRealizarEmpleado"),
                 {
                     method: "GET",
                     credentials: "include"
@@ -112,10 +115,12 @@ export function Empleado() {
 
     useEffect(() => {
 
-        citasHoy();
-        citasPendientesEmpleado();
-        citasFinalizadasEmpleado();
-        citasRealizar();
+        void Promise.resolve().then(() => {
+            citasHoy();
+            citasPendientesEmpleado();
+            citasFinalizadasEmpleado();
+            citasRealizar();
+        });
 
     }, []);
 
@@ -130,6 +135,10 @@ export function Empleado() {
     }, [message]);
 
     async function cerrarSesion() {
+        if (perfilId) {
+            navigate("/admin");
+            return;
+        }
 
         await fetch(
             "http://localhost:3000/inser/logout",
@@ -159,13 +168,13 @@ export function Empleado() {
 
                     <button
                         className="menu-btn"
-                        onClick={() => navigate("/citasEmpleado")}
+                        onClick={() => navigate(perfilUrl("/citasEmpleado"))}
                     >
                         Gestionar mis citas
                     </button>
 
                     <button onClick={cerrarSesion}>
-                        Cerrar sesión
+                        {perfilId ? 'Volver al panel administrador' : 'Cerrar sesión'}
                     </button>
 
                 </nav>
@@ -331,7 +340,7 @@ export function Empleado() {
                     <div className="acciones-empleado">
 
                         <button
-                            onClick={() => navigate("/citasEmpleado")}
+                            onClick={() => navigate(perfilUrl("/citasEmpleado"))}
                             className="accion-btn"
                         >
 
