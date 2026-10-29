@@ -1,7 +1,7 @@
 import React from 'react'
 import { useState } from 'react'
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 
 
@@ -11,13 +11,16 @@ export function MisCitas() {
     const [message, SetMessage] = useState("");
 
     const navigate = useNavigate();
+    const location = useLocation();
+    const perfilId = new URLSearchParams(location.search).get("perfilId");
+    const perfilUrl = (url) => perfilId ? `${url}?perfilId=${encodeURIComponent(perfilId)}` : url;
 
 
 
 
     async function obtenerCliente() {
         try {
-            const response = await fetch("http://localhost:3000/inser/cliente", {
+            const response = await fetch(perfilUrl("http://localhost:3000/inser/cliente"), {
                 method: 'GET',
                 credentials: 'include',
             })
@@ -38,7 +41,7 @@ export function MisCitas() {
     async function cancelarSuCita(id) {
         try {
             const response = await fetch(
-                `http://localhost:3000/inser/cliente/cancelar/${id}`,
+                perfilUrl(`http://localhost:3000/inser/cliente/cancelar/${id}`),
                 {
                     method: 'PUT',
                     credentials: 'include',
@@ -147,7 +150,7 @@ export function MisCitas() {
 
                                         <button
                                             className="btn-reprogramar"
-                                            onClick={() => navigate(`/reprogramar/${clientes.id}`)}
+                                            onClick={() => navigate(perfilUrl(`/reprogramar/${clientes.id}`))}
                                         >
                                             Reprogramar
                                         </button>
