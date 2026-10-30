@@ -10,14 +10,13 @@ export function CitasEmpleado() {
     const location = useLocation();
     const navigate = useNavigate();
     const perfilId = new URLSearchParams(location.search).get("perfilId");
-    const perfilUrl = (url) => perfilId ? `${url}?perfilId=${encodeURIComponent(perfilId)}` : url;
 
 
 
 
     async function obtenerEmpleado() {
         try {
-            const response = await fetch(perfilUrl("http://localhost:3000/inser/empleado"), {
+            const response = await fetch("http://localhost:3000/inser/empleado", {
                 method: "GET",
                 credentials:'include',
             });
@@ -55,7 +54,7 @@ export function CitasEmpleado() {
     async function comfirmar(id) {
         try {
             const response = await fetch(
-                perfilUrl(`http://localhost:3000/inser/empleado/comfirmar/${id}`),
+                `http://localhost:3000/inser/empleado/comfirmar/${id}`,
                 {
                     method: "PUT",
                     credentials:'include',
@@ -79,7 +78,7 @@ export function CitasEmpleado() {
     async function finalizar(id) {
         try {
             const response = await fetch(
-                perfilUrl(`http://localhost:3000/inser/empleado/finalizar/${id}`),
+                `http://localhost:3000/inser/empleado/finalizar/${id}`,
                 {
                     method: "PUT",
                     credentials:'include',
@@ -103,7 +102,7 @@ export function CitasEmpleado() {
     async function cancelar(id) {
         try {
             const response = await fetch(
-                perfilUrl(`http://localhost:3000/inser/empleado/cancelar/${id}`),
+                `http://localhost:3000/inser/empleado/cancelar/${id}`,
                 {
                     method: "PUT",
                     credentials:'include',
@@ -128,7 +127,7 @@ export function CitasEmpleado() {
         <div>
 
             {perfilId && (
-                <button type="button" className="admin-abrir-panel-perfil" onClick={() => navigate('/admin')}>
+                <button type="button" className="menu-btn" onClick={() => navigate('/admin')}>
                     Volver al panel administrador
                 </button>
             )}
