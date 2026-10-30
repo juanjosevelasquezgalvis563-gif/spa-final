@@ -1,6 +1,5 @@
 import React from "react";
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
 
 export function Cita() {
 
@@ -10,9 +9,6 @@ export function Cita() {
   const [servicioId, SetServicioId] = useState("");
   const [message, SetMessage] = useState("");
   const [servicios, SetServicios] = useState([]);
-  const location = useLocation();
-  const perfilId = new URLSearchParams(location.search).get("perfilId");
-  const perfilUrl = (url) => perfilId ? `${url}?perfilId=${encodeURIComponent(perfilId)}` : url;
 
 
 
@@ -21,7 +17,7 @@ export function Cita() {
 
     try {
       const response = await fetch(
-        perfilUrl("http://localhost:3000/inser/cliente"),
+        "http://localhost:3000/inser/cliente",
         {
           method: "POST",
           credentials:'include',
@@ -57,7 +53,7 @@ export function Cita() {
   async function Servicios() {
     try {
       const response = await fetch(
-        perfilUrl("http://localhost:3000/inser/cliente/servicios"),
+        "http://localhost:3000/inser/cliente/servicios",
         {
           method: "GET",
           credentials:'include',
