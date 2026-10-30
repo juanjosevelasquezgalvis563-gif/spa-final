@@ -41,7 +41,7 @@ import {productosUpdate} from "../controllers/AdminController.js";
 import { productosDelete } from "../controllers/AdminController.js";
 import { comprasAdmin } from "../controllers/AdminController.js";
 import { historialCompras } from "../controllers/AdminController.js";
-import { perfilesAdmin, perfilAdmin } from "../controllers/AdminController.js";
+import { perfilesAdmin, activarPerfilAdmin } from "../controllers/AdminController.js";
 
 
 
@@ -93,6 +93,7 @@ router.post('/auth/google', loginGoogle);
 router.get('/me', middleware, me);
 router.post("/logout", (req, res) => {
     res.clearCookie("token");
+    res.clearCookie("adminPerfil");
 
     res.json({
         message: "sesión cerrada"
@@ -127,7 +128,7 @@ router.get('/empleado/citaRealizarEmpleado',middlewareEmpleado,citaRealizarEmple
 
 router.get('/administrador',middlewareAdmin,admin);
 router.get('/administrador/perfiles',middlewareAdmin,perfilesAdmin);
-router.get('/administrador/perfiles/:id',middlewareAdmin,perfilAdmin);
+router.post('/administrador/perfil-activo',middlewareAdmin,activarPerfilAdmin);
 router.get('/administrador/productos',middlewareAdmin,productosAdmin);
 router.put('/administrador/productos/:id',middlewareAdmin,productosUpdate);
 router.delete('/administrador/productos/:id',middlewareAdmin,productosDelete);
