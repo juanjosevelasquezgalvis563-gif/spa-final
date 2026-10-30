@@ -14,7 +14,6 @@ export function Admin() {
     const [precio_compra, SetPrecioCompra] = useState("");
     const [rolPerfil, SetRolPerfil] = useState('empleado');
     const [perfiles, SetPerfiles] = useState([]);
-    const [perfilSeleccionado, SetPerfilSeleccionado] = useState(null);
     const [cargandoPerfiles, SetCargandoPerfiles] = useState(false);
 
     const navigate = useNavigate();
@@ -150,7 +149,6 @@ export function Admin() {
     async function obtenerPerfiles(rol = rolPerfil) {
         SetCargandoPerfiles(true);
         SetPerfiles([]);
-        SetPerfilSeleccionado(null);
 
         try {
             const response = await fetch(
@@ -171,26 +169,36 @@ export function Admin() {
         }
     }
 
-    async function seleccionarPerfil(usuario) {
-        SetPerfilSeleccionado({ usuario, citas: null, cargando: true });
-
+    async function abrirPerfil(usuario) {
         try {
             const response = await fetch(
-                `http://localhost:3000/inser/administrador/perfiles/${usuario.id}?rol=${rolPerfil}`,
-                { credentials: 'include' }
+                'http://localhost:3000/inser/administrador/perfil-activo',
+                {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: usuario.id, rol: rolPerfil })
+                }
             );
             const data = await response.json();
 
             if (response.ok) {
-                SetPerfilSeleccionado({ ...data, cargando: false });
+                navigate(`/${rolPerfil}?perfilId=${usuario.id}`);
             } else {
-                SetPerfilSeleccionado(null);
                 SetMessage(data.message || 'No se pudo abrir el perfil.');
             }
         } catch {
-            SetPerfilSeleccionado(null);
             SetMessage('Error de conexión al abrir el perfil.');
         }
+    }
+
+    async function limpiarPerfilActivo() {
+        await fetch('http://localhost:3000/inser/administrador/perfil-activo', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        });
     }
 
     useEffect(() => {
@@ -199,6 +207,7 @@ export function Admin() {
             obtenerProductos();
             historialCompras();
             obtenerPerfiles('empleado');
+            limpiarPerfilActivo();
         });
     }, []);
 
@@ -533,9 +542,6 @@ export function Admin() {
                             <span className="admin-panel-icon">👥</span>
                             Perfiles de usuarios
                         </h2>
-                        <p className="admin-perfiles-intro">
-                            Selecciona un empleado o cliente para consultar sus datos y citas.
-                        </p>
                     </div>
                     <div className="admin-perfiles-roles" role="group" aria-label="Filtrar perfiles por rol">
                         <button
@@ -559,83 +565,29 @@ export function Admin() {
                     </div>
                 </div>
 
-                <div className="admin-perfiles-layout">
-                    <div className="admin-perfiles-lista" aria-label={`Lista de ${rolPerfil === 'empleado' ? 'empleados' : 'clientes'}`}>
-                        {cargandoPerfiles && <p className="admin-perfiles-vacio">Cargando perfiles…</p>}
-                        {!cargandoPerfiles && perfiles.length === 0 && (
-                            <p className="admin-perfiles-vacio">No hay {rolPerfil === 'empleado' ? 'empleados' : 'clientes'} registrados.</p>
-                        )}
-                        {!cargandoPerfiles && perfiles.map((usuario) => (
-                            <button
-                                type="button"
-                                key={usuario.id}
-                                className={`admin-perfil-item${perfilSeleccionado?.usuario?.id === usuario.id ? ' seleccionado' : ''}`}
-                                onClick={() => seleccionarPerfil(usuario)}
-                            >
-                                <span className="admin-perfil-avatar" aria-hidden="true">{usuario.nombre?.charAt(0)?.toUpperCase() || 'U'}</span>
-                                <span className="admin-perfil-item-texto">
-                                    <strong>{usuario.nombre}</strong>
-                                    <small>{usuario.email}</small>
-                                </span>
-                                <span className="admin-perfil-flecha" aria-hidden="true">›</span>
+                {cargandoPerfiles && <p className="admin-perfiles-vacio">Cargando perfiles…</p>}
+                {!cargandoPerfiles && perfiles.length === 0 && (
+                    <p className="admin-perfiles-vacio">No hay perfiles registrados.</p>
+                )}
+                <div className="admin-perfiles-lista">
+                        {perfiles.map((usuario) => (
+                        <article className="admin-perfil-item" key={usuario.id}>
+                            <span className="admin-perfil-avatar" aria-hidden="true">{usuario.nombre?.charAt(0)?.toUpperCase() || 'U'}</span>
+                            <span className="admin-perfil-item-texto">
+                                <strong>{usuario.nombre}</strong>
+                                <small>{usuario.email}</small>
+                                <span className="admin-perfil-rol">{usuario.rol}</span>
+                            </span>
+                            <span className="admin-perfil-citas-resumen">
+                                <strong>{usuario.resumenCitas.total} citas</strong>
+                                <small>Pendientes {usuario.resumenCitas.pendientes} · Confirmadas {usuario.resumenCitas.confirmadas}</small>
+                                <small>Finalizadas {usuario.resumenCitas.finalizadas} · Canceladas {usuario.resumenCitas.canceladas}</small>
+                            </span>
+                            <button type="button" className="admin-perfil-ir" onClick={() => abrirPerfil(usuario)}>
+                                Ir al panel y gestionar citas
                             </button>
-                        ))}
-                    </div>
-
-                    <div className="admin-perfil-detalle" aria-live="polite">
-                        {!perfilSeleccionado && (
-                            <div className="admin-perfil-placeholder">
-                                <span aria-hidden="true">👤</span>
-                                <p>Selecciona un perfil para ver sus datos y citas.</p>
-                            </div>
-                        )}
-                        {perfilSeleccionado?.cargando && <p className="admin-perfiles-vacio">Cargando perfil…</p>}
-                        {perfilSeleccionado && !perfilSeleccionado.cargando && (
-                            <>
-                                <div className="admin-perfil-resumen">
-                                    <span className="admin-perfil-avatar grande" aria-hidden="true">
-                                        {perfilSeleccionado.usuario.nombre?.charAt(0)?.toUpperCase() || 'U'}
-                                    </span>
-                                    <div>
-                                        <span className="admin-perfil-rol">{perfilSeleccionado.usuario.rol}</span>
-                                        <h3>{perfilSeleccionado.usuario.nombre}</h3>
-                                        <p>{perfilSeleccionado.usuario.email}</p>
-                                        <p>{perfilSeleccionado.usuario.telefono || 'Teléfono no registrado'}</p>
-                                    </div>
-                                </div>
-                                <button
-                                    type="button"
-                                    className="admin-abrir-panel-perfil"
-                                    onClick={() => navigate(`/${rolPerfil}?perfilId=${perfilSeleccionado.usuario.id}`)}
-                                >
-                                    Abrir panel original de {rolPerfil === 'empleado' ? 'empleado' : 'cliente'}
-                                </button>
-                                <div className="admin-perfil-citas-head">
-                                    <h3>Citas</h3>
-                                    <span>{perfilSeleccionado.citas.length}</span>
-                                </div>
-                                {perfilSeleccionado.citas.length === 0 ? (
-                                    <p className="admin-perfiles-vacio">Este perfil todavía no tiene citas.</p>
-                                ) : (
-                                    <div className="admin-perfil-citas">
-                                        {perfilSeleccionado.citas.map((cita) => {
-                                            const otraPersona = rolPerfil === 'empleado' ? cita.cliente : cita.empleado;
-                                            return (
-                                                <article className="admin-perfil-cita" key={cita.id}>
-                                                    <div className="admin-perfil-cita-top">
-                                                        <strong>{cita.Servicio?.nombre || 'Servicio'}</strong>
-                                                        <span className={`admin-perfil-estado estado-${cita.estado}`}>{cita.estado}</span>
-                                                    </div>
-                                                    <p>{rolPerfil === 'empleado' ? 'Cliente' : 'Empleado'}: {otraPersona?.nombre || 'No disponible'}</p>
-                                                    <small>{cita.fecha?.split('T')[0]} · {cita.hora?.slice(0, 5)}</small>
-                                                </article>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </>
-                        )}
-                    </div>
+                        </article>
+                    ))}
                 </div>
             </section>
 
