@@ -15,7 +15,7 @@ export function Empleado() {
     const navigate = useNavigate();
     const location = useLocation();
     const perfilId = new URLSearchParams(location.search).get("perfilId");
-    const perfilUrl = (url) => perfilId ? `${url}?perfilId=${encodeURIComponent(perfilId)}` : url;
+    const perfilPath = (path) => perfilId ? `${path}?perfilId=${encodeURIComponent(perfilId)}` : path;
 
 
  
@@ -26,7 +26,7 @@ export function Empleado() {
         try {
 
             const response = await fetch(
-                perfilUrl("http://localhost:3000/inser/empleado/citasHoy"),
+                "http://localhost:3000/inser/empleado/citasHoy",
                 {
                     method: "GET",
                     credentials: "include"
@@ -49,7 +49,7 @@ export function Empleado() {
         try {
 
             const response = await fetch(
-                perfilUrl("http://localhost:3000/inser/empleado/citasPendientesEmpleado"),
+                "http://localhost:3000/inser/empleado/citasPendientesEmpleado",
                 {
                     method: "GET",
                     credentials: "include"
@@ -72,7 +72,7 @@ export function Empleado() {
         try {
 
             const response = await fetch(
-                perfilUrl("http://localhost:3000/inser/empleado/citasFinalizadasEmpleado"),
+                "http://localhost:3000/inser/empleado/citasFinalizadasEmpleado",
                 {
                     method: "GET",
                     credentials: "include"
@@ -95,7 +95,7 @@ export function Empleado() {
         try {
 
             const response = await fetch(
-                perfilUrl("http://localhost:3000/inser/empleado/citaRealizarEmpleado"),
+                "http://localhost:3000/inser/empleado/citaRealizarEmpleado",
                 {
                     method: "GET",
                     credentials: "include"
@@ -168,7 +168,7 @@ export function Empleado() {
 
                     <button
                         className="menu-btn"
-                        onClick={() => navigate(perfilUrl("/citasEmpleado"))}
+                        onClick={() => navigate(perfilPath("/citasEmpleado"))}
                     >
                         Gestionar mis citas
                     </button>
@@ -340,7 +340,7 @@ export function Empleado() {
                     <div className="acciones-empleado">
 
                         <button
-                            onClick={() => navigate(perfilUrl("/citasEmpleado"))}
+                            onClick={() => navigate(perfilPath("/citasEmpleado"))}
                             className="accion-btn"
                         >
 
