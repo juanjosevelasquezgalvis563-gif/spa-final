@@ -2370,6 +2370,390 @@ button {
   opacity: 1;
 }
 
+/* =====================================================
+   CUERPO PRINCIPAL (GRID MAESTRO DE 12 COLUMNAS)
+===================================================== */
+
+.dashboard .contenido {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1.75rem;
+  padding: 2.5rem;
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  align-content: start;
+}
+
+/* Asignación de espacios geométrica exacta tipo Bento */
+.dashboard .bienvenida {
+  grid-column: span 12;
+}
+
+.dashboard .card {
+  grid-column: span 4;
+}
+
+.dashboard .citas-realizar {
+  grid-column: span 6;
+}
+
+.dashboard .acciones {
+  grid-column: span 6;
+}
+
+.dashboard .fidelizacion {
+  grid-column: span 12;
+}
+
+.dashboard .formulario-resena {
+  grid-column: span 6;
+}
+
+/* Media Queries Responsivas */
+@media (max-width: 1200px) {
+  .dashboard .card { grid-column: span 6; }
+}
+
+@media (max-width: 900px) {
+  .dashboard .card,
+  .dashboard .citas-realizar,
+  .dashboard .acciones,
+  .dashboard .formulario-resena { 
+    grid-column: span 12; 
+  }
+  .dashboard .sidebar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem;
+  }
+}
+
+/* Scrollbars personalizados */
+.dashboard ::-webkit-scrollbar { width: 6px; height: 6px; }
+.dashboard ::-webkit-scrollbar-track { background: var(--v-gray-100); }
+.dashboard ::-webkit-scrollbar-thumb { background: var(--v-gray-500); border-radius: 99px; }
+
+/* =====================================================
+   ESTILOS DE CONTENEDORES Y TARJETAS (CUERPO LUJOSO)
+===================================================== */
+
+/* Hero / Bienvenida */
+.dashboard .bienvenida {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: 3rem;
+  border-radius: 24px;
+  background: 
+    radial-gradient(circle at 90% 15%, rgba(255, 255, 255, 0.08), transparent 45%),
+    linear-gradient(135deg, var(--v-black) 0%, var(--v-dark-800) 100%);
+  border: 1px solid var(--v-border-dark);
+  box-shadow: var(--v-shadow-lg);
+  color: var(--v-white);
+  transition: var(--v-transition);
+}
+
+.dashboard .bienvenida:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--v-shadow-glow);
+}
+
+.dashboard .bienvenida::after {
+  content: "V";
+  position: absolute;
+  z-index: -1;
+  top: -50px;
+  right: 30px;
+  color: rgba(255, 255, 255, 0.03);
+  font-family: Georgia, serif;
+  font-size: 260px;
+  font-weight: 900;
+  pointer-events: none;
+}
+
+.dashboard .bienvenida p {
+  color: var(--v-gray-200);
+  font-weight: 300;
+  font-size: 1.1rem;
+}
+
+/* Tarjetas y Contenedores Base con efectos glass & reflect */
+.dashboard .card,
+.dashboard .citas-realizar,
+.dashboard .acciones,
+.dashboard .fidelizacion,
+.dashboard .formulario-resena {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--v-white);
+  border: 1px solid var(--v-border-light);
+  border-radius: 22px;
+  padding: 2rem;
+  box-shadow: var(--v-shadow-sm);
+  transition: var(--v-transition);
+}
+
+/* Reflejo diagonal sutil al hacer hover en las tarjetas */
+.dashboard .card::after,
+.dashboard .citas-realizar::after {
+  content: "";
+  position: absolute;
+  top: -100%;
+  left: -100%;
+  width: 60%;
+  height: 300%;
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.03), transparent);
+  transform: rotate(25deg);
+  pointer-events: none;
+  transition: left 0.8s var(--v-ease);
+}
+
+.dashboard .card:hover::after,
+.dashboard .citas-realizar:hover::after {
+  left: 200%;
+}
+
+.dashboard .card:hover,
+.dashboard .citas-realizar:hover,
+.dashboard .acciones:hover,
+.dashboard .fidelizacion:hover,
+.dashboard .formulario-resena:hover {
+  transform: translateY(-5px);
+  border-color: var(--v-border-hover);
+  box-shadow: var(--v-shadow-md);
+}
+
+/* Tipografía de títulos dentro del cuerpo */
+.dashboard h2, .dashboard h3 {
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+/* =====================================================
+   BOTONES DE ACCIÓN RÁPIDA (Estilo Fino)
+===================================================== */
+
+.dashboard .acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.dashboard .acciones .acciones-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.dashboard .acciones .accion {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--v-gray-100);
+  border: 1px solid var(--v-border-light);
+  border-radius: 14px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  cursor: pointer;
+  transition: var(--v-transition);
+}
+
+.dashboard .acciones .accion::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 0%;
+  background: var(--v-black);
+  transition: height 0.3s var(--v-ease);
+}
+
+.dashboard .acciones .accion:hover {
+  color: var(--v-white);
+  background: var(--v-dark-900);
+  border-color: var(--v-dark-900);
+  transform: translateY(-3px);
+  box-shadow: var(--v-shadow-md);
+}
+
+.dashboard .acciones .accion:hover::before {
+  height: 100%;
+}
+
+.dashboard .acciones .accion h3 {
+  font-size: 1rem;
+  margin: 0;
+  transition: transform 0.3s var(--v-ease);
+}
+
+.dashboard .acciones .accion:hover h3 {
+  transform: translateX(4px);
+}
+
+.dashboard .acciones .accion p {
+  color: var(--v-gray-500);
+  font-size: 0.85rem;
+  margin: 0;
+  transition: color 0.3s ease;
+}
+
+.dashboard .acciones .accion:hover p {
+  color: var(--v-gray-400);
+}
+
+/* =====================================================
+   FIDELIZACIÓN (ZONA VIP OSCURA ELEGANTE)
+===================================================== */
+
+.dashboard .puntos-resumen {
+  position: relative;
+  overflow: hidden;
+  padding: 2.25rem;
+  background: linear-gradient(135deg, var(--v-dark-900) 0%, var(--v-black) 100%);
+  border: 1px solid var(--v-border-dark);
+  border-radius: 18px;
+  color: var(--v-white);
+  box-shadow: var(--v-shadow-md);
+}
+
+.dashboard .niveles-descuento {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.dashboard .niveles-descuento > div {
+  background: var(--v-dark-800);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 1.25rem;
+  color: var(--v-white);
+  transition: var(--v-transition);
+}
+
+.dashboard .niveles-descuento > div:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.dashboard .beneficio-puntos {
+  border-radius: 12px;
+  background: var(--v-gray-100);
+  padding: 0.85rem 1.1rem;
+  border: 1px solid var(--v-border-light);
+  transition: var(--v-transition);
+}
+
+.dashboard .beneficio-puntos:hover {
+  transform: translateX(5px);
+  background: var(--v-white);
+  border-color: var(--v-gray-600);
+  box-shadow: var(--v-shadow-sm);
+}
+
+/* =====================================================
+   FORMULARIOS Y CONTROLES PROFESIONALES
+===================================================== */
+
+.dashboard .formulario-resena {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.dashboard .formulario-resena select,
+.dashboard .formulario-resena textarea {
+  width: 100%;
+  appearance: none;
+  background: var(--v-gray-100);
+  border: 1px solid var(--v-border-light);
+  border-radius: 12px;
+  padding: 0.95rem 1.15rem;
+  color: var(--v-dark-900);
+  font-size: 0.95rem;
+  box-sizing: border-box;
+  transition: var(--v-transition);
+}
+
+.dashboard .formulario-resena select:hover,
+.dashboard .formulario-resena textarea:hover {
+  border-color: var(--v-gray-500);
+}
+
+.dashboard .formulario-resena select:focus,
+.dashboard .formulario-resena textarea:focus {
+  outline: none;
+  background: var(--v-white);
+  border-color: var(--v-black);
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.06);
+}
+
+.dashboard .formulario-resena > button {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  padding: 1rem;
+  background: var(--v-black);
+  color: var(--v-white);
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: var(--v-transition);
+}
+
+.dashboard .formulario-resena > button:hover:not(:disabled) {
+  background: var(--v-dark-700);
+  transform: translateY(-2px);
+  box-shadow: var(--v-shadow-md);
+}
+
+/* =====================================================
+   HISTORIAL Y RESEÑAS PUBLICADAS
+===================================================== */
+
+.dashboard .movimiento-puntos {
+  padding: 0.85rem 1.1rem;
+  border-radius: 12px;
+  background: transparent;
+  transition: var(--v-transition);
+}
+
+.dashboard .movimiento-puntos:hover {
+  transform: translateX(5px);
+  background: var(--v-gray-100);
+}
+
+.dashboard .resenas-publicadas > div {
+  background: var(--v-gray-100);
+  border: 1px solid var(--v-border-light);
+  border-radius: 14px;
+  padding: 1.25rem;
+  transition: var(--v-transition);
+}
+
+.dashboard .resenas-publicadas > div:hover {
+  transform: translateY(-3px);
+  background: var(--v-white);
+  border-color: var(--v-border-hover);
+  box-shadow: var(--v-shadow-sm);
+}
+
+/* Foco de accesibilidad universal */
+.dashboard button:focus-visible,
+.dashboard select:focus-visible,
+.dashboard textarea:focus-visible {
+  outline: 2px solid var(--v-black);
+  outline-offset: 3px;
+}
 /* =========================================================
    FORMULARIOS GENERALES
 ========================================================= */
