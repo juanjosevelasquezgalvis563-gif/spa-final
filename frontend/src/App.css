@@ -4737,145 +4737,197 @@ button:hover {
 }
 
 /* =========================================================
-   HISTORIAL DE COMPRAS
+   HISTORIAL DE COMPRAS - DARK LUXURY EDITION
    ========================================================= */
 
 .admin-historial {
     max-width: 1440px;
-    margin: 24px auto 0;
-    padding: 26px 28px 28px;
-    background: var(--white);
-    border: 1px solid rgba(43, 24, 63, .07);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
+    margin: 32px auto 0;
+    padding: 32px;
+    background: #141417;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    box-shadow: 
+        0 20px 40px -15px rgba(0, 0, 0, 0.8),
+        0 0 0 1px rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(12px);
+    transition: border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.admin-historial:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.9),
+        0 0 30px rgba(255, 255, 255, 0.03);
 }
 
 .admin-historial-tabla-wrap {
     width: 100%;
     overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #27272a transparent;
+}
+
+/* Scrollbar personalizada */
+.admin-historial-tabla-wrap::-webkit-scrollbar {
+    height: 6px;
+}
+.admin-historial-tabla-wrap::-webkit-scrollbar-track {
+    background: transparent;
+}
+.admin-historial-tabla-wrap::-webkit-scrollbar-thumb {
+    background: #27272a;
+    border-radius: 4px;
+}
+.admin-historial-tabla-wrap::-webkit-scrollbar-thumb:hover {
+    background: #3f3f46;
 }
 
 .admin-historial-tabla {
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0;
+    border-spacing: 0 6px; /* Separación sutil entre filas para estilo moderno */
 }
 
 .admin-historial-tabla thead th {
-    padding: 12px 14px;
+    padding: 14px 18px;
     text-align: left;
-    color: var(--muted);
-    font-size: 11.5px;
+    color: #a1a1aa;
+    font-size: 11px;
     font-weight: 600;
-    letter-spacing: 1px;
+    letter-spacing: 1.2px;
     text-transform: uppercase;
-    background: var(--cream);
-    border-bottom: 1px solid rgba(43, 24, 63, .08);
+    background: #18181b;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     white-space: nowrap;
 }
 
 .admin-historial-tabla thead th:first-child {
-    border-top-left-radius: var(--radius-sm);
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
 }
 
 .admin-historial-tabla thead th:last-child {
-    border-top-right-radius: var(--radius-sm);
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
 }
 
 .admin-historial-tabla tbody td {
-    padding: 12px 14px;
+    padding: 16px 18px;
     vertical-align: middle;
-    border-bottom: 1px solid rgba(43, 24, 63, .06);
-    font-size: 14px;
-    color: var(--ink);
+    background: #18181b;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    font-size: 13.5px;
+    color: #f4f4f5;
+    transition: background 0.3s ease;
 }
 
 .admin-historial-fila {
-    transition: background var(--t-fast);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+}
+
+.admin-historial-fila td:first-child {
+    border-left: 1px solid rgba(255, 255, 255, 0.04);
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+
+.admin-historial-fila td:last-child {
+    border-right: 1px solid rgba(255, 255, 255, 0.04);
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.admin-historial-fila:hover td {
+    background: #1c1c21;
+    border-color: rgba(255, 255, 255, 0.12);
 }
 
 .admin-historial-fila:hover {
-    background: rgba(232, 221, 245, .38);
-}
-
-.admin-historial-fila:last-child td {
-    border-bottom: none;
+    transform: translateY(-2px);
 }
 
 .admin-historial-fecha {
-    color: var(--muted);
+    color: #a1a1aa;
     white-space: nowrap;
+    font-size: 13px;
 }
 
 .admin-historial-producto {
     font-weight: 600;
-    color: var(--plum);
+    color: #ffffff;
     min-width: 150px;
 }
 
 .admin-historial-cantidad {
     text-align: center;
-    color: var(--plum);
+    color: #e4e4e7;
     font-weight: 600;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 6px;
+    width: fit-content;
+    margin: 0 auto;
+    padding: 2px 8px;
 }
 
 .admin-historial-precio {
-    font-family: var(--font-display);
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--gold-deep);
+    font-family: var(--font-display, inherit);
+    font-size: 14px;
+    font-weight: 600;
+    color: #d4d4d8;
     white-space: nowrap;
 }
 
 .admin-historial-total {
-    font-family: var(--font-display);
-    font-size: 16px;
+    font-family: var(--font-display, inherit);
+    font-size: 15px;
     font-weight: 700;
-    color: var(--plum);
+    color: #ffffff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
     white-space: nowrap;
 }
 
 .admin-historial-accion {
-    width: 46px;
+    width: 50px;
     text-align: center;
 }
 
-/* Botón de ojo (ver detalle) */
-
+/* Botón de ojo (ver detalle) moderno */
 .admin-btn-ver {
     display: grid;
     place-items: center;
-    width: 30px;
-    height: 30px;
+    width: 34px;
+    height: 34px;
     padding: 0;
     margin: 0 auto;
-    border: 1px solid rgba(43, 24, 63, .14);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 50%;
-    background: transparent;
-    color: var(--plum-soft);
+    background: rgba(255, 255, 255, 0.03);
+    color: #e4e4e7;
     cursor: pointer;
-    transition: var(--t-base);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .admin-btn-ver:hover {
-    background: var(--lilac);
-    border-color: transparent;
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-sm);
+    background: #ffffff;
+    color: #09090b;
+    border-color: #ffffff;
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
 }
 
 .admin-historial-vacio {
     margin: 0;
-    padding: 34px 20px;
+    padding: 48px 24px;
     text-align: center;
-    color: var(--muted);
+    color: #a1a1aa;
     font-size: 14.5px;
-    background: var(--cream);
-    border: 1px dashed rgba(43, 24, 63, .18);
-    border-radius: var(--radius-md);
+    background: #18181b;
+    border: 1px dashed rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
 }
-
-
 /* =========================================================
    FORMULARIO ACTUALIZAR PRODUCTO
    ========================================================= */
