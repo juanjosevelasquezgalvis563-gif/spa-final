@@ -5,24 +5,38 @@ import empleado3 from "../assets/empleado3.jpg";
 
 const profesionales = [
   {
-    nombre: "Nombre del profesional",
-    cargo: "Estilista profesional",
+    nombre: "VALENTINA ALVAREZ",
+    cargo: "MANICURISTA",
     descripcion:
-      "Especialista en transformar tu estilo y resaltar tu belleza con atención personalizada.",
+      "apasionada por el arte, la belleza y el cuidado de las uñas. Mi objetivo es resaltar la belleza de tus manos a través de diseños únicos, acabados impecables y servicios realizados con dedicación, creatividad y atención a cada detalle.",
     imagen: empleado1,
   },
   {
-    nombre: "Nombre del profesional",
-    cargo: "Especialista en color",
+    nombre: "MELANY ARANGO",
+    cargo: "MANICURISTA",
     descripcion:
-      "Experto en coloración, técnicas modernas y resultados que se adaptan a tu estilo.",
+      "dedicada a realzar la belleza de tus manos y uñas con creatividad, pasión y profesionalismo. Me especializo en ofrecer servicios personalizados, cuidando cada detalle para que cada cliente disfrute de una experiencia única y especial.",
     imagen: empleado2,
   },
   {
-    nombre: "Nombre del profesional",
-    cargo: "Experto en belleza",
+    nombre: "EVELYN NINO",
+    cargo: "ESTILISTA",
     descripcion:
-      "Comprometido con el cuidado personal, los detalles y una experiencia única para cada cliente.",
+      " apasionada por el mundo de la belleza y el cuidado personal. Me especializo en transformar y resaltar la belleza de cada persona, ofreciendo servicios personalizados que se adaptan a sus gustos, necesidades y estilo.",
+    imagen: empleado3,
+  },
+   {
+    nombre: "STIVEN PIEDRAHITA",
+    cargo: "ESTILISTA",
+    descripcion:
+      "La belleza está en los detalles y cada persona merece un estilo que la haga sentir única. Como estilista, me encanta crear looks modernos, innovadores y llenos de personalidad.",
+    imagen: empleado3,
+  },
+   {
+    nombre: "JENNIFER CORREA",
+    cargo: "ESTILISTA",
+    descripcion:
+      "comprometida con el bienestar, la imagen y la satisfacción de mis clientes. Ofrezco servicios de belleza con dedicación, responsabilidad y atención personalizada, buscando siempre resaltar lo mejor de cada persona.",
     imagen: empleado3,
   },
 ];
