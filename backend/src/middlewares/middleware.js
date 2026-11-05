@@ -10,15 +10,18 @@ export async function middleware(req,res,next){
     try{
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
         req.user = decoded;
-        if (decoded.rol === 'administrador' && req.method === 'PUT' && req.query.perfilId) {
+        const perfilActivo = decoded.rol === 'administrador' && req.cookies.adminPerfil
+            ? JSON.parse(req.cookies.adminPerfil)
+            : null;
+        if (perfilActivo && req.method === 'PUT') {
             const perfil = await Usuario.findOne({
                 attributes: ['id'],
-                where: { id: req.query.perfilId, rol: ['cliente', 'empleado'] }
+                where: { id: perfilActivo.id, rol: perfilActivo.rol }
             });
             if (!perfil) {
                 return res.status(404).json({ message: 'No se encontró el perfil seleccionado.' });
             }
-            req.user = { ...decoded, id: perfil.id };
+            req.user = { ...decoded, id: perfil.id, rol: perfilActivo.rol };
         }
         next();
 

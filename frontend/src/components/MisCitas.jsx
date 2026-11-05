@@ -13,14 +13,14 @@ export function MisCitas() {
     const navigate = useNavigate();
     const location = useLocation();
     const perfilId = new URLSearchParams(location.search).get("perfilId");
-    const perfilUrl = (url) => perfilId ? `${url}?perfilId=${encodeURIComponent(perfilId)}` : url;
+    const perfilPath = (path) => perfilId ? `${path}?perfilId=${encodeURIComponent(perfilId)}` : path;
 
 
 
 
     async function obtenerCliente() {
         try {
-            const response = await fetch(perfilUrl("http://localhost:3000/inser/cliente"), {
+            const response = await fetch("http://localhost:3000/inser/cliente", {
                 method: 'GET',
                 credentials: 'include',
             })
@@ -41,7 +41,7 @@ export function MisCitas() {
     async function cancelarSuCita(id) {
         try {
             const response = await fetch(
-                perfilUrl(`http://localhost:3000/inser/cliente/cancelar/${id}`),
+                `http://localhost:3000/inser/cliente/cancelar/${id}`,
                 {
                     method: 'PUT',
                     credentials: 'include',
@@ -150,7 +150,7 @@ export function MisCitas() {
 
                                         <button
                                             className="btn-reprogramar"
-                                            onClick={() => navigate(perfilUrl(`/reprogramar/${clientes.id}`))}
+                                            onClick={() => navigate(perfilPath(`/reprogramar/${clientes.id}`))}
                                         >
                                             Reprogramar
                                         </button>

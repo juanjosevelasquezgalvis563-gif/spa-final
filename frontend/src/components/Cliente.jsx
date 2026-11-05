@@ -28,13 +28,13 @@ export function Cliente() {
   const navigate = useNavigate();
   const location = useLocation();
   const perfilId = new URLSearchParams(location.search).get("perfilId");
-  const perfilUrl = (url) => perfilId ? `${url}?perfilId=${encodeURIComponent(perfilId)}` : url;
-  const navegarPerfil = (url) => navigate(perfilUrl(url));
+  const perfilPath = (path) => perfilId ? `${path}?perfilId=${encodeURIComponent(perfilId)}` : path;
+  const navegarPerfil = (path) => navigate(perfilPath(path));
 
   async function cantidadCitas() {
     try {
       const response = await fetch(
-        perfilUrl('http://localhost:3000/inser/cliente/cantidadCitas'),
+        'http://localhost:3000/inser/cliente/cantidadCitas',
         { credentials: "include" }
       );
       const data = await response.json();
@@ -49,7 +49,7 @@ export function Cliente() {
   async function citasPendientes() {
     try {
       const response = await fetch(
-        perfilUrl('http://localhost:3000/inser/cliente/citasPendientes'),
+        'http://localhost:3000/inser/cliente/citasPendientes',
         { credentials: "include" }
       );
       const data = await response.json();
@@ -64,7 +64,7 @@ export function Cliente() {
   async function citasComfirmadas() {
     try {
       const response = await fetch(
-        perfilUrl('http://localhost:3000/inser/cliente/citasComfirmadas'),
+        'http://localhost:3000/inser/cliente/citasComfirmadas',
         { credentials: "include" }
       );
       const data = await response.json();
@@ -79,7 +79,7 @@ export function Cliente() {
   async function citasFinalizadas() {
     try {
       const response = await fetch(
-        perfilUrl('http://localhost:3000/inser/cliente/citasFinalizadas'),
+        'http://localhost:3000/inser/cliente/citasFinalizadas',
         { credentials: "include" }
       );
       const data = await response.json();
@@ -94,7 +94,7 @@ export function Cliente() {
   async function citasRealizar() {
     try {
       const response = await fetch(
-        perfilUrl('http://localhost:3000/inser/cliente/citaRealizar'),
+        'http://localhost:3000/inser/cliente/citaRealizar',
         { credentials: "include" }
       );
       const data = await response.json();
@@ -109,7 +109,7 @@ export function Cliente() {
   async function ultimasCitas() {
     try {
       const response = await fetch(
-        perfilUrl('http://localhost:3000/inser/cliente/ultimasCitas'),
+        'http://localhost:3000/inser/cliente/ultimasCitas',
         { credentials: "include" }
       );
       const data = await response.json();
@@ -124,7 +124,7 @@ export function Cliente() {
   async function obtenerFidelizacion() {
     try {
       const response = await fetch(
-        perfilUrl('http://localhost:3000/inser/cliente/fidelizacion'),
+        'http://localhost:3000/inser/cliente/fidelizacion',
         { credentials: "include" }
       );
 
@@ -151,7 +151,7 @@ export function Cliente() {
   async function obtenerResenas() {
     try {
       const response = await fetch(
-        perfilUrl('http://localhost:3000/inser/cliente/resenas'),
+        'http://localhost:3000/inser/cliente/resenas',
         { credentials: "include" }
       );
 
@@ -171,7 +171,7 @@ export function Cliente() {
   async function prepararCitasParaResena() {
     try {
       const response = await fetch(
-        perfilUrl('http://localhost:3000/inser/cliente/citasParaResena'),
+        'http://localhost:3000/inser/cliente/citasParaResena',
         { credentials: "include" }
       );
 
@@ -185,7 +185,7 @@ export function Cliente() {
       const citas = Array.isArray(data) ? data : data.citas || [];
 
       const responseResenas = await fetch(
-        perfilUrl('http://localhost:3000/inser/cliente/resenas'),
+        'http://localhost:3000/inser/cliente/resenas',
         { credentials: "include" }
       );
 
@@ -224,7 +224,7 @@ export function Cliente() {
 
     try {
       const response = await fetch(
-        perfilUrl('http://localhost:3000/inser/cliente/resenas'),
+        'http://localhost:3000/inser/cliente/resenas',
         {
           method: "POST",
           headers: {

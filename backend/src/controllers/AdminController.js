@@ -2,7 +2,6 @@ import Usuario from "../models/Usuario.js";
 import Producto from "../models/productos.js";
 import Compra from "../models/compras.js";
 import Cita from "../models/citas.js";
-import Servicio from "../models/servicios.js";
 
 const ROLES_PERFIL_ADMIN = ['empleado', 'cliente'];
 
@@ -19,47 +18,54 @@ export async function perfilesAdmin(req, res) {
             order: [['nombre', 'ASC']]
         });
 
-        return res.json(usuarios);
+        const perfiles = await Promise.all(usuarios.map(async (usuario) => {
+            const campoId = rol === 'empleado' ? 'empleado_id' : 'usuario_id';
+            const filtro = { [campoId]: usuario.id };
+            const [total, pendientes, confirmadas, finalizadas, canceladas] = await Promise.all([
+                Cita.count({ where: filtro }),
+                Cita.count({ where: { ...filtro, estado: 'pendiente' } }),
+                Cita.count({ where: { ...filtro, estado: 'confirmada' } }),
+                Cita.count({ where: { ...filtro, estado: 'finalizada' } }),
+                Cita.count({ where: { ...filtro, estado: 'cancelada' } })
+            ]);
+
+            return {
+                ...usuario.toJSON(),
+                resumenCitas: { total, pendientes, confirmadas, finalizadas, canceladas }
+            };
+        }));
+
+        return res.json(perfiles);
     } catch (error) {
         return res.status(500).json({ message: 'No se pudieron obtener los perfiles.' });
     }
 }
 
-export async function perfilAdmin(req, res) {
+export async function activarPerfilAdmin(req, res) {
     try {
-        const rol = req.query.rol || 'empleado';
-        if (!ROLES_PERFIL_ADMIN.includes(rol)) {
-            return res.status(400).json({ message: 'El rol solicitado no se puede consultar desde este panel.' });
+        const { id, rol } = req.body;
+
+        if (!id || !ROLES_PERFIL_ADMIN.includes(rol)) {
+            res.clearCookie('adminPerfil', { httpOnly: true, sameSite: 'lax', secure: false });
+            return res.json({ message: 'Perfil administrativo limpiado.' });
         }
 
-        const usuario = await Usuario.findOne({
-            attributes: ['id', 'nombre', 'telefono', 'email', 'rol'],
-            where: { id: req.params.id, rol }
+        const perfil = await Usuario.findOne({
+            attributes: ['id'],
+            where: { id, rol }
         });
 
-        if (!usuario) {
-            return res.status(404).json({ message: 'No se encontró el perfil solicitado.' });
+        if (!perfil) {
+            return res.status(404).json({ message: 'No se encontró el perfil seleccionado.' });
         }
 
-        const esEmpleado = rol === 'empleado';
-        const citas = await Cita.findAll({
-            where: esEmpleado ? { empleado_id: usuario.id } : { usuario_id: usuario.id },
-            attributes: ['id', 'fecha', 'hora', 'estado'],
-            include: [
-                {
-                    model: Usuario,
-                    as: esEmpleado ? 'cliente' : 'empleado',
-                    attributes: ['id', 'nombre', 'email']
-                },
-                {
-                    model: Servicio,
-                    attributes: ['id', 'nombre', 'precio']
-                }
-            ],
-            order: [['fecha', 'DESC'], ['hora', 'ASC']]
+        res.cookie('adminPerfil', JSON.stringify({ id: perfil.id, rol }), {
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: false,
+            maxAge: 60 * 60 * 1000
         });
-
-        return res.json({ usuario, citas });
+        return res.json({ message: 'Perfil seleccionado.' });
     } catch (error) {
         return res.status(500).json({ message: 'No se pudo cargar el perfil seleccionado.' });
     }

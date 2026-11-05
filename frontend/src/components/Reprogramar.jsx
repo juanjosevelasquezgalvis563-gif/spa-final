@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 export function Reprogramar() {
   const [fecha, SetFecha] = useState("");
@@ -10,16 +10,12 @@ export function Reprogramar() {
 
   
   const { id } = useParams();
-  const location = useLocation();
-  const perfilId = new URLSearchParams(location.search).get("perfilId");
-  const perfilUrl = (url) => perfilId ? `${url}?perfilId=${encodeURIComponent(perfilId)}` : url;
-
   async function handleSubmit(e) {
     e.preventDefault();
 
     try {
       const response = await fetch(
-        perfilUrl(`http://localhost:3000/inser/cliente/actualizar/${id}`),
+        `http://localhost:3000/inser/cliente/actualizar/${id}`,
         {
           method: "PUT",
           credentials:'include',

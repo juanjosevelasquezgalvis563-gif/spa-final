@@ -37,7 +37,7 @@ const profesionales = [
     cargo: "ESTILISTA",
     descripcion:
       "comprometida con el bienestar, la imagen y la satisfacción de mis clientes. Ofrezco servicios de belleza con dedicación, responsabilidad y atención personalizada, buscando siempre resaltar lo mejor de cada persona.",
-    imagen: empleado2,
+    imagen: empleado1,
   },
 ];
 
