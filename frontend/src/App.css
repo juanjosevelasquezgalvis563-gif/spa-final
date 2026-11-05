@@ -3864,77 +3864,206 @@ button:hover {
     background: #D4AF37;
 }
 
-
 /* =========================================================
-   FORMULARIO
-========================================================= */
+   FORMULARIO DE CITAS - CLEAN WHITE & BLACK LUXURY EDITION
+   ========================================================= */
 
 .cita-formulario {
-    background: white;
-    padding: 30px;
-    border-radius: 18px;
-    border: 1px solid #ececec;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, .08);
+    background: #ffffff; /* Fondo blanco absoluto */
+    padding: 48px 40px;
+    border-radius: 24px;
+    border: 2px solid #e5e5e5; /* Borde gris claro elegante */
+    box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.08),
+        0 0 20px rgba(0, 0, 0, 0.02);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.cita-formulario:hover {
+    border-color: #000000; /* El borde se vuelve negro puro al hacer hover general */
+    box-shadow: 
+        0 30px 70px rgba(0, 0, 0, 0.12),
+        0 0 30px rgba(0, 0, 0, 0.04);
+    transform: translateY(-2px);
+}
 
 .cita-formulario h2 {
     text-align: center;
-    color: #2B183F;
-    font-family: 'Playfair Display', serif;
-    font-size: 26px;
-    margin: 0 0 25px;
+    color: #000000 !important; /* Título principal 100% negro y nítido */
+    font-family: var(--font-display, 'Playfair Display', serif);
+    font-size: 34px;
+    font-weight: 800;
+    margin: 0 0 36px;
+    letter-spacing: -0.02em;
 }
 
-
-/* FORMULARIO */
+/* ESTRUCTURA DEL FORMULARIO */
 
 .cita-formulario form {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 26px;
 }
 
-
-/* CAMPO */
+/* CAMPO CONTENEDOR */
 
 .cita-campo {
     display: flex;
     flex-direction: column;
-    gap: 7px;
+    gap: 10px;
+    position: relative;
 }
 
-
+/* PALABRAS DE FECHA, HORA, EMPLEADO, SERVICIO, ETC. EN NEGRO PURO */
 .cita-campo label {
-    color: #555;
-    font-size: 14px;
-    font-weight: 600;
+    color: #000000 !important; /* Forzado a negro puro para máxima legibilidad */
+    font-size: 15px; /* Tamaño grande y claro */
+    font-weight: 800; /* Extra bold para que destaquen perfectamente */
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Indicador dinámico de selección (Punto negro elegante) */
+.cita-campo label::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background-color: #a3a3a3;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
 
-/* INPUTS Y SELECT */
+.cita-campo:focus-within label {
+    color: #000000 !important;
+    transform: translateX(4px);
+}
+
+.cita-campo:focus-within label::before {
+    background-color: #000000;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    transform: scale(1.6);
+}
+
+/* INPUTS, SELECTS Y VALORES INTERNOS EN NEGRO NÍTIDO */
 
 .cita-campo input,
-.cita-campo select {
+.cita-campo select,
+.cita-campo textarea {
     width: 100%;
-    padding: 13px 14px;
-    border: 1px solid #d8d8d8;
-    border-radius: 10px;
-    background: #fafafa;
-    font-family: 'Poppins', sans-serif;
-    font-size: 14px;
+    padding: 18px 20px;
+    border: 2px solid #d4d4d4; /* Borde gris visible y limpio */
+    border-radius: 14px;
+    background: #ffffff !important; /* Fondo blanco puro */
+    color: #000000 !important; /* VALORES, NÚMEROS Y TEXTOS ESCRITOS 100% NEGROS */
+    font-family: var(--font-body, 'Poppins', sans-serif);
+    font-size: 17px; /* Letras grandes y cómodas de leer */
+    font-weight: 600;
+    line-height: 1.5;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
 }
 
+/* Forzar color de texto dentro de opciones y selects desplegados */
+.cita-campo select option {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 16px;
+    padding: 14px;
+}
+
+.cita-campo input::placeholder {
+    color: #a3a3a3 !important; /* Placeholder gris claro legible */
+    font-weight: 400;
+    opacity: 1;
+}
+
+.cita-campo input:hover,
+.cita-campo select:hover {
+    border-color: #737373;
+    background: #fafafa !important;
+}
 
 .cita-campo input:focus,
 .cita-campo select:focus {
     outline: none;
-    border-color: #D4AF37;
-    background: white;
-    box-shadow: 0 0 8px rgba(212, 175, 55, .2);
+    border-color: #000000 !important; /* Borde negro profundo al enfocar */
+    background: #ffffff !important;
+    color: #000000 !important;
+    transform: translateY(-3px);
+    box-shadow: 
+        0 0 0 4px rgba(0, 0, 0, 0.1), 
+        0 15px 35px rgba(0, 0, 0, 0.08);
 }
 
+.cita-campo input:focus::placeholder {
+    opacity: 0.4;
+}
 
+/* Flecha personalizada negra para los selects (Servicio, Empleado, etc.) */
+.cita-campo select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+    background-repeat: no-repeat;
+    background-position: right 20px center;
+    background-size: 20px;
+    padding-right: 50px;
+    cursor: pointer;
+}
+
+/* Selector de fecha / calendario con iconos oscuros sobre fondo blanco */
+.cita-campo input[type="date"] {
+    color-scheme: light;
+}
+
+.cita-campo input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0); /* Icono de calendario oscuro */
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    opacity: 0.8;
+    transition: all 0.3s ease;
+}
+
+.cita-campo input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+    transform: scale(1.15);
+}
+
+/* Eliminar completamente flechas/spinners de inputs numéricos */
+.cita-campo input[type="number"]::-webkit-inner-spin-button,
+.cita-campo input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.cita-campo input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* RESPONSIVE DESIGN */
+
+@media (max-width: 600px) {
+    .cita-formulario {
+        padding: 30px 20px;
+        border-radius: 18px;
+    }
+
+    .cita-formulario h2 {
+        font-size: 26px;
+        margin-bottom: 24px;
+    }
+
+    .cita-campo input,
+    .cita-campo select {
+        font-size: 16px;
+        padding: 15px 16px;
+    }
+}
 /* =========================================================
    MENSAJE
 ========================================================= */
