@@ -3993,79 +3993,180 @@ button:hover {
     .servicio-agendar {
         width: 100%;
     }
-
-
-
+}
 /* =========================================================
-   MIS CITAS (CLIENTE)
+   MIS CITAS (CLIENTE) - DARK LUXURY EDITION
    ========================================================= */
+
+/* Variables locales para facilitar personalización */
+:root {
+    --bg-dark-radial: radial-gradient(circle at 50% 0%, #1a1a1e 0%, #0d0d0f 100%);
+    --surface-card: #141417;
+    --surface-hover: #1c1c21;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-glow: rgba(255, 255, 255, 0.2);
+    --text-primary: #f4f4f5;
+    --text-muted: #a1a1aa;
+    --accent-glow: rgba(255, 255, 255, 0.05);
+    --transition-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+}
 
 .mis-citas-container {
     min-height: 100vh;
-    padding: 56px 6%;
-    font-family: var(--font-body);
-    color: var(--ink);
-    background: linear-gradient(180deg, #F8F5EC 0%, #F1EBFA 100%);
+    padding: 64px 6%;
+    font-family: var(--font-body, 'Inter', system-ui, -apple-system, sans-serif);
+    color: var(--text-primary);
+    background: var(--bg-dark-radial);
+    background-attachment: fixed;
+    box-sizing: border-box;
 }
 
 .mis-citas-card {
     max-width: 1100px;
     margin: 0 auto;
-    background: white;
-    border-radius: var(--radius-lg);
-    border: 1px solid rgba(43, 24, 63, .06);
-    box-shadow: var(--shadow-md);
-    padding: 36px;
+    background: var(--surface-card);
+    border-radius: var(--radius-lg, 16px);
+    border: 1px solid var(--border-subtle);
+    box-shadow: 
+        0 20px 40px -15px rgba(0, 0, 0, 0.7),
+        0 0 0 1px rgba(255, 255, 255, 0.03);
+    padding: 40px;
+    backdrop-filter: blur(12px);
+    transition: transform 0.4s var(--transition-smooth), 
+                box-shadow 0.4s var(--transition-smooth),
+                border-color 0.4s var(--transition-smooth);
+}
+
+.mis-citas-card:hover {
+    border-color: var(--border-glow);
+    box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.8),
+        0 0 30px var(--accent-glow);
 }
 
 .mis-citas-header {
-    margin-bottom: 26px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid rgba(43, 24, 63, .08);
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+}
+
+/* Efecto de línea brillante debajo del encabezado */
+.mis-citas-header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 80px;
+    height: 1px;
+    background: linear-gradient(90deg, #ffffff 0%, transparent 100%);
 }
 
 .mis-citas-header .tabla-title {
     margin: 0;
     text-align: left;
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    text-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
 }
 
 .tabla-responsive {
     width: 100%;
     overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #3f3f46 transparent;
 }
 
-@media (max-width: 600px) {
+/* Scrollbar estilizada para Chrome/Safari/Edge */
+.tabla-responsive::-webkit-scrollbar {
+    height: 6px;
+}
+.tabla-responsive::-webkit-scrollbar-track {
+    background: transparent;
+}
+.tabla-responsive::-webkit-scrollbar-thumb {
+    background: #27272a;
+    border-radius: 4px;
+}
+.tabla-responsive::-webkit-scrollbar-thumb:hover {
+    background: #3f3f46;
+}
 
+/* Estilos adicionales para layout y elementos de cita */
+.cita-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+.servicio-card {
+    display: flex;
+    background: #18181b;
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
+    overflow: hidden;
+    transition: all 0.3s var(--transition-smooth);
+}
+
+.servicio-card:hover {
+    background: var(--surface-hover);
+    transform: translateY(-4px);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.servicio-image {
+    width: 140px;
+    object-fit: cover;
+    filter: grayscale(80%) contrast(110%);
+    transition: filter 0.3s ease, transform 0.4s var(--transition-smooth);
+}
+
+.servicio-card:hover .servicio-image {
+    filter: grayscale(0%) contrast(100%);
+    transform: scale(1.05);
+}
+
+/* =========================================================
+   RESPONSIVE DESIGN (MOBILE OPTIMIZED)
+   ========================================================= */
+
+@media (max-width: 768px) {
     .mis-citas-container {
-        padding: 34px 16px;
+        padding: 24px 16px;
     }
 
     .mis-citas-card {
-        padding: 22px 16px;
+        padding: 24px 18px;
+        border-radius: 12px;
     }
 
     .servicio-card {
         flex-direction: column;
-        align-items: stretch;
     }
 
     .servicio-image {
         width: 100%;
-        height: 180px;
+        height: 190px;
     }
 
     .cita-layout {
         grid-template-columns: 1fr;
+        gap: 16px;
     }
 
     .cita-container {
-        padding: 34px 18px;
+        padding: 24px 16px;
     }
 
     .cita-title {
-        font-size: 30px;
+        font-size: 26px;
+        letter-spacing: -0.01em;
     }
-}
 }
 
 
@@ -4486,89 +4587,154 @@ button:hover {
 
 
 /* =========================================================
-   FORMULARIO DE COMPRA
+   FORMULARIO DE COMPRA (MODERNO & INTERACTIVO)
    ========================================================= */
 
 .admin-form {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-}
-
-.admin-label {
-    display: block;
-    margin-bottom: 7px;
-    color: var(--plum);
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: .3px;
-}
-
-.admin-input {
+    gap: 18px;
     width: 100%;
-    padding: 12px 14px;
-    background: var(--white);
-    border: 1px solid rgba(43, 24, 63, .16);
-    border-radius: var(--radius-sm);
-    color: var(--ink);
-    font-family: var(--font-body);
-    font-size: 14.5px;
-    transition: var(--t-base);
-}
-
-.admin-input::placeholder {
-    color: #A79FB4;
-}
-
-.admin-input:focus {
-    outline: none;
-    border-color: var(--gold);
-    box-shadow: 0 0 0 3px rgba(212, 175, 55, .18);
 }
 
 .admin-form-fila {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
 }
 
 .admin-form-col {
     display: flex;
     flex-direction: column;
+    position: relative;
+}
+
+.admin-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    color: var(--plum);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    transition: color var(--t-base, 0.2s ease);
+}
+
+.admin-input {
+    width: 100%;
+    padding: 13px 16px;
+    background: var(--white, #ffffff);
+    border: 1.5px solid rgba(43, 24, 63, 0.12);
+    border-radius: var(--radius-sm, 8px);
+    color: var(--ink, #1a1a1a);
+    font-family: var(--font-body, system-ui, sans-serif);
+    font-size: 14.5px;
+    line-height: 1.4;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+    box-sizing: border-box;
+}
+
+.admin-input::placeholder {
+    color: #A79FB4;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.admin-input:hover {
+    border-color: rgba(43, 24, 63, 0.28);
+}
+
+.admin-input:focus {
+    outline: none;
+    border-color: var(--gold, #d4af37);
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.18), 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.admin-input:focus::placeholder {
+    opacity: 0.4;
+}
+
+/* Estado al enfocar el input dentro de la columna */
+.admin-form-col:focus-within .admin-label {
+    color: var(--gold, #d4af37);
 }
 
 .admin-help {
     margin-top: 6px;
-    color: var(--muted);
-    font-size: 11.5px;
+    color: var(--muted, #71697a);
+    font-size: 12px;
+    line-height: 1.35;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
+/* Botón de Compra Destacado */
 .admin-btn-comprar {
+    position: relative;
     width: 100%;
-    margin-top: 6px;
-    padding: 15px 24px;
+    margin-top: 10px;
+    padding: 16px 28px;
     border: none;
-    border-radius: var(--radius-sm);
-    background: linear-gradient(135deg, var(--plum-soft), var(--plum));
-    color: var(--white);
-    font-family: var(--font-body);
+    border-radius: var(--radius-sm, 8px);
+    background: linear-gradient(135deg, var(--plum-soft, #5a2e82), var(--plum, #3b1956));
+    color: var(--white, #ffffff);
+    font-family: var(--font-body, system-ui, sans-serif);
     font-size: 15px;
-    font-weight: 600;
-    letter-spacing: .3px;
+    font-weight: 700;
+    letter-spacing: .5px;
     cursor: pointer;
-    transition: var(--t-base);
+    overflow: hidden;
+    z-index: 1;
+    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), 
+                box-shadow 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), 
+                background 0.3s ease;
+}
+
+/* Efecto de resplandor interior/superior */
+.admin-btn-comprar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
 }
 
 .admin-btn-comprar:hover {
-    background: linear-gradient(135deg, var(--plum), var(--ink));
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+    background: linear-gradient(135deg, var(--plum, #3b1956), var(--ink, #1f0b30));
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px -5px rgba(59, 25, 86, 0.35), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.admin-btn-comprar:hover::before {
+    opacity: 1;
 }
 
 .admin-btn-comprar:active {
-    transform: translateY(0);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px -2px rgba(59, 25, 86, 0.25);
 }
 
+.admin-btn-comprar:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.4);
+}
+
+/* Adaptación a dispositivos móviles */
+@media (max-width: 640px) {
+    .admin-form-fila {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+}
 
 /* =========================================================
    HISTORIAL DE COMPRAS
