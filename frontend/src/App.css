@@ -3113,18 +3113,583 @@ button:hover {
     }
 
 }
-/* =========================================================
-   AGENDA DE CITAS
-   ========================================================= */
+/* =====================================================
+   VELURE — SISTEMA MONOCROMÁTICO DEFINITIVO (UI & AGENDA)
+   Negro, Blanco y Gris (Ultra-Luxury Edition)
+===================================================== */
 
-.cita-page {
-    min-height: 100vh;
-    background: #f7f7fb;
-    padding: 45px;
-    font-family: 'Poppins', sans-serif;
-    color: #2B183F;
+.dashboard {
+  --v-black: #000000;
+  --v-dark-950: #070707;
+  --v-dark-900: #0f0f0f;
+  --v-dark-800: #171717;
+  --v-dark-700: #222222;
+  
+  --v-gray-600: #4a4a4a;
+  --v-gray-500: #7b7b7b;
+  --v-gray-400: #adadad;
+  --v-gray-200: #e3e3e5;
+  --v-gray-100: #f2f3f5;
+  --v-white: #ffffff;
+
+  --v-bg-main: #f7f8fa;
+  --v-border-light: rgba(0, 0, 0, 0.08);
+  --v-border-hover: rgba(0, 0, 0, 0.22);
+  --v-border-dark: rgba(255, 255, 255, 0.12);
+  
+  --v-shadow-sm: 0 4px 20px rgba(0, 0, 0, 0.03);
+  --v-shadow-md: 0 12px 35px rgba(0, 0, 0, 0.06);
+  --v-shadow-lg: 0 24px 50px rgba(0, 0, 0, 0.12);
+  --v-shadow-glow: 0 0 30px rgba(0, 0, 0, 0.25);
+
+  --v-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --v-transition: all 0.35s var(--v-ease);
+
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--v-bg-main);
+  color: var(--v-dark-900);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  letter-spacing: -0.01em;
 }
 
+/* =====================================================
+   NAVBAR SUPERIOR (Fijo, Elegante y Minimalista)
+===================================================== */
+
+.dashboard .sidebar {
+  background: var(--v-dark-950);
+  border-bottom: 1px solid var(--v-border-dark);
+  padding: 1.1rem 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-sizing: border-box;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.4);
+}
+
+.dashboard .sidebar img,
+.dashboard .sidebar .logo {
+  max-height: 44px;
+  width: auto;
+  border-radius: 50%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.15));
+}
+
+.dashboard .sidebar-nav,
+.dashboard .sidebar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.dashboard .sidebar > button {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--v-gray-400);
+  padding: 0.65rem 1.1rem;
+  text-align: center;
+  font-weight: 500;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: var(--v-transition);
+}
+
+.dashboard .sidebar > button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--v-white);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.dashboard .sidebar > button:hover {
+  color: var(--v-black);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15);
+}
+
+.dashboard .sidebar > button:hover::before {
+  opacity: 1;
+}
+
+/* =====================================================
+   CUERPO PRINCIPAL (GRID MAESTRO DE 12 COLUMNAS)
+===================================================== */
+
+.dashboard .contenido {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1.75rem;
+  padding: 2.5rem;
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  align-content: start;
+}
+
+.dashboard .bienvenida { grid-column: span 12; }
+.dashboard .card { grid-column: span 4; }
+.dashboard .citas-realizar { grid-column: span 6; }
+.dashboard .acciones { grid-column: span 6; }
+.dashboard .fidelizacion { grid-column: span 12; }
+.dashboard .formulario-resena { grid-column: span 6; }
+
+@media (max-width: 1200px) {
+  .dashboard .card { grid-column: span 6; }
+}
+
+@media (max-width: 900px) {
+  .dashboard .card,
+  .dashboard .citas-realizar,
+  .dashboard .acciones,
+  .dashboard .formulario-resena { 
+    grid-column: span 12; 
+  }
+  .dashboard .sidebar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem;
+  }
+}
+
+.dashboard ::-webkit-scrollbar { width: 6px; height: 6px; }
+.dashboard ::-webkit-scrollbar-track { background: var(--v-gray-100); }
+.dashboard ::-webkit-scrollbar-thumb { background: var(--v-gray-500); border-radius: 99px; }
+
+/* =====================================================
+   ESTILOS DE TARJETAS Y CONTENEDORES DEL CUERPO
+===================================================== */
+
+.dashboard .bienvenida {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: 3rem;
+  border-radius: 24px;
+  background: 
+    radial-gradient(circle at 90% 15%, rgba(255, 255, 255, 0.08), transparent 45%),
+    linear-gradient(135deg, var(--v-black) 0%, var(--v-dark-800) 100%);
+  border: 1px solid var(--v-border-dark);
+  box-shadow: var(--v-shadow-lg);
+  color: var(--v-white);
+  transition: var(--v-transition);
+}
+
+.dashboard .bienvenida:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--v-shadow-glow);
+}
+
+.dashboard .bienvenida::after {
+  content: "V";
+  position: absolute;
+  z-index: -1;
+  top: -50px;
+  right: 30px;
+  color: rgba(255, 255, 255, 0.03);
+  font-family: Georgia, serif;
+  font-size: 260px;
+  font-weight: 900;
+  pointer-events: none;
+}
+
+.dashboard .bienvenida p {
+  color: var(--v-gray-200);
+  font-weight: 300;
+  font-size: 1.1rem;
+}
+
+.dashboard .card,
+.dashboard .citas-realizar,
+.dashboard .acciones,
+.dashboard .fidelizacion,
+.dashboard .formulario-resena {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--v-white);
+  border: 1px solid var(--v-border-light);
+  border-radius: 22px;
+  padding: 2rem;
+  box-shadow: var(--v-shadow-sm);
+  transition: var(--v-transition);
+}
+
+.dashboard .card:hover,
+.dashboard .citas-realizar:hover,
+.dashboard .acciones:hover,
+.dashboard .fidelizacion:hover,
+.dashboard .formulario-resena:hover {
+  transform: translateY(-5px);
+  border-color: var(--v-border-hover);
+  box-shadow: var(--v-shadow-md);
+}
+
+.dashboard h2, .dashboard h3 {
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  color: var(--v-black);
+}
+
+/* =====================================================
+   BOTONES DE ACCIÓN RÁPIDA
+===================================================== */
+
+.dashboard .acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.dashboard .acciones .acciones-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.dashboard .acciones .accion {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--v-gray-100);
+  border: 1px solid var(--v-border-light);
+  border-radius: 14px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  cursor: pointer;
+  transition: var(--v-transition);
+}
+
+.dashboard .acciones .accion::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 0%;
+  background: var(--v-black);
+  transition: height 0.3s var(--v-ease);
+}
+
+.dashboard .acciones .accion:hover {
+  color: var(--v-white);
+  background: var(--v-dark-900);
+  border-color: var(--v-dark-900);
+  transform: translateY(-3px);
+  box-shadow: var(--v-shadow-md);
+}
+
+.dashboard .acciones .accion:hover::before {
+  height: 100%;
+}
+
+.dashboard .acciones .accion h3 {
+  font-size: 1rem;
+  margin: 0;
+  color: inherit;
+  transition: transform 0.3s var(--v-ease);
+}
+
+.dashboard .acciones .accion:hover h3 {
+  transform: translateX(4px);
+}
+
+.dashboard .acciones .accion p {
+  color: var(--v-gray-500);
+  font-size: 0.85rem;
+  margin: 0;
+  transition: color 0.3s ease;
+}
+
+.dashboard .acciones .accion:hover p {
+  color: var(--v-gray-400);
+}
+
+/* =====================================================
+   FIDELIZACIÓN (ZONA VIP OSCURA)
+===================================================== */
+
+.dashboard .puntos-resumen {
+  position: relative;
+  overflow: hidden;
+  padding: 2.25rem;
+  background: linear-gradient(135deg, var(--v-dark-900) 0%, var(--v-black) 100%);
+  border: 1px solid var(--v-border-dark);
+  border-radius: 18px;
+  color: var(--v-white);
+  box-shadow: var(--v-shadow-md);
+}
+
+.dashboard .puntos-resumen h2 {
+  color: var(--v-white);
+}
+
+.dashboard .niveles-descuento {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.dashboard .niveles-descuento > div {
+  background: var(--v-dark-800);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 1.25rem;
+  color: var(--v-white);
+  transition: var(--v-transition);
+}
+
+.dashboard .niveles-descuento > div:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.dashboard .beneficio-puntos {
+  border-radius: 12px;
+  background: var(--v-gray-100);
+  padding: 0.85rem 1.1rem;
+  border: 1px solid var(--v-border-light);
+  color: var(--v-dark-900);
+  transition: var(--v-transition);
+}
+
+.dashboard .beneficio-puntos:hover {
+  transform: translateX(5px);
+  background: var(--v-white);
+  border-color: var(--v-gray-600);
+  box-shadow: var(--v-shadow-sm);
+}
+
+/* =====================================================
+   FORMULARIOS Y CONTROLES DEL CUERPO
+===================================================== */
+
+.dashboard .formulario-resena {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.dashboard .formulario-resena select,
+.dashboard .formulario-resena textarea {
+  width: 100%;
+  appearance: none;
+  background: var(--v-gray-100);
+  border: 1px solid var(--v-border-light);
+  border-radius: 12px;
+  padding: 0.95rem 1.15rem;
+  color: var(--v-dark-900);
+  font-size: 0.95rem;
+  box-sizing: border-box;
+  transition: var(--v-transition);
+}
+
+.dashboard .formulario-resena select:hover,
+.dashboard .formulario-resena textarea:hover {
+  border-color: var(--v-gray-500);
+}
+
+.dashboard .formulario-resena select:focus,
+.dashboard .formulario-resena textarea:focus {
+  outline: none;
+  background: var(--v-white);
+  border-color: var(--v-black);
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.06);
+}
+
+.dashboard .formulario-resena > button {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  padding: 1rem;
+  background: var(--v-black);
+  color: var(--v-white);
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: var(--v-transition);
+}
+
+.dashboard .formulario-resena > button:hover:not(:disabled) {
+  background: var(--v-dark-700);
+  transform: translateY(-2px);
+  box-shadow: var(--v-shadow-md);
+}
+
+.dashboard .movimiento-puntos {
+  padding: 0.85rem 1.1rem;
+  border-radius: 12px;
+  background: transparent;
+  transition: var(--v-transition);
+}
+
+.dashboard .movimiento-puntos:hover {
+  transform: translateX(5px);
+  background: var(--v-gray-100);
+}
+
+.dashboard .resenas-publicadas > div {
+  background: var(--v-gray-100);
+  border: 1px solid var(--v-border-light);
+  border-radius: 14px;
+  padding: 1.25rem;
+  transition: var(--v-transition);
+}
+
+.dashboard .resenas-publicadas > div:hover {
+  transform: translateY(-3px);
+  background: var(--v-white);
+  border-color: var(--v-border-hover);
+  box-shadow: var(--v-shadow-sm);
+}
+
+/* =====================================================
+   PÁGINA DE AGENDA DE CITAS (.cita-page)
+===================================================== */
+
+.cita-page {
+  --v-black: #000000;
+  --v-black-card: #121212;
+  --v-gray-subtle: #f2f3f5;
+  --v-white: #ffffff;
+  --v-border-light: rgba(0, 0, 0, 0.08);
+  --v-border-hover: rgba(0, 0, 0, 0.25);
+  --v-shadow-md: 0 12px 35px rgba(0, 0, 0, 0.08);
+  --v-shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.15);
+  --v-transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+  min-height: 100vh;
+  background-color: var(--v-gray-subtle);
+  color: var(--v-black-card);
+  padding: 3.5rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  box-sizing: border-box;
+}
+
+.cita-page .container,
+.cita-page .agenda-container,
+.cita-page .card-cita {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--v-white);
+  border: 1px solid var(--v-border-light);
+  border-radius: 26px;
+  padding: 3rem;
+  box-shadow: var(--v-shadow-md);
+  transition: var(--v-transition);
+}
+
+.cita-page .container:hover,
+.cita-page .agenda-container:hover,
+.cita-page .card-cita:hover {
+  transform: translateY(-6px);
+  border-color: var(--v-border-hover);
+  box-shadow: var(--v-shadow-lg);
+}
+
+.cita-page h1, .cita-page h2, .cita-page h3 {
+  color: var(--v-black);
+  font-weight: 800;
+}
+
+.cita-page input,
+.cita-page select,
+.cita-page textarea {
+  width: 100%;
+  appearance: none;
+  background: var(--v-gray-subtle);
+  border: 1px solid var(--v-border-light);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  color: var(--v-black-card);
+  font-size: 0.95rem;
+  box-sizing: border-box;
+  transition: var(--v-transition);
+}
+
+.cita-page input:focus,
+.cita-page select:focus,
+.cita-page textarea:focus {
+  outline: none;
+  background: var(--v-white);
+  border-color: var(--v-black);
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08);
+}
+
+.cita-page button,
+.cita-page .btn-agendar {
+  width: 100%;
+  padding: 1.1rem 1.75rem;
+  background: var(--v-black);
+  color: var(--v-white);
+  font-weight: 700;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: var(--v-transition);
+}
+
+.cita-page button:hover:not(:disabled),
+.cita-page .btn-agendar:hover:not(:disabled) {
+  background: var(--v-dark-800);
+  transform: translateY(-3px);
+  box-shadow: var(--v-shadow-md);
+}
+
+.cita-page .horario-slot,
+.cita-page .slot-tiempo {
+  background: var(--v-gray-subtle);
+  border: 1px solid var(--v-border-light);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--v-transition);
+}
+
+.cita-page .horario-slot:hover,
+.cita-page .slot-tiempo:hover {
+  background: var(--v-white);
+  border-color: var(--v-black);
+  transform: translateY(-3px);
+}
+
+.cita-page .horario-slot.selected,
+.cita-page .slot-tiempo.activo {
+  background: var(--v-black-card);
+  color: var(--v-white);
+  border-color: var(--v-black);
+}
+
+/* Foco de accesibilidad universal */
+.dashboard button:focus-visible,
+.dashboard select:focus-visible,
+.dashboard textarea:focus-visible,
+.cita-page button:focus-visible {
+  outline: 2px solid var(--v-black);
+  outline-offset: 3px;
+}
 
 /* =========================================================
    ENCABEZADO
