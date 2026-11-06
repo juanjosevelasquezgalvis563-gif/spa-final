@@ -11,15 +11,18 @@ function Carousel() {
   const slides = [
     {
       image: imagenBelleza1,
-      title: 'Corte, Cepillado y Quimicos',
+      title: 'Corte, cepillado y cuidado capilar',
+      description: 'Un estilo pensado para resaltar tu esencia.',
     },
     {
       image: imagenBelleza2,
       title: 'Manicure y Pedicure',
+      description: 'Cuidado y detalle en cada acabado.',
     },
     {
       image: imagenBelleza3,
-      title: 'Masajes, Limpieza Facial y Tratamientos Corporales',
+      title: 'Masajes y tratamientos faciales y corporales',
+      description: 'Un espacio para relajarte y renovar tu bienestar.',
     },
   ];
 
@@ -31,9 +34,8 @@ function Carousel() {
         <h2>Un ambiente pensado para ti</h2>
 
         <p>
-          En Velure Spa, creemos que el bienestar es un arte. Por eso, hemos diseñado cada uno de nuestros rincones 
-          para ofrecerte una experiencia distinguida y profundamente relajante.
-          Conéctate con la tranquilidad y déjate consentir.
+          En JC Alta Peluquería, cada espacio está preparado para que disfrutes
+          de tus servicios con comodidad, cuidado y atención personalizada.
         </p>
       </div>
 
@@ -57,7 +59,11 @@ function Carousel() {
                 }}
               >
                 <div className="overlay">
-                  <h3>{slide.title}</h3>
+                  <div className="showcase-caption">
+                    <span className="showcase-caption-label">JC Alta Peluquería</span>
+                    <h3>{slide.title}</h3>
+                    <p>{slide.description}</p>
+                  </div>
                 </div>
               </div>
             </SwiperSlide>
