@@ -11051,3 +11051,376 @@ PROFESIONALES
     grid-template-columns: 1fr;
   }
 }
+
+/* Agenda del empleado */
+.gestionar-citas {
+  --agenda-ink: #171719;
+  --agenda-muted: #77777e;
+  --agenda-line: #e2e2e5;
+  --agenda-surface: #ffffff;
+  --agenda-soft: #f3f3f4;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: clamp(24px, 5vw, 64px) clamp(18px, 4vw, 42px);
+  color: var(--agenda-ink);
+}
+
+.gestionar-citas > .menu-btn {
+  margin-bottom: 26px;
+  border: 1px solid #d5d5d9;
+  border-radius: 999px;
+  background: #fff;
+  color: #333338;
+  font-size: 12px;
+  font-weight: 650;
+  transition: background .2s ease, color .2s ease, border-color .2s ease;
+}
+
+.gestionar-citas > .menu-btn:hover {
+  border-color: #222225;
+  background: #222225;
+  color: #fff;
+}
+
+.gestionar-citas-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--agenda-line);
+}
+
+.gestionar-citas-eyebrow {
+  color: #77777e;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .2em;
+}
+
+.gestionar-citas-header h1 {
+  margin: 10px 0 7px;
+  color: var(--agenda-ink);
+  font-family: var(--font-display);
+  font-size: clamp(32px, 4vw, 46px);
+  font-weight: 600;
+  letter-spacing: -.04em;
+  line-height: 1.08;
+}
+
+.gestionar-citas-header p {
+  margin: 0;
+  color: var(--agenda-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.gestionar-citas-total {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex: 0 0 auto;
+  padding: 10px 14px;
+  border: 1px solid var(--agenda-line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .76);
+}
+
+.gestionar-citas-total strong {
+  color: #222225;
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.gestionar-citas-total span {
+  max-width: 76px;
+  color: var(--agenda-muted);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.gestionar-citas .mensaje-cita {
+  margin: 0 0 18px;
+  padding: 13px 16px;
+  border: 1px solid #d6d6da;
+  border-radius: 12px;
+  background: #fff;
+  color: #38383d;
+  font-size: 13px;
+  text-align: left;
+}
+
+.gestionar-citas .empleado-lista {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 14px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.gestionar-citas .empleado-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 20px;
+  padding: 22px;
+  border: 1px solid var(--agenda-line);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 100% 0, rgba(0, 0, 0, .035), transparent 32%),
+    var(--agenda-surface);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .04);
+  transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+}
+
+.gestionar-citas .empleado-card:hover {
+  transform: translateY(-3px);
+  border-color: #bcbcc1;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, .085);
+}
+
+.cita-agenda-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 17px;
+  border-bottom: 1px solid #ededee;
+}
+
+.cita-agenda-fecha {
+  display: grid;
+  gap: 5px;
+}
+
+.cita-agenda-fecha > span {
+  color: #85858b;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .15em;
+}
+
+.cita-agenda-fecha strong {
+  color: #202023;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -.025em;
+}
+
+.cita-agenda-fecha time {
+  color: #707076;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.gestionar-citas .estado-cita {
+  padding: 6px 10px;
+  border: 1px solid #dedee1;
+  border-radius: 999px;
+  background: #f2f2f3;
+  color: #48484e;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.gestionar-citas .estado-cita.confirmada,
+.gestionar-citas .estado-cita.finalizada {
+  border-color: #c9c9cd;
+  background: #e7e7e9;
+  color: #222225;
+}
+
+.gestionar-citas .estado-cita.cancelada {
+  border-color: #dedee1;
+  background: #f7f7f8;
+  color: #77777e;
+}
+
+.cita-agenda-detalles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.gestionar-citas .cita-agenda-detalles p {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid #ededee;
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+.gestionar-citas .cita-agenda-detalles strong {
+  color: #85858b;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.gestionar-citas .cita-agenda-detalles span {
+  overflow: hidden;
+  color: #303034;
+  font-size: 12px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gestionar-citas .empleado-botones {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 15px;
+  border-top: 1px solid #ededee;
+}
+
+.gestionar-citas .empleado-botones button {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #dedee1;
+  border-radius: 10px;
+  background: #fff;
+  color: #414147;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+}
+
+.gestionar-citas .empleado-botones button:hover {
+  transform: translateY(-1px);
+}
+
+.gestionar-citas .empleado-botones .btn-confirmar {
+  border-color: #202023;
+  background: #202023;
+  color: #fff;
+}
+
+.gestionar-citas .empleado-botones .btn-confirmar:hover {
+  border-color: #444449;
+  background: #444449;
+  color: #fff;
+}
+
+.gestionar-citas .empleado-botones .btn-finalizar:hover {
+  border-color: #a6a6ac;
+  background: #ededee;
+  color: #202023;
+}
+
+.gestionar-citas .empleado-botones .btn-cancelar {
+  color: #707076;
+}
+
+.gestionar-citas .empleado-botones .btn-cancelar:hover {
+  border-color: #a6a6ac;
+  background: #f1f1f2;
+  color: #252529;
+}
+
+.gestionar-citas .empleado-botones button:focus-visible,
+.gestionar-citas > .menu-btn:focus-visible {
+  outline: 2px solid #55555b;
+  outline-offset: 3px;
+}
+
+.gestionar-citas-vacio {
+  grid-column: 1 / -1;
+  display: grid;
+  min-height: 260px;
+  place-content: center;
+  justify-items: center;
+  padding: 36px 20px;
+  border: 1px dashed #c9c9ce;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .62);
+  text-align: center;
+}
+
+.gestionar-citas-vacio-icono {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 1px solid #dedee1;
+  border-radius: 15px;
+  background: #f0f0f1;
+  color: #55555b;
+  font-size: 25px;
+}
+
+.gestionar-citas-vacio h2 {
+  margin: 17px 0 6px;
+  color: #27272b;
+  font-family: var(--font-display);
+  font-size: 22px;
+}
+
+.gestionar-citas-vacio p {
+  margin: 0;
+  color: #77777e;
+  font-size: 13px;
+}
+
+@media (max-width: 760px) {
+  .gestionar-citas .empleado-lista {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .gestionar-citas {
+    padding: 24px 16px;
+  }
+
+  .gestionar-citas-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .gestionar-citas-total {
+    align-self: stretch;
+  }
+
+  .gestionar-citas-total span {
+    max-width: none;
+  }
+
+  .gestionar-citas .empleado-card {
+    gap: 16px;
+    padding: 17px;
+    border-radius: 16px;
+  }
+
+  .cita-agenda-detalles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gestionar-citas .empleado-botones {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gestionar-citas *,
+  .gestionar-citas *::before,
+  .gestionar-citas *::after {
+    transition-duration: .01ms !important;
+  }
+}
