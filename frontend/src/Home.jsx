@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -25,7 +24,6 @@ function App() {
     };
 
     onScroll();
-
     window.addEventListener('scroll', onScroll, { passive: true });
 
     return () => {
@@ -63,74 +61,43 @@ function App() {
           </a>
 
           <nav className="navbar-links" aria-label="Secciones">
-            <a
-              href="#inicio"
-              onClick={(event) => handleSectionNavigation(event, 'inicio')}
-            >
+            <a href="#inicio" onClick={(event) => handleSectionNavigation(event, 'inicio')}>
               Inicio
             </a>
-
             <a
               href="#sobre-nosotros"
-              onClick={(event) =>
-                handleSectionNavigation(event, 'sobre-nosotros')
-              }
+              onClick={(event) => handleSectionNavigation(event, 'sobre-nosotros')}
             >
               Nosotros
             </a>
-
             <a
               href="#catalogo-servicios"
-              onClick={(event) =>
-                handleSectionNavigation(event, 'catalogo-servicios')
-              }
+              onClick={(event) => handleSectionNavigation(event, 'catalogo-servicios')}
             >
               Nuestros Servicios
             </a>
-
-            <a
-              href="#showcase"
-              onClick={(event) => handleSectionNavigation(event, 'showcase')}
-            >
+            <a href="#showcase" onClick={(event) => handleSectionNavigation(event, 'showcase')}>
               Ambientes
             </a>
-
             <a
               href="#capacitaciones"
-              onClick={(event) =>
-                handleSectionNavigation(event, 'capacitaciones')
-              }
+              onClick={(event) => handleSectionNavigation(event, 'capacitaciones')}
             >
               Capacitaciones
             </a>
-
-            <a
-              href="#educate"
-              onClick={(event) => handleSectionNavigation(event, 'educate')}
-            >
+            <a href="#educate" onClick={(event) => handleSectionNavigation(event, 'educate')}>
               Educate
             </a>
-
             <a
               href="#profesionales"
-              onClick={(event) =>
-                handleSectionNavigation(event, 'profesionales')
-              }
+              onClick={(event) => handleSectionNavigation(event, 'profesionales')}
             >
               Profesionales
             </a>
-
-            <a
-              href="#ubicacion"
-              onClick={(event) => handleSectionNavigation(event, 'ubicacion')}
-            >
+            <a href="#ubicacion" onClick={(event) => handleSectionNavigation(event, 'ubicacion')}>
               Cómo Llegar
             </a>
-
-            <a
-              href="#novedades"
-              onClick={(event) => handleSectionNavigation(event, 'novedades')}
-            >
+            <a href="#novedades" onClick={(event) => handleSectionNavigation(event, 'novedades')}>
               Novedades
             </a>
           </nav>
@@ -143,7 +110,6 @@ function App() {
             >
               Iniciar Sesión
             </button>
-
             <button
               type="button"
               onClick={() => navigate('/registro')}
@@ -155,7 +121,7 @@ function App() {
         </div>
       </header>
 
-      <main>
+      <main className="landing-main">
         <Hero />
         <About />
         <CatalogoServicios />

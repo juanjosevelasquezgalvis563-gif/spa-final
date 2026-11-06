@@ -9089,6 +9089,34 @@ PROFESIONALES
   }
 }
 
+/* Fondo continuo y luminoso para el cuerpo de la landing */
+.landing-main {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: #d7d7dc;
+  background-image:
+    radial-gradient(ellipse at 8% 7%, rgba(255, 255, 255, .94) 0, rgba(255, 255, 255, 0) 34%),
+    radial-gradient(ellipse at 91% 29%, rgba(133, 133, 145, .34) 0, rgba(133, 133, 145, 0) 38%),
+    radial-gradient(ellipse at 12% 65%, rgba(255, 255, 255, .82) 0, rgba(255, 255, 255, 0) 34%),
+    radial-gradient(ellipse at 85% 91%, rgba(125, 125, 137, .28) 0, rgba(125, 125, 137, 0) 38%),
+    linear-gradient(145deg, #f0f0f2 0%, #d1d1d7 48%, #e8e8eb 100%);
+}
+
+.landing-main > section {
+  position: relative;
+  box-sizing: border-box;
+  background: transparent !important;
+}
+
+.landing-main > section:nth-of-type(even) {
+  border-top: 1px solid rgba(255, 255, 255, .72);
+  border-bottom: 1px solid rgba(160, 160, 168, .18);
+  background: rgba(255, 255, 255, .78) !important;
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+
 /* Reseñas del cliente: formulario y reseñas en dos columnas */
 .dashboard .contenido > .formulario-resena {
   --review-black: #111111;

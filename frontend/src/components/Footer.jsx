@@ -1,6 +1,4 @@
-import React from 'react';
 import logo from '../assets/image.png';
-
 
 export default function Footer() {
   return (
@@ -19,7 +17,10 @@ export default function Footer() {
             Creamos experiencias de belleza pensadas para
              resaltar tu esencia y devolverte la confianza.
           </p>
-          <a href="#servicios" className="footer-cta">
+          <a
+            href="#servicios"
+            className="footer-cta"
+          >
             Descubre nuestros servicios <span>↗</span>
           </a>
         </div>
