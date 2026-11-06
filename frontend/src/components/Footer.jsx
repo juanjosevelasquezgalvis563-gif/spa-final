@@ -26,11 +26,16 @@ export default function Footer() {
 
         <div className="footer-section">
           <h3>Explora</h3>
-          <ul>
-            <li><a href="/">Inicio</a></li>
-            <li><a href="#servicios">Nuestros servicios</a></li>
-            <li><a href="#nosotros">Sobre nosotros</a></li>
-            
+          <ul className="footer-explore">
+            <li><a href="#inicio">Inicio</a></li>
+            <li><a href="#sobre-nosotros">Nosotros</a></li>
+            <li><a href="#catalogo-servicios">Nuestros servicios</a></li>
+            <li><a href="#showcase">Ambientes</a></li>
+            <li><a href="#capacitaciones">Capacitaciones</a></li>
+            <li><a href="#educate">Educate</a></li>
+            <li><a href="#profesionales">Profesionales</a></li>
+            <li><a href="#ubicacion">Cómo llegar</a></li>
+            <li><a href="#novedades">Novedades</a></li>
           </ul>
         </div>
 
@@ -43,13 +48,13 @@ export default function Footer() {
             </li>
             <li>
               <span className="footer-icon">☎</span>
-              <a href="wa.link/okfwcg" target="_blank" rel="noreferrer">
-                
+              <a href="https://wa.link/okfwcg" target="_blank" rel="noopener noreferrer">
+                Escríbenos al WhatsApp dando clic aquí
               </a>
             </li>
             <li>
               <span className="footer-icon">✉</span>
-              <a href="jcaltapeluqueria9@gmail.com">
+              <a href="mailto:jcaltapeluqueria9@gmail.com">
                 jcaltapeluqueria9@gmail.com
               </a>
             </li>
