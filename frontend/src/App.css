@@ -2064,7 +2064,6 @@ button {
 
 .registro-captcha {
     min-width: 0;
-<<<<<<< HEAD
     margin: 2px 0 0;
     padding: 18px;
     border: 1px solid #e8e1eb;
@@ -2078,23 +2077,10 @@ button {
     padding: 0 8px;
     color: #2B183F;
     font-size: 15px;
-=======
-    margin: 0;
-    padding: 16px;
-    border: 1px solid #e4dbe9;
-    border-radius: 12px;
-    background: #fcfaff;
-}
-
-.registro-captcha legend {
-    padding: 0 6px;
-    color: #2B183F;
->>>>>>> 016f85385405a2122062a86d388ff7b1b878c848
     font-weight: 700;
 }
 
 .registro-captcha-prompt {
-<<<<<<< HEAD
     margin: 10px 0 14px;
     color: #362844;
     font-size: 14px;
@@ -2120,26 +2106,16 @@ button {
     color: #5b456c;
     font-size: 11px;
     font-weight: 700;
-=======
-    margin: 0 0 12px;
-    color: #493958;
-    text-align: center;
->>>>>>> 016f85385405a2122062a86d388ff7b1b878c848
 }
 
 .registro-captcha-images {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-<<<<<<< HEAD
     gap: 9px;
-=======
-    gap: 8px;
->>>>>>> 016f85385405a2122062a86d388ff7b1b878c848
 }
 
 .registro-captcha-option {
     position: relative;
-<<<<<<< HEAD
     display: block;
     overflow: hidden;
     aspect-ratio: 1;
@@ -2164,30 +2140,11 @@ button {
 .registro-captcha-verify:focus-visible {
     outline: 3px solid rgba(212, 175, 55, .65);
     outline-offset: 3px;
-=======
-    padding: 4px;
-    border: 2px solid transparent;
-    border-radius: 12px;
-    background: #fff;
-    cursor: pointer;
-    transition: border-color .2s, transform .2s;
-}
-
-.registro-captcha-option:hover {
-    transform: translateY(-2px);
-}
-
-.registro-captcha-option:focus-visible,
-.registro-captcha-option.seleccionada {
-    outline: none;
-    border-color: #2B183F;
->>>>>>> 016f85385405a2122062a86d388ff7b1b878c848
 }
 
 .registro-captcha-option img {
     display: block;
     width: 100%;
-<<<<<<< HEAD
     height: 100%;
     object-fit: cover;
     transition: transform .2s ease;
@@ -2290,68 +2247,6 @@ button {
 .registro-captcha-status.exitoso {
     color: #17613d;
     font-weight: 700;
-=======
-    aspect-ratio: 1;
-    border-radius: 8px;
-}
-
-.registro-captcha-option span {
-    position: absolute;
-    top: 7px;
-    right: 7px;
-    display: grid;
-    width: 22px;
-    height: 22px;
-    place-items: center;
-    border-radius: 50%;
-    background: #2B183F;
-    color: #fff;
-    font-weight: 700;
-}
-
-.registro-captcha-refresh {
-    display: block;
-    margin: 12px auto 0;
-    padding: 4px 8px;
-    border: 0;
-    background: transparent;
-    color: #493958;
-    text-decoration: underline;
-    cursor: pointer;
-}
-
-.registro-captcha-refresh:disabled {
-    cursor: wait;
-}
-
-.registro-captcha-status {
-    margin: 10px 0 0;
-    color: #493958;
-    text-align: center;
-    font-weight: 600;
-}
-
-.registro-captcha-status.exitoso {
-    color: #15803d;
-}
-
-.registro-captcha-verify {
-    display: block;
-    width: 100%;
-    margin-top: 8px;
-    padding: 10px;
-    border: 0;
-    border-radius: 8px;
-    background: #2B183F;
-    color: #fff;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.registro-captcha-verify:disabled {
-    opacity: .6;
-    cursor: wait;
->>>>>>> 016f85385405a2122062a86d388ff7b1b878c848
 }
 
 .registro-button {
