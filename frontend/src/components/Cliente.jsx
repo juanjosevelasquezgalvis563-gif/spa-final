@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import logo from '../assets/image.png'; 
 
@@ -10,6 +10,7 @@ export function Cliente() {
   const [finalizadas, SetFinalizadas] = useState(null);
   const [realizar, SetRealizar] = useState(null);
   const [ultimas, SetUltimasCitas] = useState([]);
+  const [nombreCliente, setNombreCliente] = useState("");
 
   const [fidelizacion, setFidelizacion] = useState({
     saldo_puntos: 0,
@@ -30,6 +31,33 @@ export function Cliente() {
   const perfilId = new URLSearchParams(location.search).get("perfilId");
   const perfilPath = (path) => perfilId ? `${path}?perfilId=${encodeURIComponent(perfilId)}` : path;
   const navegarPerfil = (path) => navigate(perfilPath(path));
+
+  const obtenerNombreCliente = useCallback(async () => {
+    try {
+      const esPerfilAdmin = Boolean(perfilId);
+      const url = esPerfilAdmin
+        ? 'http://localhost:3000/inser/administrador/perfiles?rol=cliente'
+        : 'http://localhost:3000/inser/me';
+      const response = await fetch(url, { credentials: "include" });
+      const data = await response.json();
+
+      if (!response.ok) {
+        SetMessage(data.message || 'No se pudo cargar el nombre del cliente');
+        return;
+      }
+
+      const cliente = esPerfilAdmin
+        ? Array.isArray(data) && data.find((perfil) => String(perfil.id) === perfilId)
+        : data.user;
+
+      if (cliente?.nombre) {
+        setNombreCliente(cliente.nombre);
+      }
+    } catch (error) {
+      console.error(error);
+      SetMessage('No se pudo cargar el nombre del cliente');
+    }
+  }, [perfilId]);
 
   async function cantidadCitas() {
     try {
@@ -271,6 +299,7 @@ export function Cliente() {
   }
 
   useEffect(() => {
+    void Promise.resolve().then(obtenerNombreCliente);
     cantidadCitas();
     citasPendientes();
     citasComfirmadas();
@@ -280,7 +309,7 @@ export function Cliente() {
     obtenerFidelizacion();
     obtenerResenas();
     prepararCitasParaResena();
-  }, []);
+  }, [obtenerNombreCliente]);
 
   useEffect(() => {
     if (!message) return;
@@ -337,7 +366,11 @@ export function Cliente() {
 
       <main className="contenido">
         <div className="bienvenida">
-          <p>Bienvenido a tu panel de JC Alta Peluqueria 👋</p>
+          <p>
+            {nombreCliente
+              ? `¡Bienvenido, ${nombreCliente}!`
+              : "Bienvenido a tu panel de JC Alta Peluqueria 👋"}
+          </p>
         </div>
 
         {message && (
@@ -372,7 +405,7 @@ export function Cliente() {
 
         <div className="panel-superior">
           <div className="citas-realizar">
-            <h4>📅 Próxima cita</h4>
+            <h4>Próxima cita</h4>
 
             <div className="cita-info">
               <h3>Fecha</h3>
@@ -399,7 +432,7 @@ export function Cliente() {
               className="accion"
               onClick={() => navegarPerfil("/cita")}
             >
-              📅
+              <span className="accion-icono" aria-hidden="true">▦</span>
               <div>
                 <h3>Agendar nueva cita</h3>
                 <p>Reserva tu próximo servicio</p>
@@ -410,7 +443,7 @@ export function Cliente() {
               className="accion"
               onClick={() => navegarPerfil("/citas")}
             >
-              📋
+              <span className="accion-icono" aria-hidden="true">≡</span>
               <div>
                 <h3>Ver mis citas</h3>
                 <p>Consulta tu historial completo</p>
@@ -421,7 +454,7 @@ export function Cliente() {
               className="accion"
               onClick={() => navegarPerfil("/perfil")}
             >
-              👤
+              <span className="accion-icono" aria-hidden="true">○</span>
               <div>
                 <h3>Editar mi perfil</h3>
                 <p>Actualiza tus datos personales</p>
