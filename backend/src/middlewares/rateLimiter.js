@@ -1,10 +1,9 @@
 import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 
-// Límite por IP: evita que un mismo origen bombardee el endpoint
-// de recuperación de contraseña.
+// Limita las solicitudes de recuperación por dirección IP.
 export const forgotPasswordIpLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 5, // máximo 5 peticiones por IP
+    windowMs: 15 * 60 * 1000,
+    limit: 5,
     standardHeaders: true,
     legacyHeaders: false,
     message: {
@@ -13,21 +12,21 @@ export const forgotPasswordIpLimiter = rateLimit({
     }
 });
 
-// Límite por correo: evita que se inunde el buzón de una víctima
-// con muchos correos de recuperación, aunque el atacante cambie de IP.
+// Evita múltiples solicitudes de recuperación para el mismo correo.
 export const forgotPasswordEmailLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 3, // máximo 3 peticiones por correo
+    windowMs: 15 * 60 * 1000,
+    limit: 3,
     standardHeaders: true,
     legacyHeaders: false,
-    // Si no hay email en el body, se usa la IP como respaldo.
     keyGenerator: (req) => {
-    const email = req.body && req.body.email;
+        const email = req.body?.email;
 
-    return typeof email === "string" && email.trim()
-        ? `email:${email.trim().toLowerCase()}`
-        : `ip:${ipKeyGenerator(req.ip)}`;
-},
+        if (typeof email === "string" && email.trim()) {
+            return `email:${email.trim().toLowerCase()}`;
+        }
+
+        return `ip:${ipKeyGenerator(req.ip)}`;
+    },
     message: {
         message:
             "Ya solicitaste varios enlaces para este correo. Intenta de nuevo en 15 minutos."
