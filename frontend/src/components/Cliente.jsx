@@ -24,6 +24,7 @@ export function Cliente() {
   const [calificacion, setCalificacion] = useState(0);
   const [comentario, setComentario] = useState("");
   const [resenas, setResenas] = useState([]);
+  const [publicandoResena, setPublicandoResena] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -211,7 +212,11 @@ export function Cliente() {
     }
   }
 
-  async function crearResena() {
+  async function crearResena(event) {
+    event.preventDefault();
+
+    if (publicandoResena) return;
+
     if (!citaSeleccionada) {
       SetMessage('Selecciona una cita para calificar');
       return;
@@ -221,6 +226,8 @@ export function Cliente() {
       SetMessage('Selecciona una calificación');
       return;
     }
+
+    setPublicandoResena(true);
 
     try {
       const response = await fetch(
@@ -259,6 +266,8 @@ export function Cliente() {
     } catch (error) {
       console.error(error);
       SetMessage('Error al publicar la reseña');
+    } finally {
+      setPublicandoResena(false);
     }
   }
 
@@ -564,99 +573,155 @@ export function Cliente() {
         </section>
 
         <section className="formulario-resena" id="resenas">
-          <h2>Califica tu servicio</h2>
+          <div className="resena-encabezado">
+            <span className="resena-etiqueta">TU EXPERIENCIA CUENTA</span>
+            <h2>Cuéntanos cómo te fue</h2>
+            <p>Califica el servicio y comparte tu opinión con nuestro equipo.</p>
+          </div>
 
-          <p>Comparte tu experiencia y gana 20 puntos.</p>
-
-          {citasParaResena.length === 0 ? (
-            <p>No tienes citas pendientes por calificar.</p>
-          ) : (
-            <>
-              <label htmlFor="cita-resena">
-                Cita finalizada
-              </label>
-
-              <select
-                id="cita-resena"
-                value={citaSeleccionada}
-                onChange={(e) => setCitaSeleccionada(e.target.value)}
-              >
-                <option value="">Seleccionar cita</option>
-
-                {citasParaResena.map((cita) => (
-                  <option key={cita.id} value={cita.id}>
-                    {cita.Servicio?.nombre || "Servicio"} -{' '}
-                    {cita.fecha?.split("T")[0]}
-                  </option>
-                ))}
-              </select>
-
-              <label>Calificación</label>
-
-              <div className="estrellas-resena">
-                {[1, 2, 3, 4, 5].map((estrella) => (
-                  <button
-                    key={estrella}
-                    type="button"
-                    className={
-                      estrella <= calificacion ? "seleccionada" : ""
-                    }
-                    onClick={() => setCalificacion(estrella)}
-                    aria-label={`${estrella} estrellas`}
-                  >
-                    {estrella <= calificacion ? "★" : "☆"}
-                  </button>
-                ))}
+          <form className="resena-crear" onSubmit={crearResena}>
+            <div className="resena-form-title">
+              <span className="resena-form-icon" aria-hidden="true">✦</span>
+              <div>
+                <h3>Nueva reseña</h3>
+                <p>Una reseña por cada cita finalizada.</p>
               </div>
+            </div>
 
-              <p>{calificacion} de 5 estrellas</p>
+            {citasParaResena.length === 0 ? (
+              <p className="resena-vacia">
+                No tienes citas pendientes por calificar. Cuando finalices un
+                servicio, podrás dejar aquí tu opinión.
+              </p>
+            ) : (
+              <>
+                <label htmlFor="cita-resena">Elige el servicio</label>
+                <select
+                  id="cita-resena"
+                  value={citaSeleccionada}
+                  onChange={(e) => setCitaSeleccionada(e.target.value)}
+                >
+                  <option value="">Seleccionar una cita finalizada</option>
+                  {citasParaResena.map((cita) => (
+                    <option key={cita.id} value={cita.id}>
+                      {cita.Servicio?.nombre || "Servicio"} ·{" "}
+                      {cita.empleado?.nombre || "Profesional no asignado"} ·{" "}
+                      {cita.fecha?.split("T")[0]}
+                    </option>
+                  ))}
+                </select>
 
-              <label htmlFor="comentario-resena">
-                Comentario (opcional)
-              </label>
+                {citaSeleccionada && (() => {
+                  const cita = citasParaResena.find(
+                    (item) => Number(item.id) === Number(citaSeleccionada)
+                  );
 
-              <textarea
-                id="comentario-resena"
-                value={comentario}
-                onChange={(e) => setComentario(e.target.value)}
-                maxLength={500}
-                placeholder="Cuéntanos cómo fue tu experiencia..."
-              />
+                  return cita ? (
+                    <div className="resena-cita-seleccionada">
+                      <span className="resena-cita-icono" aria-hidden="true">✓</span>
+                      <div>
+                        <strong>{cita.Servicio?.nombre || "Servicio"}</strong>
+                        <span>
+                          Atendido por {cita.empleado?.nombre || "profesional no asignado"}
+                        </span>
+                        <small>
+                          {cita.fecha
+                            ? new Date(cita.fecha).toLocaleDateString("es-CO")
+                            : ""}
+                        </small>
+                      </div>
+                    </div>
+                  ) : null;
+                })()}
 
-              <button
-                type="button"
-                onClick={crearResena}
-                disabled={!citaSeleccionada || calificacion === 0}
-              >
-                Publicar reseña
-              </button>
-            </>
-          )}
+                <fieldset className="resena-calificacion">
+                  <legend>¿Cómo calificarías la atención?</legend>
+                  <div className="estrellas-resena" role="group" aria-label="Calificación">
+                    {[1, 2, 3, 4, 5].map((estrella) => (
+                      <button
+                        key={estrella}
+                        type="button"
+                        className={estrella <= calificacion ? "seleccionada" : ""}
+                        onClick={() => setCalificacion(estrella)}
+                        aria-label={`${estrella} ${estrella === 1 ? "estrella" : "estrellas"}`}
+                        aria-pressed={calificacion === estrella}
+                      >
+                        {estrella <= calificacion ? "★" : "☆"}
+                      </button>
+                    ))}
+                    <span>
+                      {calificacion > 0
+                        ? `${calificacion} de 5`
+                        : "Selecciona una calificación"}
+                    </span>
+                  </div>
+                </fieldset>
+
+                <label htmlFor="comentario-resena">Tu comentario (opcional)</label>
+                <textarea
+                  id="comentario-resena"
+                  value={comentario}
+                  onChange={(e) => setComentario(e.target.value)}
+                  maxLength={500}
+                  placeholder="¿Qué fue lo que más te gustó?"
+                />
+                <span className="resena-caracteres">{comentario.length}/500</span>
+
+                <button
+                  className="resena-publicar"
+                  type="submit"
+                  disabled={!citaSeleccionada || calificacion === 0 || publicandoResena}
+                >
+                  {publicandoResena ? "Publicando..." : "Publicar reseña"}
+                </button>
+                <p className="resena-puntos">Al publicar una reseña válida ganas 20 puntos.</p>
+              </>
+            )}
+          </form>
 
           <div className="resenas-publicadas">
-            <h3>Mis reseñas publicadas</h3>
+            <div className="resenas-publicadas-cabecera">
+              <div>
+                <span className="resena-etiqueta">TU HISTORIAL</span>
+                <h3>Mis reseñas</h3>
+              </div>
+              <span className="resenas-conteo">{resenas.length}</span>
+            </div>
 
             {resenas.length === 0 ? (
-              <p>Aún no has publicado reseñas.</p>
+              <p className="resenas-sin-publicar">
+                Tus reseñas publicadas aparecerán aquí.
+              </p>
             ) : (
-              resenas.map((resena) => (
-                <div key={resena.id}>
-                  <p>
-                    {"★".repeat(resena.calificacion)}
-                    {"☆".repeat(5 - resena.calificacion)}
-                  </p>
-
-                  <p>{resena.comentario || "Sin comentario"}</p>
-
-                  <span>
-                    {resena.fecha_creacion
-                      ? new Date(
-                          resena.fecha_creacion
-                        ).toLocaleDateString('es-CO')
-                      : ''}
-                  </span>
-                </div>
-              ))
+              <div className="resenas-lista">
+                {resenas.map((resena) => (
+                  <article className="resena-publicada" key={resena.id}>
+                    <div className="resena-publicada-top">
+                      <span className="resena-estrellas-lectura" aria-label={`${resena.calificacion} de 5 estrellas`}>
+                        {"★".repeat(resena.calificacion)}
+                        <span>{"☆".repeat(5 - resena.calificacion)}</span>
+                      </span>
+                      <time>
+                        {resena.fecha_creacion
+                          ? new Date(resena.fecha_creacion).toLocaleDateString("es-CO")
+                          : ""}
+                      </time>
+                    </div>
+                    <p className="resena-publicada-comentario">
+                      {resena.comentario || "Sin comentario"}
+                    </p>
+                    <div className="resena-dirigida">
+                      <span aria-hidden="true">✂</span>
+                      <div>
+                        <strong>{resena.cita?.empleado?.nombre || "Profesional"}</strong>
+                        <small>
+                          {resena.cita?.Servicio?.nombre || "Servicio"}
+                        </small>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
             )}
           </div>
         </section>
