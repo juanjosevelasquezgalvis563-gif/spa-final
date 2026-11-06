@@ -12,6 +12,7 @@ export const forgotPasswordIpLimiter = rateLimit({
     }
 });
 
+
 // Evita múltiples solicitudes de recuperación para el mismo correo.
 export const forgotPasswordEmailLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
