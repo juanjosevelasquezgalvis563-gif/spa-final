@@ -2064,6 +2064,7 @@ button {
 
 .registro-captcha {
     min-width: 0;
+<<<<<<< HEAD
     margin: 2px 0 0;
     padding: 18px;
     border: 1px solid #e8e1eb;
@@ -2077,10 +2078,23 @@ button {
     padding: 0 8px;
     color: #2B183F;
     font-size: 15px;
+=======
+    margin: 0;
+    padding: 16px;
+    border: 1px solid #e4dbe9;
+    border-radius: 12px;
+    background: #fcfaff;
+}
+
+.registro-captcha legend {
+    padding: 0 6px;
+    color: #2B183F;
+>>>>>>> 016f85385405a2122062a86d388ff7b1b878c848
     font-weight: 700;
 }
 
 .registro-captcha-prompt {
+<<<<<<< HEAD
     margin: 10px 0 14px;
     color: #362844;
     font-size: 14px;
@@ -2106,16 +2120,26 @@ button {
     color: #5b456c;
     font-size: 11px;
     font-weight: 700;
+=======
+    margin: 0 0 12px;
+    color: #493958;
+    text-align: center;
+>>>>>>> 016f85385405a2122062a86d388ff7b1b878c848
 }
 
 .registro-captcha-images {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
+<<<<<<< HEAD
     gap: 9px;
+=======
+    gap: 8px;
+>>>>>>> 016f85385405a2122062a86d388ff7b1b878c848
 }
 
 .registro-captcha-option {
     position: relative;
+<<<<<<< HEAD
     display: block;
     overflow: hidden;
     aspect-ratio: 1;
@@ -2140,11 +2164,30 @@ button {
 .registro-captcha-verify:focus-visible {
     outline: 3px solid rgba(212, 175, 55, .65);
     outline-offset: 3px;
+=======
+    padding: 4px;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color .2s, transform .2s;
+}
+
+.registro-captcha-option:hover {
+    transform: translateY(-2px);
+}
+
+.registro-captcha-option:focus-visible,
+.registro-captcha-option.seleccionada {
+    outline: none;
+    border-color: #2B183F;
+>>>>>>> 016f85385405a2122062a86d388ff7b1b878c848
 }
 
 .registro-captcha-option img {
     display: block;
     width: 100%;
+<<<<<<< HEAD
     height: 100%;
     object-fit: cover;
     transition: transform .2s ease;
@@ -2247,6 +2290,68 @@ button {
 .registro-captcha-status.exitoso {
     color: #17613d;
     font-weight: 700;
+=======
+    aspect-ratio: 1;
+    border-radius: 8px;
+}
+
+.registro-captcha-option span {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    display: grid;
+    width: 22px;
+    height: 22px;
+    place-items: center;
+    border-radius: 50%;
+    background: #2B183F;
+    color: #fff;
+    font-weight: 700;
+}
+
+.registro-captcha-refresh {
+    display: block;
+    margin: 12px auto 0;
+    padding: 4px 8px;
+    border: 0;
+    background: transparent;
+    color: #493958;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.registro-captcha-refresh:disabled {
+    cursor: wait;
+}
+
+.registro-captcha-status {
+    margin: 10px 0 0;
+    color: #493958;
+    text-align: center;
+    font-weight: 600;
+}
+
+.registro-captcha-status.exitoso {
+    color: #15803d;
+}
+
+.registro-captcha-verify {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    padding: 10px;
+    border: 0;
+    border-radius: 8px;
+    background: #2B183F;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.registro-captcha-verify:disabled {
+    opacity: .6;
+    cursor: wait;
+>>>>>>> 016f85385405a2122062a86d388ff7b1b878c848
 }
 
 .registro-button {
@@ -10250,4 +10355,150 @@ PROFESIONALES
     flex-direction: column;
     gap: 4px;
   }
+}
+/* Perfiles consultables desde el panel de administración */
+.admin-perfiles {
+    margin: 30px 0;
+    padding: 28px;
+    border: 1px solid rgba(43, 24, 63, .08);
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 12px 32px rgba(43, 24, 63, .07);
+}
+
+.admin-perfiles-head {
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 22px;
+}
+
+.admin-perfiles-roles {
+    display: flex;
+    gap: 8px;
+    padding: 5px;
+    border-radius: 12px;
+    background: #f6f1f8;
+}
+
+.admin-perfiles-roles button {
+    padding: 9px 15px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #65566e;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.admin-perfiles-roles button.activo {
+    background: #2B183F;
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(43, 24, 63, .16);
+}
+
+.admin-perfiles-lista {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+}
+
+.admin-perfil-item {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid #eee7f1;
+    border-radius: 12px;
+    background: #fff;
+    color: #33243d;
+    text-align: left;
+}
+
+.admin-perfil-rol {
+    color: #9a7a3d;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.admin-perfil-ir {
+    width: 100%;
+    padding: 9px 12px;
+    border: 0;
+    border-radius: 8px;
+    background: #2B183F;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.admin-perfil-ir:hover {
+    background: #493958;
+}
+
+.admin-perfil-avatar {
+    display: grid;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #eadcf0, #f7edda);
+    color: #43265e;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.admin-perfil-item-texto {
+    display: grid;
+    min-width: 0;
+    flex: 1;
+    gap: 3px;
+}
+
+.admin-perfil-item-texto strong,
+.admin-perfil-item-texto small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-perfil-item-texto small {
+    color: #827889;
+    font-size: 12px;
+}
+
+.admin-perfil-flecha {
+    color: #9c8ba7;
+    font-size: 24px;
+}
+
+.admin-perfiles-vacio {
+    padding: 18px;
+    color: #827889;
+    font-size: 14px;
+    text-align: center;
+}
+
+@media (max-width: 720px) {
+    .admin-perfiles { padding: 18px; }
+    .admin-perfiles-head { flex-direction: column; }
+}
+
+.admin-perfil-citas-resumen {
+    display: grid;
+    width: 100%;
+    gap: 3px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    background: #f8f5fa;
+    color: #493958;
+    font-size: 12px;
+}
+
+
+.admin-perfil-citas-resumen small {
+    color: #827889;
 }

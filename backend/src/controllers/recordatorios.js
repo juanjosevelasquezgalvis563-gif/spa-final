@@ -1,4 +1,3 @@
-import cron from "node-cron";
 import nodemailer from "nodemailer";
 
 import Cita from "../models/citas.js";
@@ -13,7 +12,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-async function procesarRecordatorios() {
+export async function procesarRecordatorios() {
     try {
         const citas = await Cita.findAll({
             where: {
@@ -48,7 +47,7 @@ async function procesarRecordatorios() {
                     fechaCita.getTime() - ahora.getTime();
 
                 const veinticuatroHoras =
-                    24 * 60 * 60 * 1000;
+                    26 * 60 * 60 * 1000;
 
              
                 if (
@@ -111,10 +110,15 @@ async function procesarRecordatorios() {
     }
 }
 
+
 export function iniciarRecordatorios() {
-  
+    console.log("Sistema de recordatorios iniciado");
+
+    // Ejecutar al iniciar el servidor
     procesarRecordatorios();
 
-   
-    cron.schedule("* * * * *", procesarRecordatorios);
+    // Revisar las citas cada hora
+    setInterval(() => {
+        procesarRecordatorios();
+    }, 60 * 60 * 1000);
 }
