@@ -10397,3 +10397,657 @@ PROFESIONALES
 .admin-perfil-citas-resumen small {
     color: #827889;
 }
+
+/* Panel de cliente: distribucion responsive y acabados monocromaticos */
+.dashboard {
+  --client-ink: #171719;
+  --client-ink-soft: #343438;
+  --client-muted: #737379;
+  --client-line: #e3e3e6;
+  --client-surface: #ffffff;
+  --client-surface-soft: #f3f3f4;
+  background:
+    radial-gradient(ellipse at 92% 9%, rgba(205, 205, 210, .35), transparent 28%),
+    linear-gradient(145deg, #f8f8f9, #eeeeef 70%, #f5f5f6);
+  color: var(--client-ink);
+}
+
+.dashboard .contenido {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: clamp(16px, 2vw, 26px);
+  max-width: 1480px;
+  padding: clamp(20px, 3vw, 42px);
+}
+
+.dashboard .contenido > .bienvenida,
+.dashboard .contenido > .cliente-message,
+.dashboard .contenido > .cards,
+.dashboard .contenido > .panel-superior,
+.dashboard .contenido > .fidelizacion,
+.dashboard .contenido > .formulario-resena {
+  grid-column: 1 / -1;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dashboard .contenido > .bienvenida {
+  min-height: 190px;
+  display: flex;
+  align-items: flex-end;
+  padding: clamp(28px, 5vw, 58px);
+  border: 1px solid #343438;
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 88% 20%, rgba(255, 255, 255, .13), transparent 30%),
+    linear-gradient(125deg, #101012 0%, #27272b 58%, #45454a 100%);
+  box-shadow: 0 22px 48px rgba(0, 0, 0, .14);
+}
+
+.dashboard .bienvenida::before {
+  position: absolute;
+  top: 28px;
+  left: clamp(28px, 5vw, 58px);
+  color: #bdbdc2;
+  content: "TU ESPACIO PERSONAL";
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .2em;
+}
+
+.dashboard .bienvenida::after {
+  top: -72px;
+  right: 3%;
+  color: rgba(255, 255, 255, .055);
+  font-size: clamp(200px, 24vw, 310px);
+}
+
+.dashboard .bienvenida p {
+  position: relative;
+  z-index: 1;
+  max-width: 680px;
+  margin: 0;
+  color: #f4f4f5;
+  font-size: clamp(24px, 3vw, 38px);
+  font-weight: 600;
+  letter-spacing: -.04em;
+  line-height: 1.15;
+}
+
+.dashboard .cliente-message {
+  margin: 0;
+  padding: 14px 18px;
+  border: 1px solid #d5d5d9;
+  border-radius: 13px;
+  background: #fff;
+  color: #414147;
+  text-align: left;
+}
+
+.dashboard .cards {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  min-width: 0;
+}
+
+.dashboard .cards > .card {
+  grid-column: auto;
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 158px;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  padding: 24px;
+  border: 1px solid var(--client-line);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 100% 0, rgba(0, 0, 0, .045), transparent 38%),
+    linear-gradient(145deg, #fff, #f7f7f8);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .045);
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+
+.dashboard .cards > .card::before {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid #e3e3e6;
+  border-radius: 12px;
+  background: #f0f0f1;
+  color: #38383d;
+  content: "01";
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.dashboard .cards > .card:nth-child(2)::before { content: "02"; }
+.dashboard .cards > .card:nth-child(3)::before { content: "03"; }
+.dashboard .cards > .card:nth-child(4)::before { content: "04"; }
+
+.dashboard .cards > .card:hover {
+  transform: translateY(-4px);
+  border-color: #bdbdc2;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, .09);
+}
+
+.dashboard .cards > .card h4 {
+  margin: 0 46px 8px 0;
+  color: #69696f;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
+.dashboard .cards > .card h2 {
+  margin: 0;
+  color: var(--client-ink);
+  font-size: clamp(32px, 4vw, 44px);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.dashboard .cards > .card > span {
+  margin-top: 9px;
+  color: #85858b;
+  font-size: 12px;
+}
+
+.dashboard .panel-superior {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr);
+  gap: 18px;
+  width: 100%;
+  margin: 0;
+}
+
+.dashboard .panel-superior > .citas-realizar,
+.dashboard .panel-superior > .acciones {
+  grid-column: auto;
+  min-width: 0;
+  width: auto;
+  max-width: none;
+  margin: 0;
+  padding: clamp(22px, 3vw, 30px);
+  border: 1px solid var(--client-line);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, .92);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .045);
+}
+
+.dashboard .panel-superior > .citas-realizar h4 {
+  margin: 0 0 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--client-line);
+  color: var(--client-ink);
+  font-size: 19px;
+}
+
+.dashboard .panel-superior .cita-info {
+  grid-template-columns: minmax(80px, .55fr) minmax(0, 1fr);
+  gap: 0 16px;
+  border: 0;
+}
+
+.dashboard .panel-superior .cita-info h3,
+.dashboard .panel-superior .cita-info p,
+.dashboard .panel-superior .cita-info .estado {
+  padding: 11px 0;
+  border-bottom: 1px solid #eeeeef;
+}
+
+.dashboard .panel-superior .cita-info h3 {
+  color: #85858b;
+  font-size: 10px;
+  letter-spacing: .1em;
+}
+
+.dashboard .panel-superior .cita-info p {
+  color: #29292e;
+  font-size: 13px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.dashboard .panel-superior .cita-info .estado {
+  align-self: center;
+  padding: 5px 10px;
+  border: 1px solid #d8d8dc;
+  border-radius: 999px;
+  background: #f1f1f2;
+  color: #333338;
+  font-size: 11px;
+}
+
+.dashboard .panel-superior > .acciones {
+  justify-content: center;
+  gap: 12px;
+}
+
+.dashboard .acciones > .accion {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  min-height: 76px;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 42px 14px 14px;
+  border: 1px solid #e7e7e9;
+  border-radius: 15px;
+  background: linear-gradient(110deg, #f7f7f8, #fff);
+  color: var(--client-ink);
+  text-align: left;
+  transition: transform .2s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+.dashboard .accion-icono {
+  display: grid;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid #dedee1;
+  border-radius: 14px;
+  background: #ededee;
+  color: #242428;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.dashboard .acciones > .accion > div {
+  min-width: 0;
+}
+
+.dashboard .acciones > .accion > div::after {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  color: #88888e;
+  content: "↗";
+  font-size: 17px;
+  transform: translateY(-50%);
+  transition: transform .2s ease, color .2s ease;
+}
+
+.dashboard .acciones > .accion h3 {
+  color: #242428;
+  font-size: 13px;
+}
+
+.dashboard .acciones > .accion p {
+  margin-top: 5px;
+  color: #77777e;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.dashboard .acciones > .accion:hover {
+  transform: translateY(-2px);
+  border-color: #bcbcc1;
+  background: #202023;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, .12);
+  color: #fff;
+}
+
+.dashboard .acciones > .accion:hover h3,
+.dashboard .acciones > .accion:hover p,
+.dashboard .acciones > .accion:hover > div::after {
+  color: #f4f4f5;
+}
+
+.dashboard .acciones > .accion:hover > div::after {
+  transform: translate(3px, -50%);
+}
+
+.dashboard .acciones > .accion:hover .accion-icono {
+  border-color: #55555a;
+  background: #3a3a3f;
+  color: #fff;
+}
+
+.dashboard .contenido > .fidelizacion {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.dashboard .fidelizacion:hover {
+  transform: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.dashboard .fidelizacion > .fidelizacion-cabecera {
+  grid-column: 1 / -1;
+  min-height: 118px;
+  padding: 26px clamp(22px, 3vw, 36px);
+  border: 1px solid #343438;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 90% 15%, rgba(255, 255, 255, .1), transparent 32%),
+    linear-gradient(125deg, #151517, #353539);
+  color: #fff;
+}
+
+.dashboard .fidelizacion-etiqueta {
+  color: #c5c5ca;
+  font-size: 10px;
+  letter-spacing: .16em;
+}
+
+.dashboard .fidelizacion-cabecera h2,
+.dashboard .fidelizacion-cabecera p {
+  color: #fff;
+}
+
+.dashboard .fidelizacion-cabecera h2 {
+  margin: 7px 0;
+  font-family: var(--font-display);
+  font-size: 28px;
+}
+
+.dashboard .fidelizacion-cabecera p {
+  color: #c7c7cb;
+  font-size: 13px;
+}
+
+.dashboard .fidelizacion-icono {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: 17px;
+  background: rgba(255, 255, 255, .08);
+  color: #f4f4f5;
+  filter: grayscale(1);
+}
+
+.dashboard .fidelizacion > .puntos-resumen {
+  grid-column: span 4;
+  min-width: 0;
+  padding: 26px;
+  border: 1px solid #333337;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #29292d, #111113);
+  color: #fff;
+}
+
+.dashboard .puntos-resumen span,
+.dashboard .puntos-resumen p {
+  color: #c2c2c7;
+}
+
+.dashboard .puntos-resumen h2 {
+  margin: 12px 0;
+  color: #fff;
+  font-size: clamp(38px, 5vw, 54px);
+}
+
+.dashboard .puntos-icono {
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: 15px;
+  background: #3d3d42;
+  color: #fff;
+  filter: grayscale(1);
+}
+
+.dashboard .fidelizacion > .descuento-disponible {
+  grid-column: span 8;
+  min-width: 0;
+  padding: 26px;
+  border: 1px solid var(--client-line);
+  border-radius: 20px;
+  background: linear-gradient(145deg, #fff, #f2f2f3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .04);
+}
+
+.dashboard .descuento-disponible h3,
+.dashboard .como-ganar-puntos h3,
+.dashboard .historial-puntos h3 {
+  margin: 0 0 12px;
+  color: #232327;
+  font-size: 16px;
+}
+
+.dashboard .descuento-disponible h2 {
+  margin: 0 0 8px;
+  color: #171719;
+  font-size: 42px;
+}
+
+.dashboard .descuento-disponible p {
+  color: #717177;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.dashboard .niveles-descuento {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.dashboard .niveles-descuento > div {
+  padding: 14px;
+  border: 1px solid #e2e2e5;
+  border-radius: 13px;
+  background: #fff;
+  color: #28282c;
+}
+
+.dashboard .niveles-descuento > div strong,
+.dashboard .niveles-descuento > div span {
+  display: block;
+  color: inherit;
+  font-size: 11px;
+}
+
+.dashboard .niveles-descuento > div span {
+  margin-top: 4px;
+  color: #77777e;
+}
+
+.dashboard .fidelizacion > .como-ganar-puntos {
+  grid-column: span 5;
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid var(--client-line);
+  border-radius: 20px;
+  background: #fff;
+}
+
+.dashboard .fidelizacion > .historial-puntos {
+  grid-column: span 7;
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid var(--client-line);
+  border-radius: 20px;
+  background: #fff;
+}
+
+.dashboard .beneficio-puntos > span,
+.dashboard .movimiento-icono {
+  background: #ededee;
+  color: #3c3c41;
+  filter: grayscale(1);
+}
+
+.dashboard .beneficio-puntos h4,
+.dashboard .movimiento-info h4 {
+  color: #28282c;
+}
+
+.dashboard .beneficio-puntos p,
+.dashboard .sin-puntos,
+.dashboard .movimiento-info span {
+  color: #77777e;
+}
+
+.dashboard .movimiento-puntos {
+  border-color: #ededee;
+}
+
+.dashboard .formulario-resena:hover {
+  transform: none;
+  border-color: #e4e4e7;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, .06);
+}
+
+.dashboard .formulario-resena .resena-form-icon {
+  border-radius: 14px;
+  background: linear-gradient(145deg, #18181a, #45454a);
+}
+
+.dashboard .resena-puntos {
+  margin: 0;
+  color: #77777e;
+  font-size: 11px;
+  text-align: center;
+}
+
+@media (max-width: 1000px) {
+  .dashboard .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard .panel-superior {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .dashboard .fidelizacion > .puntos-resumen {
+    grid-column: span 5;
+  }
+
+  .dashboard .fidelizacion > .descuento-disponible {
+    grid-column: span 7;
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboard .sidebar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .dashboard .sidebar > button {
+    flex: 1 1 130px;
+  }
+
+  .dashboard .contenido {
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .dashboard .panel-superior {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard .fidelizacion > .puntos-resumen,
+  .dashboard .fidelizacion > .descuento-disponible,
+  .dashboard .fidelizacion > .como-ganar-puntos,
+  .dashboard .fidelizacion > .historial-puntos {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 520px) {
+  .dashboard .contenido {
+    gap: 13px;
+    padding: 14px;
+  }
+
+  .dashboard .contenido > .bienvenida {
+    min-height: 170px;
+    padding: 28px 22px;
+    border-radius: 20px;
+  }
+
+  .dashboard .bienvenida::before {
+    top: 20px;
+    left: 22px;
+    font-size: 9px;
+  }
+
+  .dashboard .bienvenida p {
+    font-size: 27px;
+  }
+
+  .dashboard .cards {
+    gap: 10px;
+  }
+
+  .dashboard .cards > .card {
+    min-height: 135px;
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .dashboard .cards > .card::before {
+    top: 13px;
+    right: 13px;
+    width: 29px;
+    height: 29px;
+    border-radius: 10px;
+    font-size: 9px;
+  }
+
+  .dashboard .cards > .card h4 {
+    margin-right: 28px;
+    font-size: 10px;
+  }
+
+  .dashboard .cards > .card h2 {
+    font-size: 34px;
+  }
+
+  .dashboard .cards > .card > span {
+    font-size: 10px;
+  }
+
+  .dashboard .panel-superior > .citas-realizar,
+  .dashboard .panel-superior > .acciones {
+    padding: 19px;
+    border-radius: 18px;
+  }
+
+  .dashboard .panel-superior .cita-info {
+    grid-template-columns: 78px minmax(0, 1fr);
+    gap: 0 10px;
+  }
+
+  .dashboard .fidelizacion {
+    gap: 12px;
+  }
+
+  .dashboard .fidelizacion > .fidelizacion-cabecera,
+  .dashboard .fidelizacion > .puntos-resumen,
+  .dashboard .fidelizacion > .descuento-disponible,
+  .dashboard .fidelizacion > .como-ganar-puntos,
+  .dashboard .fidelizacion > .historial-puntos {
+    padding: 20px;
+    border-radius: 17px;
+  }
+
+  .dashboard .niveles-descuento {
+    grid-template-columns: 1fr;
+  }
+}
