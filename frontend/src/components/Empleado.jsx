@@ -190,7 +190,7 @@ export function Empleado() {
                     </h2>
 
                     <p>
-                        Bienvenido a tu panel de JC Alta Peluqueria.
+                        ¡Bienvenido al equipo de JC Alta Peluquería!
                     </p>
 
                 </div>
