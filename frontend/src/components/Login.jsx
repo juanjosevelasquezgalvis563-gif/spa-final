@@ -1,7 +1,8 @@
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
+import logo from "../assets/image.png";
 
 export function Login() {
   const [email, setEmail] = useState("");
@@ -40,7 +41,7 @@ export function Login() {
       } else {
         setMessage(data.message);
       }
-    } catch (error) {
+    } catch {
       setMessage("Error de conexión con el servidor");
     }
   }
@@ -68,7 +69,7 @@ export function Login() {
       } else {
         setMessage(data.message || "No se pudo iniciar sesión con Google");
       }
-    } catch (error) {
+    } catch {
       setMessage("Error de conexión con el servidor");
     }
   }
@@ -84,64 +85,91 @@ export function Login() {
   }, [message]);
 
   return (
-    <div className="login-container">
-      <form onSubmit={handleSubmit} className="login-form">
-        <div className="login-header">
-          <h2 className="login-title">
-            Bienvenido a Jc Alta Peluquería
-          </h2>
-        </div>
+    <div className="login-container auth-page">
+      <div className="auth-layout">
+        <aside className="auth-brand-panel">
+          <div className="auth-brand">
+            <img src={logo} alt="JC Alta Peluquería" />
+            <span>JC Alta Peluquería</span>
+          </div>
+          <div className="auth-brand-copy">
+            <span className="auth-eyebrow">BELLEZA Y BIENESTAR</span>
+            <h1>Un espacio para resaltar tu esencia.</h1>
+            <p>
+              Ingresa a tu cuenta y continúa disfrutando de una experiencia
+              pensada para ti.
+            </p>
+          </div>
+          <div className="auth-brand-detail" aria-hidden="true">
+            <span>JC</span>
+          </div>
+          <p className="auth-brand-caption">Tu belleza, nuestro arte.</p>
+        </aside>
 
-        <div className="login-group">
-          <label>Correo electrónico</label>
-          <input
-            type="email"
-            placeholder="tucorreo@ejemplo.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="login-input"
-            required
-          />
-        </div>
+        <form onSubmit={handleSubmit} className="login-form auth-card auth-card-login">
+          <div className="auth-form-heading">
+            <span className="auth-eyebrow">QUÉ BUENO TENERTE DE VUELTA</span>
+            <h2 className="login-title">Iniciar sesión</h2>
+            <p>Ingresa tus datos para continuar.</p>
+          </div>
 
-        <div className="login-group">
-          <label>Contraseña</label>
-          <input
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="login-input"
-            required
-          />
-        </div>
+          <div className="login-group">
+            <label htmlFor="login-email">Correo electrónico</label>
+            <input
+              id="login-email"
+              type="email"
+              placeholder="tucorreo@ejemplo.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="login-input"
+              autoComplete="email"
+              required
+            />
+          </div>
 
-        <button type="submit" className="login-button">
-          Iniciar sesión
-        </button>
+          <div className="login-group">
+            <label htmlFor="login-password">Contraseña</label>
+            <input
+              id="login-password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="login-input"
+              autoComplete="current-password"
+              required
+            />
+          </div>
 
-        <div className="login-footer-links">
-          <Link to="/forgot-password" className="forgot-password">
-            ¿Olvidaste tu contraseña?
-          </Link>
-        </div>
+          <div className="login-footer-links">
+            <Link to="/forgot-password" className="forgot-password">
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </div>
 
-        <div className="login-google">
-          
+          <button type="submit" className="login-button">
+            Iniciar sesión
+          </button>
 
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={() => {
-              setMessage("No se pudo iniciar sesión con Google");
-            }}
-            text="continue_with"
-            shape="rectangular"
-            width="280"
-          />
-        </div>
+          <div className="login-google">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => {
+                setMessage("No se pudo iniciar sesión con Google");
+              }}
+              text="continue_with"
+              shape="rectangular"
+              width="280"
+            />
+          </div>
 
-        {message && <p className="login-message">{message}</p>}
-      </form>
+          {message && <p className="login-message" role="alert">{message}</p>}
+
+          <p className="auth-switch">
+            ¿Aún no tienes cuenta? <Link to="/registro">Crear cuenta</Link>
+          </p>
+        </form>
+      </div>
     </div>
   );
 }
