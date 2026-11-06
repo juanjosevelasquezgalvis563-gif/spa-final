@@ -110,6 +110,7 @@ export async function procesarRecordatorios() {
     }
 }
 
+
 export function iniciarRecordatorios() {
     console.log("Sistema de recordatorios iniciado");
 
