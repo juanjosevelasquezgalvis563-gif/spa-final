@@ -7,20 +7,85 @@ const CAPTCHA_TTL_MS = 5 * 60 * 1000;
 const CAPTCHA_MAX_CHALLENGES = 5000;
 const CAPTCHA_REQUIRED_SELECTIONS = 4;
 const CAPTCHA_REQUIRED_ROUNDS = 3;
+const CAPTCHA_IMAGE_SIZE = 320;
 const captchaProofs = new Map();
 const captchaSessions = new Map();
 const CAPTCHA_SHAPES = [
-    { name: 'semáforo', svg: '<path d="M49 73h6v19h-6z" fill="#64748b" stroke="none"/><rect x="34" y="8" width="32" height="68" rx="9" fill="#263449" stroke="#172033" stroke-width="3"/><circle cx="50" cy="24" r="8" fill="#ef4444" stroke="#fecaca" stroke-width="2"/><circle cx="50" cy="42" r="8" fill="#f59e0b" stroke="#fde68a" stroke-width="2"/><circle cx="50" cy="60" r="8" fill="#22c55e" stroke="#bbf7d0" stroke-width="2"/>' },
-    { name: 'bicicleta', svg: '<g fill="none" stroke="#334155" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="68" r="15"/><circle cx="76" cy="68" r="15"/><path d="m24 68 16-27 17 27H24l13-20h19l20 20M38 41h-9m28 0h9m-17 0 4-7h8"/><circle cx="57" cy="68" r="3" fill="#f59e0b" stroke="none"/></g>' },
-    { name: 'autobús', svg: '<rect x="17" y="15" width="66" height="57" rx="11" fill="#fbbf24" stroke="#92400e" stroke-width="3"/><path d="M22 25a5 5 0 0 1 5-5h46a5 5 0 0 1 5 5v20H22z" fill="#dbeafe" stroke="#475569" stroke-width="2"/><path d="M49 21v23M19 53h62" stroke="#92400e" stroke-width="2"/><circle cx="31" cy="73" r="7" fill="#334155" stroke="#e2e8f0" stroke-width="2"/><circle cx="69" cy="73" r="7" fill="#334155" stroke="#e2e8f0" stroke-width="2"/><circle cx="75" cy="59" r="3" fill="#ef4444" stroke="none"/>' },
-    { name: 'automóvil', svg: '<path d="M18 57 24 42q2-6 9-7h32q7 1 10 8l7 14q5 2 5 8v9H13v-9q0-6 5-8z" fill="#60a5fa" stroke="#1e3a8a" stroke-width="3"/><path d="m31 40-6 15h43l-7-15q-1-2-5-2H36q-4 0-5 2z" fill="#dbeafe" stroke="#1e3a8a" stroke-width="2"/><circle cx="29" cy="72" r="7" fill="#1e293b" stroke="#e2e8f0" stroke-width="2"/><circle cx="71" cy="72" r="7" fill="#1e293b" stroke="#e2e8f0" stroke-width="2"/><path d="M14 62h8m56 0h8" stroke="#fde68a" stroke-width="4" stroke-linecap="round"/>' },
-    { name: 'motocicleta', svg: '<g fill="none" stroke="#334155" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="25" cy="68" r="13"/><circle cx="75" cy="68" r="13"/><path d="m25 68 16-20h18l16 20H48l-9-17m20-3 8-9h9m-32 9-5-8h-8"/><path d="M43 46h18l7 8H40z" fill="#f97316" stroke="#9a3412"/><path d="M67 39h9" stroke="#64748b"/></g>' },
-    { name: 'señal de tránsito', svg: '<path d="M47 54h6v37h-6z" fill="#64748b" stroke="none"/><path d="m50 10 34 20v29H16V30z" fill="#ef4444" stroke="#991b1b" stroke-width="3"/><path d="m50 17 27 16v19H23V33z" fill="none" stroke="#fff" stroke-width="3"/><text x="50" y="46" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" font-weight="700" fill="#fff" stroke="none">STOP</text>' }
+    {
+        name: 'semáforo',
+        images: [
+            'photo-1557404763-69708cd8b9ce',
+            'photo-1581677641984-cf14ca58c5ee',
+            'photo-1624724126923-e2c021df1311',
+            'photo-1530652101053-8c0db4fbb5de',
+            'photo-1527603815363-e79385e0747e'
+        ]
+    },
+    {
+        name: 'bicicleta',
+        images: [
+            'photo-1485965120184-e220f721d03e',
+            'photo-1532298229144-0ec0c57515c7',
+            'photo-1618762044398-ec1e7e048bbd',
+            'photo-1507035895480-2b3156c31fc8',
+            'photo-1452573992436-6d508f200b30'
+        ]
+    },
+    {
+        name: 'autobús',
+        images: [
+            'photo-1570125909232-eb263c188f7e',
+            'photo-1632276536839-84cad7fd03b0',
+            'photo-1570125909517-53cb21c89ff2',
+            'photo-1544620347-c4fd4a3d5957',
+            'photo-1564694202883-46e7448c1b26'
+        ]
+    },
+    {
+        name: 'automóvil',
+        images: [
+            'photo-1580273916550-e323be2ae537',
+            'photo-1503376780353-7e6692767b70',
+            'photo-1494976388531-d1058494cdd8',
+            'photo-1492144534655-ae79c964c9d7',
+            'photo-1568605117036-5fe5e7bab0b7'
+        ]
+    },
+    {
+        name: 'motocicleta',
+        images: [
+            'photo-1449426468159-d96dbf08f19f',
+            'photo-1588627541420-fce3f661b779',
+            'photo-1591637333184-19aa84b3e01f',
+            'photo-1558981403-c5f9899a28bc',
+            'photo-1558981806-ec527fa84c39'
+        ]
+    },
+    {
+        name: 'señal de tránsito',
+        images: [
+            'photo-1572670014853-1d3a3f22b40f',
+            'photo-1618737739013-aed8938604fb',
+            'photo-1506704810770-7e9bbab1094b',
+            'photo-1546617885-4822125f891e',
+            'photo-1520716963369-9b24de965de4'
+        ]
+    }
 ];
 
-function crearImagenCaptcha(shape, color, background) {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="16" fill="${background}"/><path d="M0 25h100M0 75h100M25 0v100M75 0v100" stroke="#ffffff" stroke-opacity=".35"/><g fill="${color}" stroke="#422b50" stroke-width="2" stroke-linejoin="round">${shape.svg}</g><circle cx="12" cy="12" r="2" fill="#d4af37"/><circle cx="88" cy="88" r="2" fill="#d4af37"/></svg>`;
-    return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+function barajar(elementos) {
+    const resultado = [...elementos];
+
+    for (let index = resultado.length - 1; index > 0; index--) {
+        const swapIndex = randomInt(index + 1);
+        [resultado[index], resultado[swapIndex]] = [resultado[swapIndex], resultado[index]];
+    }
+
+    return resultado;
+}
+
+function crearImagenCaptcha(photoId) {
+    return `https://images.unsplash.com/${photoId}?auto=format&fit=crop&w=${CAPTCHA_IMAGE_SIZE}&h=${CAPTCHA_IMAGE_SIZE}&q=75`;
 }
 
 function crearDesafioCaptcha(sessionId, round) {
@@ -36,23 +101,22 @@ function crearDesafioCaptcha(sessionId, round) {
     }
 
     const target = CAPTCHA_SHAPES[randomInt(CAPTCHA_SHAPES.length)];
-    const distractors = CAPTCHA_SHAPES.filter((shape) => shape !== target);
-    const opciones = [target, target, target, target];
+    const distractors = barajar(CAPTCHA_SHAPES.filter((shape) => shape !== target)).slice(0, 4);
+    const opciones = [
+        ...barajar(target.images).slice(0, CAPTCHA_REQUIRED_SELECTIONS).map((photoId) => ({
+            shape: target,
+            photoId
+        })),
+        ...distractors.map((shape) => ({
+            shape,
+            photoId: shape.images[randomInt(shape.images.length)]
+        }))
+    ];
+    const opcionesBarajadas = barajar(opciones);
 
-    while (opciones.length < 8) {
-        opciones.push(distractors[randomInt(distractors.length)]);
-    }
-
-    for (let index = opciones.length - 1; index > 0; index--) {
-        const swapIndex = randomInt(index + 1);
-        [opciones[index], opciones[swapIndex]] = [opciones[swapIndex], opciones[index]];
-    }
-
-    const respuesta = opciones
-        .map((shape, index) => shape === target ? index : null)
+    const respuesta = opcionesBarajadas
+        .map((opcion, index) => opcion.shape === target ? index : null)
         .filter((index) => index !== null);
-    const colores = ['#d8b4e2', '#b9d8ca', '#f4d18c', '#a8c9e8', '#e9b7a8', '#c4c6ef', '#b5d7dc', '#e6c6a5'];
-    const fondos = ['#fbf5fc', '#f2faf5', '#fff9ed', '#f1f7fc', '#fff5f1', '#f5f5ff', '#f1fbfc', '#fff9f1'];
     const challengeId = randomUUID();
     captchaChallenges.set(challengeId, {
         respuesta,
@@ -67,9 +131,9 @@ function crearDesafioCaptcha(sessionId, round) {
         round,
         totalRounds: CAPTCHA_REQUIRED_ROUNDS,
         prompt: `Selecciona todas las imágenes que contienen ${target.name}.`,
-        images: opciones.map((shape, index) => ({
+        images: opcionesBarajadas.map((opcion, index) => ({
             id: index,
-            src: crearImagenCaptcha(shape, colores[index], fondos[index])
+            src: crearImagenCaptcha(opcion.photoId)
         }))
     };
 }
