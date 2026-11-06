@@ -1,5 +1,7 @@
 
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import logo from "../assets/image.png";
 
 export function Registro() {
   const [nombre, setNombre] = useState("");
@@ -158,16 +160,40 @@ export function Registro() {
   }
 
   return (
-    <div className="registro-container">
-      <form className="registro-form" onSubmit={handleSubmit}>
-        <h2 className="registro-title">
-          Regístrate
-        </h2>
+    <div className="registro-container auth-page auth-page-register">
+      <div className="auth-layout">
+        <aside className="auth-brand-panel auth-brand-panel-register">
+          <div className="auth-brand">
+            <img src={logo} alt="JC Alta Peluquería" />
+            <span>JC Alta Peluquería</span>
+          </div>
+          <div className="auth-brand-copy">
+            <span className="auth-eyebrow">BIENVENIDA A TU NUEVO RITUAL</span>
+            <h1>Tu momento de cuidarte empieza aquí.</h1>
+            <p>
+              Crea tu cuenta para reservar tus servicios y vivir una
+              experiencia de belleza hecha para ti.
+            </p>
+          </div>
+          <div className="auth-brand-detail" aria-hidden="true">
+            <span>JC</span>
+          </div>
+          <p className="auth-brand-caption">Tu belleza, nuestro arte.</p>
+        </aside>
+
+        <form className="registro-form auth-card auth-card-register" onSubmit={handleSubmit}>
+          <div className="auth-form-heading">
+            <span className="auth-eyebrow">ÚNETE A NOSOTROS</span>
+            <h2 className="registro-title">Crear cuenta</h2>
+            <p>Completa tus datos para comenzar.</p>
+          </div>
 
         <input
           className="registro-input"
           type="text"
           placeholder="Nombre"
+          autoComplete="name"
+          aria-label="Nombre"
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
           required
@@ -177,6 +203,8 @@ export function Registro() {
           className="registro-input"
           type="tel"
           placeholder="Teléfono"
+          autoComplete="tel"
+          aria-label="Teléfono"
           value={telefono}
           onChange={(e) => setTelefono(e.target.value)}
           required
@@ -186,6 +214,8 @@ export function Registro() {
           className="registro-input"
           type="email"
           placeholder="Correo electrónico"
+          autoComplete="email"
+          aria-label="Correo electrónico"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -195,6 +225,8 @@ export function Registro() {
           className="registro-input"
           type="password"
           placeholder="Contraseña"
+          autoComplete="new-password"
+          aria-label="Contraseña"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -257,11 +289,16 @@ export function Registro() {
         </button>
 
         {message && (
-          <p className="registro-message">
+          <p className="registro-message" role="status">
             {message}
           </p>
         )}
-      </form>
+
+          <p className="auth-switch">
+            ¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link>
+          </p>
+        </form>
+      </div>
     </div>
   );
 }
