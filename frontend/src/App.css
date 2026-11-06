@@ -8049,6 +8049,428 @@ EDUCATE
   .edu-heading-main {
     gap: 30px;
   }
+}
+
+/* =========================================================
+   PANEL ADMINISTRADOR - PALETA MONOCROMATICA
+========================================================= */
+
+.admin-dashboard {
+    --admin-black: #111111;
+    --admin-black-deep: #080808;
+    --admin-gray-dark: #3f3f46;
+    --admin-gray: #71717a;
+    --admin-gray-light: #e4e4e7;
+    --admin-gray-bg: #f4f4f5;
+    --admin-white: #ffffff;
+
+    color: var(--admin-black);
+    background: var(--admin-gray-bg);
+}
+
+.admin-dashboard .admin-topbar {
+    max-width: 1440px;
+    padding: 24px 28px;
+    border: 1px solid var(--admin-gray-light);
+    border-radius: var(--radius-md);
+    background: var(--admin-white);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .05);
+}
+
+.admin-dashboard .admin-saludo,
+.admin-dashboard .admin-panel-title {
+    color: var(--admin-black);
+}
+
+.admin-dashboard .admin-subtitulo,
+.admin-dashboard .admin-rol {
+    color: var(--admin-gray);
+}
+
+.admin-dashboard .admin-identity {
+    border-color: var(--admin-gray-light);
+    background: var(--admin-white);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .05);
+}
+
+.admin-dashboard .admin-avatar {
+    background: var(--admin-black);
+    color: var(--admin-white);
+}
+
+.admin-dashboard .admin-nombre {
+    color: var(--admin-black);
+}
+
+.admin-dashboard .admin-alert {
+    border-color: var(--admin-gray-light);
+    border-left-color: var(--admin-black);
+    background: #e4e4e7;
+    color: var(--admin-gray-dark);
+}
+
+.admin-dashboard .admin-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+}
+
+.admin-dashboard .admin-panel,
+.admin-dashboard .admin-perfiles,
+.admin-dashboard .admin-historial {
+    border: 1px solid var(--admin-gray-light);
+    border-radius: var(--radius-md);
+    background: var(--admin-white);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .05);
+}
+
+.admin-dashboard .admin-panel-head {
+    border-bottom-color: var(--admin-gray-light);
+}
+
+.admin-dashboard .admin-panel-icon {
+    background: var(--admin-gray-light);
+    filter: grayscale(1);
+}
+
+.admin-dashboard .admin-total,
+.admin-dashboard .admin-stock {
+    border-color: var(--admin-gray-light);
+    background: var(--admin-gray-bg);
+    color: var(--admin-gray-dark);
+}
+
+.admin-dashboard .admin-vacio,
+.admin-dashboard .admin-perfiles-vacio {
+    border-color: var(--admin-gray-light);
+    background: var(--admin-gray-bg);
+    color: var(--admin-gray);
+}
+
+.admin-dashboard .admin-tabla thead th {
+    border-bottom-color: var(--admin-gray-dark);
+    background: var(--admin-black);
+    color: var(--admin-white);
+}
+
+.admin-dashboard .admin-tabla tbody td {
+    border-bottom-color: var(--admin-gray-light);
+    color: var(--admin-gray-dark);
+}
+
+.admin-dashboard .admin-fila:hover {
+    background: var(--admin-gray-bg);
+}
+
+.admin-dashboard .admin-imagen {
+    background: var(--admin-gray-light);
+    box-shadow: none;
+}
+
+.admin-dashboard .admin-celda-nombre,
+.admin-dashboard .admin-celda-precio {
+    color: var(--admin-black);
+}
+
+.admin-dashboard .admin-badge,
+.admin-dashboard .admin-badge[data-estado="en stock"],
+.admin-dashboard .admin-badge[data-estado="stock bajo"],
+.admin-dashboard .admin-badge[data-estado="sin stock"] {
+    border: 1px solid var(--admin-gray-light);
+    background: var(--admin-gray-bg);
+    color: var(--admin-gray-dark);
+}
+
+.admin-dashboard .admin-badge[data-estado="en stock"] {
+    background: var(--admin-white);
+}
+
+.admin-dashboard .admin-badge[data-estado="stock bajo"] {
+    background: #d4d4d8;
+}
+
+.admin-dashboard .admin-badge[data-estado="sin stock"] {
+    background: var(--admin-gray-dark);
+    color: var(--admin-white);
+}
+
+.admin-dashboard .admin-btn-editar,
+.admin-dashboard .admin-btn-eliminar {
+    border: 1px solid var(--admin-gray-light);
+    background: var(--admin-gray-bg);
+    filter: grayscale(1);
+}
+
+.admin-dashboard .admin-btn-editar:hover,
+.admin-dashboard .admin-btn-eliminar:hover {
+    border-color: var(--admin-black);
+    background: var(--admin-black);
+    color: var(--admin-white);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, .16);
+}
+
+.admin-dashboard .admin-label,
+.admin-dashboard .admin-form-col:focus-within .admin-label {
+    color: var(--admin-gray-dark);
+}
+
+.admin-dashboard .admin-label::before,
+.admin-dashboard .admin-form-col:focus-within .admin-label::before {
+    background-color: var(--admin-gray);
+    box-shadow: none;
+}
+
+.admin-dashboard .admin-input {
+    border-color: var(--admin-gray-light);
+    background: var(--admin-gray-bg);
+    color: var(--admin-black);
+}
+
+.admin-dashboard .admin-input:hover,
+.admin-dashboard .admin-input:focus {
+    border-color: var(--admin-gray);
+    background: var(--admin-white);
+    color: var(--admin-black);
+    box-shadow: 0 0 0 3px rgba(113, 113, 122, .14);
+}
+
+.admin-dashboard .admin-input::placeholder {
+    color: var(--admin-gray);
+}
+
+.admin-dashboard .admin-input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: none;
+}
+
+.admin-dashboard .admin-help {
+    color: var(--admin-gray);
+}
+
+.admin-dashboard .admin-btn-comprar {
+    border-color: var(--admin-black);
+    background: var(--admin-black);
+    color: var(--admin-white);
+}
+
+.admin-dashboard .admin-btn-comprar::before {
+    background: var(--admin-white);
+}
+
+.admin-dashboard .admin-btn-comprar:hover {
+    border-color: var(--admin-black);
+    color: var(--admin-black);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .14);
+}
+
+.admin-dashboard .admin-perfiles {
+    max-width: 1440px;
+    margin: 24px auto 0;
+    padding: 26px 28px 28px;
+}
+
+.admin-dashboard .admin-perfiles-roles {
+    display: flex;
+    gap: 8px;
+}
+
+.admin-dashboard .admin-perfiles-roles button {
+    padding: 9px 16px;
+    border: 1px solid var(--admin-gray-light);
+    border-radius: var(--radius-pill);
+    background: var(--admin-white);
+    color: var(--admin-gray-dark);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--t-base);
+}
+
+.admin-dashboard .admin-perfiles-roles button:hover,
+.admin-dashboard .admin-perfiles-roles button.activo {
+    border-color: var(--admin-black);
+    background: var(--admin-black);
+    color: var(--admin-white);
+}
+
+.admin-dashboard .admin-perfiles-lista {
+    display: grid;
+    gap: 12px;
+}
+
+.admin-dashboard .admin-perfil-item {
+    display: grid;
+    grid-template-columns: auto minmax(160px, 1fr) minmax(220px, 1.2fr) auto;
+    align-items: center;
+    gap: 18px;
+    padding: 16px;
+    border: 1px solid var(--admin-gray-light);
+    border-radius: var(--radius-sm);
+    background: var(--admin-white);
+    transition: var(--t-base);
+}
+
+.admin-dashboard .admin-perfil-item:hover {
+    border-color: var(--admin-gray);
+    background: var(--admin-gray-bg);
+    transform: translateY(-2px);
+}
+
+.admin-dashboard .admin-perfil-avatar {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--admin-black);
+    color: var(--admin-white);
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.admin-dashboard .admin-perfil-item-texto,
+.admin-dashboard .admin-perfil-citas-resumen {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.admin-dashboard .admin-perfil-item-texto strong,
+.admin-dashboard .admin-perfil-citas-resumen strong {
+    color: var(--admin-black);
+    font-size: 14px;
+}
+
+.admin-dashboard .admin-perfil-item-texto small,
+.admin-dashboard .admin-perfil-citas-resumen small {
+    color: var(--admin-gray);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.admin-dashboard .admin-perfil-rol {
+    width: fit-content;
+    margin-top: 3px;
+    padding: 3px 9px;
+    border-radius: var(--radius-pill);
+    background: var(--admin-gray-light);
+    color: var(--admin-gray-dark);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.admin-dashboard .admin-perfil-ir {
+    padding: 10px 14px;
+    border: 1px solid var(--admin-black);
+    border-radius: var(--radius-sm);
+    background: var(--admin-black);
+    color: var(--admin-white);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--t-base);
+}
+
+.admin-dashboard .admin-perfil-ir:hover {
+    background: var(--admin-gray-dark);
+    transform: translateY(-1px);
+}
+
+.admin-dashboard .admin-historial {
+    max-width: 1440px;
+    margin: 24px auto 0;
+    padding: 26px 28px 28px;
+}
+
+.admin-dashboard .admin-historial:hover {
+    border-color: var(--admin-gray);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .08);
+}
+
+.admin-dashboard .admin-historial-tabla {
+    border-spacing: 0;
+}
+
+.admin-dashboard .admin-historial-tabla thead th {
+    border-bottom-color: var(--admin-gray-dark);
+    background: var(--admin-black);
+    color: var(--admin-white);
+}
+
+.admin-dashboard .admin-historial-tabla tbody td {
+    border-color: var(--admin-gray-light);
+    background: var(--admin-white);
+    color: var(--admin-gray-dark);
+}
+
+.admin-dashboard .admin-historial-fila:hover td {
+    background: var(--admin-gray-bg);
+    border-color: var(--admin-gray-light);
+}
+
+.admin-dashboard .admin-historial-producto,
+.admin-dashboard .admin-historial-total {
+    color: var(--admin-black);
+    text-shadow: none;
+}
+
+.admin-dashboard .admin-historial-fecha,
+.admin-dashboard .admin-historial-precio,
+.admin-dashboard .admin-historial-cantidad {
+    color: var(--admin-gray-dark);
+}
+
+.admin-dashboard .admin-historial-cantidad {
+    background: var(--admin-gray-bg);
+}
+
+.admin-dashboard .admin-btn-ver {
+    border-color: var(--admin-gray-light);
+    background: var(--admin-gray-bg);
+    color: var(--admin-black);
+}
+
+.admin-dashboard .admin-btn-ver:hover {
+    border-color: var(--admin-black);
+    background: var(--admin-black);
+    color: var(--admin-white);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, .16);
+}
+
+.admin-dashboard .admin-historial-vacio {
+    border-color: var(--admin-gray-light);
+    background: var(--admin-gray-bg);
+    color: var(--admin-gray);
+}
+
+@media (max-width: 900px) {
+    .admin-dashboard .admin-perfiles,
+    .admin-dashboard .admin-historial {
+        padding: 22px 16px 24px;
+    }
+
+    .admin-dashboard .admin-perfil-item {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .admin-dashboard .admin-perfil-citas-resumen,
+    .admin-dashboard .admin-perfil-ir {
+        grid-column: 2;
+    }
+}
+
+@media (max-width: 600px) {
+    .admin-dashboard .admin-topbar {
+        padding: 20px;
+    }
+
+    .admin-dashboard .admin-perfil-item {
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    .admin-dashboard .admin-perfil-ir {
+        width: 100%;
+    }
 
   .edu-feature-grid {
     grid-template-columns: 1fr;
