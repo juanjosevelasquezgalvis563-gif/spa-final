@@ -124,7 +124,7 @@ export function CitasEmpleado() {
     }
 
     return (
-        <div>
+        <div className="empleado-container">
 
             {perfilId && (
                 <button type="button" className="menu-btn" onClick={() => navigate('/admin')}>
