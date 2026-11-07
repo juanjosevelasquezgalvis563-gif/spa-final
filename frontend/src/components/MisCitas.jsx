@@ -2,6 +2,7 @@ import React from 'react'
 import { useState } from 'react'
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom'
+import { API_ROOT } from '../lib/api';
 
 
 
@@ -20,7 +21,7 @@ export function MisCitas() {
 
     async function obtenerCliente() {
         try {
-            const response = await fetch("http://localhost:3000/inser/cliente", {
+            const response = await fetch(`${API_ROOT}/inser/cliente`, {
                 method: 'GET',
                 credentials: 'include',
             })
@@ -41,7 +42,7 @@ export function MisCitas() {
     async function cancelarSuCita(id) {
         try {
             const response = await fetch(
-                `http://localhost:3000/inser/cliente/cancelar/${id}`,
+                `${API_ROOT}/inser/cliente/cancelar/${id}`,
                 {
                     method: 'PUT',
                     credentials: 'include',
