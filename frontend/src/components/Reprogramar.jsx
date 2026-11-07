@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { API_ROOT } from "../lib/api";
 
 export function Reprogramar() {
   const [fecha, SetFecha] = useState("");
@@ -15,7 +16,7 @@ export function Reprogramar() {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/inser/cliente/actualizar/${id}`,
+        `${API_ROOT}/inser/cliente/actualizar/${id}`,
         {
           method: "PUT",
           credentials:'include',
