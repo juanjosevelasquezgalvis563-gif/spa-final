@@ -12,6 +12,7 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const frontendOrigin = process.env.FRONTEND_URL?.replace(/\/+$/, "");
 
 app.use(
   helmet({
@@ -24,7 +25,7 @@ app.use(cors({
     origin: [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
-        process.env.FRONTEND_URL
+        frontendOrigin
     ].filter(Boolean),
     credentials: true
 }));
