@@ -52,6 +52,7 @@ import {
     forgotPasswordEmailLimiter
 } from "../middlewares/rateLimiter.js";
 import rateLimit from "express-rate-limit";
+import { authCookieOptions } from "../config/cookies.js";
 
 
 
@@ -92,8 +93,8 @@ router.post('/login',loginLimiter, login);
 router.post('/auth/google', loginGoogle);
 router.get('/me', middleware, me);
 router.post("/logout", (req, res) => {
-    res.clearCookie("token");
-    res.clearCookie("adminPerfil");
+    res.clearCookie("token", authCookieOptions);
+    res.clearCookie("adminPerfil", authCookieOptions);
 
     res.json({
         message: "sesión cerrada"
