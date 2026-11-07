@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-
+import { API_ROOT } from '../lib/api';
 
 
 
@@ -20,7 +20,7 @@ export function CitasEmpleado() {
         SetCargando(true);
         SetErrorCarga(false);
         try {
-            const response = await fetch("http://localhost:3000/inser/empleado", {
+            const response = await fetch(`${API_ROOT}/inser/empleado`, {
                 method: "GET",
                 credentials:'include',
             });
@@ -67,7 +67,7 @@ export function CitasEmpleado() {
     async function comfirmar(id) {
         try {
             const response = await fetch(
-                `http://localhost:3000/inser/empleado/comfirmar/${id}`,
+                `${API_ROOT}/inser/empleado/comfirmar/${id}`,
                 {
                     method: "PUT",
                     credentials:'include',
@@ -91,7 +91,7 @@ export function CitasEmpleado() {
     async function finalizar(id) {
         try {
             const response = await fetch(
-                `http://localhost:3000/inser/empleado/finalizar/${id}`,
+                `${API_ROOT}/inser/empleado/finalizar/${id}`,
                 {
                     method: "PUT",
                     credentials:'include',
@@ -115,7 +115,7 @@ export function CitasEmpleado() {
     async function cancelar(id) {
         try {
             const response = await fetch(
-                `http://localhost:3000/inser/empleado/cancelar/${id}`,
+                `${API_ROOT}/inser/empleado/cancelar/${id}`,
                 {
                     method: "PUT",
                     credentials:'include',
