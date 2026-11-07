@@ -1,5 +1,6 @@
 import React from "react";
 import { useEffect, useState } from "react";
+import { API_ROOT } from "../lib/api";
 
 export function Cita() {
 
@@ -17,7 +18,7 @@ export function Cita() {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/inser/cliente",
+        `${API_ROOT}/inser/cliente`,
         {
           method: "POST",
           credentials:'include',
@@ -53,7 +54,7 @@ export function Cita() {
   async function Servicios() {
     try {
       const response = await fetch(
-        "http://localhost:3000/inser/cliente/servicios",
+        `${API_ROOT}/inser/cliente/servicios`,
         {
           method: "GET",
           credentials:'include',
