@@ -1,8 +1,8 @@
-
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import logo from "../assets/image.png";
+import { API_ROOT } from "../lib/api";
 
 export function Login() {
   const [email, setEmail] = useState("");
@@ -25,7 +25,7 @@ export function Login() {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:3000/inser/login", {
+      const response = await fetch(`${API_ROOT}/inser/login`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -49,7 +49,7 @@ export function Login() {
   async function handleGoogleSuccess(credentialResponse) {
     try {
       const response = await fetch(
-        "http://localhost:3000/inser/auth/google",
+        `${API_ROOT}/inser/auth/google`,
         {
           method: "POST",
           credentials: "include",
