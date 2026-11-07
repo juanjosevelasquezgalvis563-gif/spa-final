@@ -1,6 +1,7 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import logo from '../assets/image.png'; 
+import { API_ROOT } from '../lib/api';
 
 export function Cliente() {
   const [message, SetMessage] = useState("");
@@ -36,8 +37,8 @@ export function Cliente() {
     try {
       const esPerfilAdmin = Boolean(perfilId);
       const url = esPerfilAdmin
-        ? 'http://localhost:3000/inser/administrador/perfiles?rol=cliente'
-        : 'http://localhost:3000/inser/me';
+        ? `${API_ROOT}/inser/administrador/perfiles?rol=cliente`
+        : `${API_ROOT}/inser/me`;
       const response = await fetch(url, { credentials: "include" });
       const data = await response.json();
 
@@ -62,7 +63,7 @@ export function Cliente() {
   async function cantidadCitas() {
     try {
       const response = await fetch(
-        'http://localhost:3000/inser/cliente/cantidadCitas',
+        `${API_ROOT}/inser/cliente/cantidadCitas`,
         { credentials: "include" }
       );
       const data = await response.json();
@@ -77,7 +78,7 @@ export function Cliente() {
   async function citasPendientes() {
     try {
       const response = await fetch(
-        'http://localhost:3000/inser/cliente/citasPendientes',
+        `${API_ROOT}/inser/cliente/citasPendientes`,
         { credentials: "include" }
       );
       const data = await response.json();
@@ -92,7 +93,7 @@ export function Cliente() {
   async function citasComfirmadas() {
     try {
       const response = await fetch(
-        'http://localhost:3000/inser/cliente/citasComfirmadas',
+        `${API_ROOT}/inser/cliente/citasComfirmadas`,
         { credentials: "include" }
       );
       const data = await response.json();
@@ -107,7 +108,7 @@ export function Cliente() {
   async function citasFinalizadas() {
     try {
       const response = await fetch(
-        'http://localhost:3000/inser/cliente/citasFinalizadas',
+        `${API_ROOT}/inser/cliente/citasFinalizadas`,
         { credentials: "include" }
       );
       const data = await response.json();
@@ -122,7 +123,7 @@ export function Cliente() {
   async function citasRealizar() {
     try {
       const response = await fetch(
-        'http://localhost:3000/inser/cliente/citaRealizar',
+        `${API_ROOT}/inser/cliente/citaRealizar`,
         { credentials: "include" }
       );
       const data = await response.json();
@@ -137,7 +138,7 @@ export function Cliente() {
   async function ultimasCitas() {
     try {
       const response = await fetch(
-        'http://localhost:3000/inser/cliente/ultimasCitas',
+        `${API_ROOT}/inser/cliente/ultimasCitas`,
         { credentials: "include" }
       );
       const data = await response.json();
@@ -152,7 +153,7 @@ export function Cliente() {
   async function obtenerFidelizacion() {
     try {
       const response = await fetch(
-        'http://localhost:3000/inser/cliente/fidelizacion',
+        `${API_ROOT}/inser/cliente/fidelizacion`,
         { credentials: "include" }
       );
 
@@ -179,7 +180,7 @@ export function Cliente() {
   async function obtenerResenas() {
     try {
       const response = await fetch(
-        'http://localhost:3000/inser/cliente/resenas',
+        `${API_ROOT}/inser/cliente/resenas`,
         { credentials: "include" }
       );
 
@@ -199,7 +200,7 @@ export function Cliente() {
   async function prepararCitasParaResena() {
     try {
       const response = await fetch(
-        'http://localhost:3000/inser/cliente/citasParaResena',
+        `${API_ROOT}/inser/cliente/citasParaResena`,
         { credentials: "include" }
       );
 
@@ -213,7 +214,7 @@ export function Cliente() {
       const citas = Array.isArray(data) ? data : data.citas || [];
 
       const responseResenas = await fetch(
-        'http://localhost:3000/inser/cliente/resenas',
+        `${API_ROOT}/inser/cliente/resenas`,
         { credentials: "include" }
       );
 
@@ -258,7 +259,7 @@ export function Cliente() {
 
     try {
       const response = await fetch(
-        'http://localhost:3000/inser/cliente/resenas',
+        `${API_ROOT}/inser/cliente/resenas`,
         {
           method: "POST",
           headers: {
