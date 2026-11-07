@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_ROOT } from '../lib/api';
 
 export function Admin() {
 
@@ -21,7 +22,7 @@ export function Admin() {
     async function obtenerAdmin() {
         try {
             const response = await fetch(
-                'http://localhost:3000/inser/administrador',
+                `${API_ROOT}/inser/administrador`,
                 {
                     method: 'GET',
                     credentials: 'include',
@@ -44,7 +45,7 @@ export function Admin() {
     async function obtenerProductos() {
         try {
             const response = await fetch(
-                'http://localhost:3000/inser/administrador/productos',
+                `${API_ROOT}/inser/administrador/productos`,
                 {
                     method: 'GET',
                     credentials: 'include'
@@ -67,7 +68,7 @@ export function Admin() {
     async function eliminarProducto(id) {
         try {
             const response = await fetch(
-                `http://localhost:3000/inser/administrador/productos/${id}`,
+                `${API_ROOT}/inser/administrador/productos/${id}`,
                 {
                     method: 'DELETE',
                     credentials: 'include'
@@ -93,7 +94,7 @@ export function Admin() {
 
         try {
             const response = await fetch(
-                'http://localhost:3000/inser/administrador/compras',
+                `${API_ROOT}/inser/administrador/compras`,
                 {
                     method: 'POST',
                     credentials: 'include',
@@ -131,7 +132,7 @@ export function Admin() {
 
     async function historialCompras(){
         try{
-            const response = await fetch('http://localhost:3000/inser/administrador/historialCompras',{
+            const response = await fetch(`${API_ROOT}/inser/administrador/historialCompras`,{
                 method:'GET',
                 credentials:'include'
             });
@@ -152,7 +153,7 @@ export function Admin() {
 
         try {
             const response = await fetch(
-                `http://localhost:3000/inser/administrador/perfiles?rol=${rol}`,
+                `${API_ROOT}/inser/administrador/perfiles?rol=${rol}`,
                 { credentials: 'include' }
             );
             const data = await response.json();
@@ -172,7 +173,7 @@ export function Admin() {
     async function abrirPerfil(usuario) {
         try {
             const response = await fetch(
-                'http://localhost:3000/inser/administrador/perfil-activo',
+                `${API_ROOT}/inser/administrador/perfil-activo`,
                 {
                     method: 'POST',
                     credentials: 'include',
@@ -193,7 +194,7 @@ export function Admin() {
     }
 
     async function limpiarPerfilActivo() {
-        await fetch('http://localhost:3000/inser/administrador/perfil-activo', {
+        await fetch(`${API_ROOT}/inser/administrador/perfil-activo`, {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
