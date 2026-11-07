@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { API_ROOT } from "../lib/api";
 
-const API_URL = "http://localhost:3000/inser/empleado";
+const API_URL = `${API_ROOT}/inser/empleado`;
 
 async function obtenerJson(ruta) {
     const url = ruta ? `${API_URL}/${ruta}` : API_URL;
@@ -111,7 +112,7 @@ export function Empleado() {
         }
 
         try {
-            const response = await fetch("http://localhost:3000/inser/logout", {
+            const response = await fetch(`${API_ROOT}/inser/logout`, {
                 method: "POST",
                 credentials: "include"
             });
