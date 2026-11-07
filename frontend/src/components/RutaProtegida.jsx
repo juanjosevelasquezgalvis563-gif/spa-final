@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
+import { API_ROOT } from "../lib/api";
 
 /**
  * Protege una ruta verificando la sesión real contra el backend.
@@ -20,7 +21,7 @@ export function RutaProtegida({ children, rol }) {
 
     async function verificar() {
       try {
-        const response = await fetch("http://localhost:3000/inser/me", {
+        const response = await fetch(`${API_ROOT}/inser/me`, {
           method: "GET",
           credentials: "include",
         });
