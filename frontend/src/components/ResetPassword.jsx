@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
+import { API_ROOT } from "../lib/api";
 
 const MIN_CARACTERES = 6;
 
@@ -38,7 +39,7 @@ export function ResetPassword() {
 
     try {
       const response = await fetch(
-        `http://${window.location.hostname}:3000/inser/reset-password`,
+        `${API_ROOT}/inser/reset-password`,
         {
           method: "POST",
           headers: {
