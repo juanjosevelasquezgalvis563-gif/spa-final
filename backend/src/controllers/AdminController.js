@@ -2,6 +2,7 @@ import Usuario from "../models/Usuario.js";
 import Producto from "../models/productos.js";
 import Compra from "../models/compras.js";
 import Cita from "../models/citas.js";
+import { adminProfileCookieOptions, authCookieOptions } from "../config/cookies.js";
 
 const ROLES_PERFIL_ADMIN = ['empleado', 'cliente'];
 
@@ -46,7 +47,7 @@ export async function activarPerfilAdmin(req, res) {
         const { id, rol } = req.body;
 
         if (!id || !ROLES_PERFIL_ADMIN.includes(rol)) {
-            res.clearCookie('adminPerfil', { httpOnly: true, sameSite: 'lax', secure: false });
+            res.clearCookie('adminPerfil', authCookieOptions);
             return res.json({ message: 'Perfil administrativo limpiado.' });
         }
 
@@ -59,12 +60,7 @@ export async function activarPerfilAdmin(req, res) {
             return res.status(404).json({ message: 'No se encontró el perfil seleccionado.' });
         }
 
-        res.cookie('adminPerfil', JSON.stringify({ id: perfil.id, rol }), {
-            httpOnly: true,
-            sameSite: 'lax',
-            secure: false,
-            maxAge: 60 * 60 * 1000
-        });
+        res.cookie('adminPerfil', JSON.stringify({ id: perfil.id, rol }), adminProfileCookieOptions);
         return res.json({ message: 'Perfil seleccionado.' });
     } catch (error) {
         return res.status(500).json({ message: 'No se pudo cargar el perfil seleccionado.' });
