@@ -1,7 +1,7 @@
-
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import logo from "../assets/image.png";
+import { API_ROOT } from "../lib/api";
 
 export function Registro() {
   const [nombre, setNombre] = useState("");
@@ -25,7 +25,7 @@ export function Registro() {
     if (reiniciarProgreso) setCaptchaRound(1);
 
     try {
-      const response = await fetch("http://localhost:3000/inser/captcha");
+      const response = await fetch(`${API_ROOT}/inser/captcha`);
       if (!response.ok) throw new Error("No se pudo cargar la verificación");
       setCaptcha(await response.json());
     } catch {
@@ -69,7 +69,7 @@ export function Registro() {
     setMessage("");
 
     try {
-      const response = await fetch("http://localhost:3000/inser/captcha/verificar", {
+      const response = await fetch(`${API_ROOT}/inser/captcha/verificar`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -124,7 +124,7 @@ export function Registro() {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/inser/registrar",
+        `${API_ROOT}/inser/registrar`,
         {
           method: "POST",
           headers: {
