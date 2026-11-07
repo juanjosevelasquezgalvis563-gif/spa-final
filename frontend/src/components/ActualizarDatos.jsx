@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_ROOT } from "../lib/api";
 
 
 export  function ActualizarDatos() {
@@ -13,9 +14,8 @@ export  function ActualizarDatos() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-
     try {
-      const response = await fetch("http://localhost:3000/inser/registrarr", {
+      const response = await fetch(`${API_ROOT}/inser/registrarr`, {
         method: "PUT",
         credentials:'include',
         headers: {
