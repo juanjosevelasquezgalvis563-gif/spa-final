@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import Usuario from "../models/Usuario.js";
 import { OAuth2Client } from "google-auth-library";
 import crypto from "crypto";
+import { authCookieOptions } from "../config/cookies.js";
 
 export async function login(req, res) {
     try {
@@ -47,11 +48,7 @@ export async function login(req, res) {
             }
         );
 
-        res.cookie("token", token, {
-            httpOnly: true,
-            secure: false,
-            sameSite: "lax"
-        });
+        res.cookie("token", token, authCookieOptions);
 
         return res.json({
             token,
@@ -141,11 +138,7 @@ export async function loginGoogle(req, res) {
             { expiresIn: "1h" }
         );
 
-        res.cookie("token", token, {
-            httpOnly: true,
-            secure: false,
-            sameSite: "lax"
-        });
+        res.cookie("token", token, authCookieOptions);
 
         return res.json({
             user: {
