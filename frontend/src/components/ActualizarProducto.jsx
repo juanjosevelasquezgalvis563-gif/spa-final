@@ -1,3 +1,4 @@
+import { API_ROOT } from '../lib/api';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -18,7 +19,7 @@ export  function ActualizarProducto() {
         e.preventDefault();
 
         try {
-            const response = await fetch(`http://localhost:3000/inser/administrador/productos/${id}`, {
+            const response = await fetch(`${API_ROOT}/inser/administrador/productos/${id}`, {
                 method: 'PUT',
                 credentials: 'include',
                 headers: {
