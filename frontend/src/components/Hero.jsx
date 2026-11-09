@@ -100,20 +100,15 @@ export function Hero() {
       <div className="hero-image">
         <video
           src= {videoSpa}
-          alt="JC Alta Peluquería"
           loading="lazy"
           width="350"
           height="350"
           autoPlay
           muted
           loop
+          playsInline
+          aria-label="Video de JC Alta Peluquería"
         />
-
-        <div className="hero-badge">
-          <span className="hero-badge-icon" aria-hidden="true">✦</span>
-
-          
-        </div>
       </div>
     </section>
   );
