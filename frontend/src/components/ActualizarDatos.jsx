@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { API_ROOT } from "../lib/api";
 
 
@@ -42,7 +42,7 @@ export  function ActualizarDatos() {
       } else {
         setMessage(data.message);
       }
-    } catch (error) {
+    } catch {
       setMessage('Error de conexion con el servidor');
     }
   }
@@ -58,47 +58,68 @@ export  function ActualizarDatos() {
   }, [message]);
 
   return (
-    <div className="registro-container">
-        <form className="registro-form" onSubmit={handleSubmit}>
+    <div className="registro-container actualizar-datos-page">
+        <form className="registro-form actualizar-datos-form" onSubmit={handleSubmit}>
+            <span className="actualizar-datos-eyebrow">PERFIL DEL EMPLEADO</span>
             <h2 className="registro-title">
                 Actualiza tus datos
             </h2>
 
-            <input
-                className="registro-input"
-                type="text"
-                placeholder="Nombre"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                required
-            />
+            <label className="actualizar-datos-campo" htmlFor="actualizar-nombre">
+                <span>Nombre</span>
+                <input
+                    id="actualizar-nombre"
+                    className="registro-input"
+                    type="text"
+                    placeholder="Tu nombre"
+                    autoComplete="name"
+                    value={nombre}
+                    onChange={(e) => setNombre(e.target.value)}
+                    required
+                />
+            </label>
 
-            <input
-                className="registro-input"
-                type="tel"
-                placeholder="Teléfono"
-                value={telefono}
-                onChange={(e) => setTelefono(e.target.value)}
-                required
-            />
+            <label className="actualizar-datos-campo" htmlFor="actualizar-telefono">
+                <span>Teléfono</span>
+                <input
+                    id="actualizar-telefono"
+                    className="registro-input"
+                    type="tel"
+                    placeholder="Tu teléfono"
+                    autoComplete="tel"
+                    value={telefono}
+                    onChange={(e) => setTelefono(e.target.value)}
+                    required
+                />
+            </label>
 
-            <input
-                className="registro-input"
-                type="email"
-                placeholder="Correo electrónico"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-            />
+            <label className="actualizar-datos-campo" htmlFor="actualizar-email">
+                <span>Correo electrónico</span>
+                <input
+                    id="actualizar-email"
+                    className="registro-input"
+                    type="email"
+                    placeholder="tucorreo@ejemplo.com"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                />
+            </label>
 
-            <input
-                className="registro-input"
-                type="password"
-                placeholder="Contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-            />
+            <label className="actualizar-datos-campo" htmlFor="actualizar-password">
+                <span>Contraseña</span>
+                <input
+                    id="actualizar-password"
+                    className="registro-input"
+                    type="password"
+                    placeholder="Nueva contraseña"
+                    autoComplete="new-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                />
+            </label>
 
             <button
                 className="registro-button"
@@ -108,7 +129,7 @@ export  function ActualizarDatos() {
             </button>
 
             {message && (
-                <p className="registro-message">
+                <p className="registro-message" role="status">
                     {message}
                 </p>
             )}
