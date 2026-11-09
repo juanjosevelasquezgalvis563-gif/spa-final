@@ -111,6 +111,8 @@ export function ForgotPassword() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
+              autoCapitalize="none"
+              maxLength={254}
               required
             />
           </div>
