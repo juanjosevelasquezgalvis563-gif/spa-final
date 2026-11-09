@@ -2946,6 +2946,137 @@ button {
     }
 }
 
+.forgot-container.auth-page {
+    justify-content: center;
+}
+
+.auth-card-forgot {
+    gap: 0;
+    text-align: left;
+}
+
+.auth-card-forgot::before {
+    top: -88px;
+    right: -80px;
+    left: auto;
+    width: 220px;
+    height: 220px;
+    transform: none;
+    border: 1px solid rgba(90, 90, 96, .12);
+    background: none;
+    box-shadow: 0 0 0 16px rgba(90, 90, 96, .025), 0 0 0 34px rgba(90, 90, 96, .02);
+}
+
+.auth-card-forgot .auth-form-heading {
+    margin-bottom: 24px;
+}
+
+.auth-card-forgot .forgot-title {
+    margin: 8px 0;
+    color: #2B183F;
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(29px, 4vw, 36px);
+    font-weight: 600;
+    line-height: 1.15;
+    text-align: left;
+}
+
+.auth-card-forgot .auth-form-heading p {
+    color: #756d7c;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.forgot-email-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.forgot-email-group label {
+    color: #3d3346;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.auth-card-forgot .forgot-email-input {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 49px;
+    margin: 0;
+    padding: 13px 15px;
+    border: 1px solid #e4dfe8;
+    border-radius: 11px;
+    background: #fbfafc;
+    color: #2B183F;
+    font: inherit;
+    font-size: 14px;
+    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+
+.auth-card-forgot .forgot-email-input::placeholder {
+    color: #a59da9;
+}
+
+.auth-card-forgot .forgot-email-input:focus {
+    border-color: #77777d;
+    outline: none;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(70, 70, 76, .1);
+}
+
+.auth-card-forgot .forgot-button {
+    min-height: 50px;
+    margin-top: 20px;
+    border: 1px solid #222225;
+    border-radius: 11px;
+    background: linear-gradient(110deg, #171719, #414145);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .16);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    transition: transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease;
+}
+
+.auth-card-forgot .forgot-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    border-color: #bcbcc1;
+    background: linear-gradient(110deg, #e4e4e7, #c8c8cc);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, .14);
+    color: #171719;
+}
+
+.auth-card-forgot .forgot-button:disabled {
+    cursor: wait;
+    opacity: .58;
+}
+
+.auth-card-forgot .forgot-button:focus-visible,
+.auth-card-forgot .forgot-password:focus-visible {
+    outline: 3px solid rgba(70, 70, 76, .35);
+    outline-offset: 3px;
+}
+
+.auth-card-forgot .forgot-back {
+    margin-top: 18px;
+    text-align: center;
+}
+
+.auth-card-forgot .forgot-back .forgot-password {
+    margin: 0;
+    color: #55555b;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.auth-card-forgot .forgot-back .forgot-password:hover {
+    color: #171719;
+}
+
+.auth-card-forgot .reset-message {
+    margin-top: 16px;
+}
+
 
 /* =========================================================
    PANEL SUPERIOR
