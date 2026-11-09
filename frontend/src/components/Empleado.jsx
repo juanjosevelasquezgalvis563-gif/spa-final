@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API_ROOT } from "../lib/api";
+import logo from "../assets/image.png";
 
 const API_URL = `${API_ROOT}/inser/empleado`;
 
@@ -132,11 +133,7 @@ export function Empleado() {
         <div className="layout-dashboard empleado-dashboard">
             <aside className="sidebar">
                 <div className="empleado-sidebar-brand">
-                    <span className="empleado-brand-mark" aria-hidden="true">JC</span>
-                    <div>
-                        <span className="empleado-sidebar-kicker">ESTUDIO</span>
-                        <h1 className="sidebar-title">JC Alta<br />Peluquería</h1>
-                    </div>
+                    <img className="empleado-sidebar-logo" src={logo} alt="JC Alta Peluquería" />
                 </div>
 
                 <nav className="sidebar-menu" aria-label="Navegación del empleado">
