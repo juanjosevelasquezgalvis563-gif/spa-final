@@ -187,7 +187,7 @@ export function Cita() {
               {categoriaSeleccionada
                 ? serviciosCategoria.map((servicio) => (
                     <button
-                      className="servicio-card cita-service-card"
+                      className={`servicio-card cita-service-card cita-detail-card${String(servicio.id) === String(servicioId) ? " seleccionado" : ""}`}
                       key={servicio.id}
                       type="button"
                       onClick={() => SetServicioId(String(servicio.id))}
@@ -217,7 +217,7 @@ export function Cita() {
                   ))
                 : Object.entries(categorias).map(([nombre, serviciosGrupo]) => (
                     <button
-                      className="servicio-card cita-service-card"
+                      className="servicio-card cita-service-card cita-category-card"
                       key={nombre}
                       type="button"
                       onClick={() => {
