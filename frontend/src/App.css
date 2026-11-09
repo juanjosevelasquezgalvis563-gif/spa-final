@@ -601,6 +601,7 @@ button {
         scroll-behavior: auto !important;
     }
 }
+
 /* =========================================================
    CARRUSEL
 ========================================================= */
@@ -2283,6 +2284,91 @@ button {
     animation: admin-alert-entra .3s var(--ease);
 }
 
+.actualizar-datos-page {
+    background:
+        radial-gradient(circle at 12% 10%, rgba(255, 255, 255, .9), transparent 35%),
+        linear-gradient(135deg, #e5e5e7, #f4f4f5 52%, #d4d4d8);
+}
+
+.actualizar-datos-form {
+    max-width: 520px;
+    padding: 42px;
+    border: 1px solid #fff;
+    background: linear-gradient(145deg, #fff, #f4f4f5);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .14);
+}
+
+.actualizar-datos-eyebrow {
+    color: #71717a;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .16em;
+    text-align: center;
+}
+
+.actualizar-datos-form .registro-title {
+    margin-bottom: 4px;
+    color: #18181b;
+}
+
+.actualizar-datos-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    color: #3f3f46;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.actualizar-datos-form .registro-input {
+    min-height: 48px;
+    padding: 12px 14px;
+    border-color: #d4d4d8;
+    border-radius: 10px;
+    background: #fafafa;
+    color: #18181b;
+    font: inherit;
+    font-size: 14px;
+}
+
+.actualizar-datos-form .registro-input::placeholder {
+    color: #a1a1aa;
+}
+
+.actualizar-datos-form .registro-input:focus {
+    border-color: #52525b;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(63, 63, 70, .1);
+}
+
+.actualizar-datos-form .registro-button {
+    min-height: 49px;
+    margin-top: 4px;
+    border: 1px solid #18181b;
+    border-radius: 10px;
+    background: linear-gradient(110deg, #18181b, #3f3f46);
+    color: #fff;
+    font-size: 14px;
+    transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+}
+
+.actualizar-datos-form .registro-button:hover {
+    transform: translateY(-2px);
+    background: #52525b;
+    color: #fff;
+    box-shadow: 0 9px 20px rgba(0, 0, 0, .16);
+}
+
+.actualizar-datos-form .registro-message {
+    margin: 0;
+    padding: 11px 13px;
+    border: 1px solid #d4d4d8;
+    border-radius: 10px;
+    background: #e4e4e7;
+    color: #27272a;
+    font-size: 13px;
+}
+
 @media (max-width: 480px) {
     .registro-captcha {
         padding: 14px;
@@ -2290,6 +2376,10 @@ button {
 
     .registro-captcha-images {
         gap: 7px;
+    }
+
+    .actualizar-datos-form {
+        padding: 30px 22px;
     }
 
     .registro-captcha-option {
@@ -5651,6 +5741,85 @@ button:hover {
     }
 }
 
+.mis-citas-container .mis-citas-card {
+    background: linear-gradient(145deg, #1c1c1f, #111112);
+    border-color: rgba(255, 255, 255, .12);
+}
+
+.mis-citas-container .mis-citas-header {
+    border-bottom-color: rgba(255, 255, 255, .14);
+}
+
+.mis-citas-container .mis-citas-header::after {
+    background: linear-gradient(90deg, #fff, transparent);
+}
+
+.mis-citas-container .tabla-responsive {
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 12px;
+}
+
+.mis-citas-container .tabla-citas {
+    border-radius: 12px;
+    box-shadow: none;
+}
+
+.mis-citas-container .tabla-citas th {
+    background: #303034;
+    color: #fff;
+}
+
+.mis-citas-container .tabla-citas td,
+.mis-citas-container .tabla-citas tr:nth-child(even) td {
+    border-bottom-color: rgba(255, 255, 255, .08);
+    background: #1b1b1e;
+    color: #e4e4e7;
+}
+
+.mis-citas-container .tabla-citas tr:nth-child(even) td {
+    background: #222225;
+}
+
+.mis-citas-container .tabla-citas tr:hover td {
+    background: #303034;
+}
+
+.mis-citas-container .estado {
+    border: 1px solid #52525b;
+    background: #303034;
+    color: #f4f4f5;
+    text-transform: capitalize;
+}
+
+.mis-citas-container .btn-cancelar,
+.mis-citas-container .btn-reprogramar {
+    min-height: 36px;
+    padding: 8px 14px;
+    border: 1px solid #71717a;
+    border-radius: 999px;
+    background: transparent;
+    color: #f4f4f5;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s ease, color .2s ease, border-color .2s ease, transform .2s ease;
+}
+
+.mis-citas-container .btn-cancelar:hover,
+.mis-citas-container .btn-reprogramar:hover {
+    transform: translateY(-1px);
+    border-color: #fff;
+    background: #f4f4f5;
+    color: #111;
+}
+
+.mis-citas-container .mensaje-cita {
+    border-color: #52525b;
+    background: #27272a;
+    color: #f4f4f5;
+}
+
 
 /* =========================================================
    PANEL ADMINISTRADOR
@@ -7018,6 +7187,123 @@ button:hover {
     color: var(--plum-soft);
     font-size: 12px;
     font-weight: 700;
+}
+
+.cita-container button.cita-category-card {
+    border-color: #d4d4d8;
+    background: linear-gradient(145deg, #fff, #f4f4f5);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .07);
+}
+
+.cita-container .cita-category-card::before {
+    background: linear-gradient(180deg, #71717a, #18181b);
+}
+
+.cita-container .cita-category-card:hover {
+    transform: translateY(-5px);
+    border-color: #71717a;
+    box-shadow: 0 18px 34px rgba(0, 0, 0, .14);
+}
+
+.cita-container .cita-category-card .servicio-media {
+    background: #d4d4d8;
+}
+
+.cita-container .cita-category-card .servicio-media::after {
+    background: linear-gradient(180deg, transparent 48%, rgba(17, 17, 17, .48));
+}
+
+.cita-container .cita-category-card .servicio-image {
+    filter: grayscale(1);
+}
+
+.cita-container .cita-category-card:hover .servicio-image {
+    filter: grayscale(.65);
+}
+
+.cita-container .cita-category-card .servicio-info strong {
+    color: #18181b;
+}
+
+.cita-container .cita-category-card .servicio-info > span:not(.cita-servicio-precio):not(.cita-seleccionar-servicio) {
+    color: #71717a;
+}
+
+.cita-container .cita-category-card .cita-seleccionar-servicio {
+    color: #3f3f46;
+}
+
+.cita-container .cita-category-card:hover .cita-seleccionar-servicio {
+    color: #09090b;
+}
+
+.cita-container button.cita-detail-card {
+    border-color: #d4d4d8;
+    background: #fff;
+    color: #18181b;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .06);
+    transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease, background .25s ease;
+}
+
+.cita-container .cita-detail-card .servicio-media {
+    background: #e4e4e7;
+}
+
+.cita-container .cita-detail-card .servicio-media::after {
+    background: linear-gradient(180deg, transparent 48%, rgba(17, 17, 17, .42));
+}
+
+.cita-container .cita-detail-card .servicio-image {
+    filter: grayscale(1);
+}
+
+.cita-container .cita-detail-card:hover .servicio-image {
+    filter: grayscale(.65);
+}
+
+.cita-container .cita-detail-card .servicio-info strong {
+    color: #18181b;
+}
+
+.cita-container .cita-detail-card .servicio-info > span:not(.cita-servicio-precio):not(.cita-seleccionar-servicio) {
+    color: #71717a;
+}
+
+.cita-container .cita-detail-card .cita-servicio-precio {
+    padding: 5px 11px;
+    border: 1px solid #d4d4d8;
+    border-radius: 999px;
+    background: #f4f4f5;
+    color: #27272a;
+}
+
+.cita-container .cita-detail-card .cita-seleccionar-servicio {
+    padding: 7px 12px;
+    border: 1px solid #d4d4d8;
+    border-radius: 999px;
+    background: #f4f4f5;
+    color: #3f3f46;
+    transition: background .2s ease, color .2s ease, border-color .2s ease;
+}
+
+.cita-container .cita-detail-card:hover,
+.cita-container .cita-detail-card.seleccionado {
+    transform: translateY(-4px);
+    border-color: #52525b;
+    background: #fafafa;
+    box-shadow: 0 14px 28px rgba(0, 0, 0, .12);
+}
+
+.cita-container .cita-detail-card:hover .cita-seleccionar-servicio,
+.cita-container .cita-detail-card.seleccionado .cita-seleccionar-servicio {
+    border-color: #18181b;
+    background: #18181b;
+    color: #fff;
+}
+
+.cita-container .cita-detail-card.seleccionado {
+    outline: 2px solid #71717a;
+    outline-offset: 2px;
 }
 
 .cita-container .cita-volver-categorias {
@@ -9172,6 +9458,10 @@ EDUCATE
     border-radius: var(--radius-md);
     background: var(--admin-white);
     box-shadow: 0 8px 24px rgba(0, 0, 0, .05);
+}
+
+.admin-dashboard .admin-welcome-message {
+    min-height: 78px;
 }
 
 .admin-dashboard .admin-saludo,
@@ -11880,6 +12170,10 @@ PROFESIONALES
 .empleado-today {
   position: relative;
   z-index: 1;
+}
+
+.empleado-welcome-message {
+  min-height: 96px;
 }
 
 .empleado-eyebrow,
