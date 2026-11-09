@@ -2714,6 +2714,138 @@ button {
     color: #3f5b49;
 }
 
+.auth-card-register .registro-captcha {
+    padding: 21px;
+    border-radius: 17px;
+    background: linear-gradient(145deg, #fff, #f3f3f4);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .055);
+}
+
+.auth-card-register .registro-captcha legend {
+    padding: 0 10px;
+    color: #29292e;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.auth-card-register .registro-captcha > .registro-captcha-status:first-of-type {
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #e9e9eb;
+    color: #4a4a50;
+    font-size: 9px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.auth-card-register .registro-captcha-prompt {
+    margin: 11px 0 15px;
+    color: #333338;
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.55;
+    text-align: left;
+}
+
+.auth-card-register .registro-captcha-images {
+    gap: 8px;
+}
+
+.auth-card-register .registro-captcha-option {
+    border: 1px solid rgba(255, 255, 255, .9);
+    border-radius: 11px;
+    background: #e5e5e7;
+    box-shadow: 0 3px 9px rgba(0, 0, 0, .09);
+}
+
+.auth-card-register .registro-captcha-option img {
+    filter: grayscale(.55) saturate(.72) contrast(1.06);
+    transition: filter .2s ease, transform .25s ease;
+}
+
+.auth-card-register .registro-captcha-option:hover img,
+.auth-card-register .registro-captcha-option.seleccionada img {
+    filter: grayscale(.18) saturate(.88) contrast(1.06);
+}
+
+.auth-card-register .registro-captcha-option:hover {
+    border-color: #b7b7bd;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .14);
+}
+
+.auth-card-register .registro-captcha-option.seleccionada {
+    border: 2px solid #252528;
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(37, 37, 40, .72);
+}
+
+.auth-card-register .registro-captcha-option.seleccionada::after {
+    border-radius: 9px;
+    background: linear-gradient(0deg, rgba(20, 20, 22, .2), transparent 58%);
+}
+
+.auth-card-register .registro-captcha-option > span {
+    top: 7px;
+    right: 7px;
+    width: 22px;
+    height: 22px;
+    border-color: rgba(255, 255, 255, .92);
+    border-radius: 7px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .2);
+}
+
+.auth-card-register .registro-captcha-option.seleccionada > span {
+    border-color: #252528;
+    background: #252528;
+}
+
+.auth-card-register .registro-captcha-status {
+    margin-top: 11px;
+    font-size: 10px;
+}
+
+.auth-card-register .registro-captcha-refresh,
+.auth-card-register .registro-captcha-verify {
+    min-height: 43px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 750;
+}
+
+.auth-card-register .registro-captcha-refresh {
+    background: #fff;
+}
+
+.auth-card-register .registro-captcha-verify {
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .12);
+}
+
+.auth-card-register .registro-captcha-option:focus-visible,
+.auth-card-register .registro-captcha-refresh:focus-visible,
+.auth-card-register .registro-captcha-verify:focus-visible {
+    outline: 2px solid #424248;
+    outline-offset: 3px;
+}
+
+@media (max-width: 520px) {
+    .auth-card-register .registro-captcha {
+        padding: 17px 14px;
+    }
+
+    .auth-card-register .registro-captcha-images {
+        gap: 6px;
+    }
+
+    .auth-card-register .registro-captcha-option {
+        border-radius: 8px;
+    }
+
+    .auth-card-register .registro-captcha-option.seleccionada::after {
+        border-radius: 6px;
+    }
+}
+
 .auth-page-register {
     align-items: flex-start;
     padding-top: 34px;
@@ -6707,6 +6839,74 @@ button:hover {
 
 .cita-container .servicio-card:hover .servicio-info h2 {
     color: var(--plum-soft);
+}
+
+.cita-container button.cita-service-card {
+    display: flex;
+    width: 100%;
+    padding: 0;
+    border: 1px solid rgba(43, 24, 63, .07);
+    color: var(--plum);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.cita-container button.cita-service-card:focus-visible,
+.cita-container .cita-volver-categorias:focus-visible {
+    outline: 3px solid var(--gold-deep);
+    outline-offset: 3px;
+}
+
+.cita-service-card .servicio-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 9px;
+}
+
+.cita-service-card .servicio-info strong {
+    color: var(--plum);
+    font-family: var(--font-display);
+    font-size: 20px;
+}
+
+.cita-service-card .servicio-info > span:not(.cita-servicio-precio):not(.cita-seleccionar-servicio) {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.cita-service-card .cita-servicio-precio {
+    color: var(--gold-deep);
+    font-weight: 700;
+}
+
+.cita-service-card .cita-seleccionar-servicio {
+    margin-top: 5px;
+    color: var(--plum-soft);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.cita-container .cita-volver-categorias {
+    align-self: flex-start;
+    padding: 8px 0;
+    border: 0;
+    background: transparent;
+    color: var(--plum-soft);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.cita-container .cita-servicios-estado {
+    margin: 0;
+    padding: 20px;
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, .8);
+    color: var(--muted);
 }
 
 .cita-container .servicio-info .servicio-precio {
@@ -11451,31 +11651,16 @@ PROFESIONALES
 .empleado-sidebar-brand {
   display: flex;
   align-items: center;
-  gap: 13px;
+  justify-content: center;
+  width: 100%;
 }
 
-.empleado-brand-mark {
-  display: grid;
-  width: 43px;
-  height: 43px;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid rgba(255, 255, 255, .25);
-  border-radius: 13px;
-  background: rgba(255, 255, 255, .08);
-  color: #fff;
-  font-family: var(--font-display);
-  font-size: 15px;
-  letter-spacing: -.05em;
-}
-
-.empleado-sidebar-kicker {
+.empleado-sidebar-logo {
   display: block;
-  margin-bottom: 5px;
-  color: #a1a1aa;
-  font-size: 8px;
-  font-weight: 800;
-  letter-spacing: .2em;
+  width: min(100%, 140px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .empleado-dashboard .sidebar-title {
