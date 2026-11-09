@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import logo from "../assets/image.png";
 import { API_ROOT } from "../lib/api";
 
 export function ForgotPassword() {
@@ -66,39 +67,74 @@ export function ForgotPassword() {
   }, [message]);
 
   return (
-    <div className="forgot-container">
-      <form onSubmit={handleSubmit} className="forgot-form">
-        <h2>¿Olvidaste tu contraseña?</h2>
-        
-        <p>
-          Ingresa tu correo electrónico para recibir un enlace y recuperar tu contraseña.
-        </p>
+    <div className="forgot-container auth-page">
+      <div className="auth-layout">
+        <aside className="auth-brand-panel">
+          <div className="auth-brand">
+            <img src={logo} alt="JC Alta Peluquería" />
+            <span>JC Alta Peluquería</span>
+          </div>
+          <div className="auth-brand-copy">
+            <span className="auth-eyebrow">RECUPERA EL ACCESO A TU CUENTA</span>
+            <h1>Tu próxima experiencia comienza aquí.</h1>
+            <p>
+              Te enviaremos un enlace seguro para que puedas crear una nueva
+              contraseña y volver a disfrutar de nuestros servicios.
+            </p>
+          </div>
+          <div className="auth-brand-detail" aria-hidden="true">
+            <span>JC</span>
+          </div>
+          <p className="auth-brand-caption">Tu belleza, nuestro arte.</p>
+        </aside>
 
-        <input
-          type="email"
-          placeholder="Correo electrónico"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+        <form
+          onSubmit={handleSubmit}
+          className="forgot-form auth-card auth-card-forgot"
+        >
+          <div className="auth-form-heading">
+            <span className="auth-eyebrow">ASISTENCIA DE CUENTA</span>
+            <h2 className="forgot-title">¿Olvidaste tu contraseña?</h2>
+            <p>
+              Ingresa el correo asociado a tu cuenta y te enviaremos un enlace
+              para recuperarla.
+            </p>
+          </div>
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Enviando..." : "Enviar enlace"}
-        </button>
+          <div className="forgot-email-group">
+            <label htmlFor="forgot-email">Correo electrónico</label>
+            <input
+              id="forgot-email"
+              className="forgot-email-input"
+              type="email"
+              placeholder="tucorreo@ejemplo.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              required
+            />
+          </div>
 
-        {/* Enlace opcional para volver al login */}
-        <div className="forgot-back">
-          <Link to="/" className="forgot-password">
-            Volver al inicio de sesión
-          </Link>
-        </div>
+          <button className="forgot-button" type="submit" disabled={loading}>
+            {loading ? "Enviando..." : "Enviar enlace de recuperación"}
+          </button>
 
-        {message && (
-          <p className={error ? "reset-message error" : "reset-message success"}>
-            {message}
-          </p>
-        )}
-      </form>
+          <div className="forgot-back">
+            <Link to="/login" className="forgot-password">
+              Volver al inicio de sesión
+            </Link>
+          </div>
+
+          {message && (
+            <p
+              className={error ? "reset-message error" : "reset-message success"}
+              role={error ? "alert" : "status"}
+            >
+              {message}
+            </p>
+          )}
+        </form>
+      </div>
     </div>
   );
 }
