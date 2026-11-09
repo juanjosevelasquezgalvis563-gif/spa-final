@@ -12,6 +12,7 @@ export function Cliente() {
   const [realizar, SetRealizar] = useState(null);
   const [ultimas, SetUltimasCitas] = useState([]);
   const [nombreCliente, setNombreCliente] = useState("");
+  const [mostrarBienvenida, setMostrarBienvenida] = useState(true);
 
   const [fidelizacion, setFidelizacion] = useState({
     saldo_puntos: 0,
@@ -322,6 +323,14 @@ export function Cliente() {
     return () => clearTimeout(temporizador);
   }, [message]);
 
+  useEffect(() => {
+    const temporizador = window.setTimeout(() => {
+      setMostrarBienvenida(false);
+    }, 10000);
+
+    return () => window.clearTimeout(temporizador);
+  }, []);
+
   return (
     <div className="dashboard">
       <aside className="sidebar">
@@ -337,7 +346,7 @@ export function Cliente() {
         </button>
 
         <button onClick={() => navegarPerfil("/perfil")}>
-          Mi perfil
+          Actualizar datos
         </button>
 
         <button onClick={() => perfilId ? navigate("/admin") : navigate("/login")}>
@@ -368,9 +377,11 @@ export function Cliente() {
       <main className="contenido">
         <div className="bienvenida">
           <p>
-            {nombreCliente
-              ? `¡Bienvenido, ${nombreCliente}!`
-              : "Bienvenido a tu panel de JC Alta Peluqueria 👋"}
+            {mostrarBienvenida
+              ? nombreCliente
+                ? `¡Bienvenido, ${nombreCliente}!`
+                : "Bienvenido a tu panel de JC Alta Peluquería 👋"
+              : "Este es tu espacio para organizar tus citas y reservar tu próximo momento de bienestar."}
           </p>
         </div>
 
