@@ -131,7 +131,7 @@ export function MisCitas() {
                                     </td>
 
                                     <td>
-                                        <span className={"estado ${clientes.estado}"}>
+                                        <span className={`estado ${clientes.estado?.toLowerCase()}`}>
                                             {clientes.estado}
                                         </span>
                                     </td>
