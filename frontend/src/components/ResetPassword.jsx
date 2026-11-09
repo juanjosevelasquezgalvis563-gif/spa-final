@@ -1,8 +1,48 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { API_ROOT } from "../lib/api";
 
-const MIN_CARACTERES = 6;
+const MIN_CARACTERES = 8;
+const CARACTERES_ESPECIALES = "@#$%&*()_";
+
+function validarPassword(password) {
+  let tieneMayuscula = false;
+  let tieneMinuscula = false;
+  let tieneNumero = false;
+  let tieneCaracterEspecial = false;
+
+  for (let i = 0; i < password.length; i++) {
+    if (password[i] >= "A" && password[i] <= "Z") {
+      tieneMayuscula = true;
+    } else if (password[i] >= "a" && password[i] <= "z") {
+      tieneMinuscula = true;
+    } else if (password[i] >= "0" && password[i] <= "9") {
+      tieneNumero = true;
+    } else if (CARACTERES_ESPECIALES.includes(password[i])) {
+      tieneCaracterEspecial = true;
+    }
+  }
+
+  if (!tieneMayuscula) {
+    return "La contraseña debe tener al menos una mayúscula";
+  }
+  if (!tieneMinuscula) {
+    return "La contraseña debe tener al menos una minúscula";
+  }
+  if (!tieneNumero) {
+    return "La contraseña debe tener al menos un número";
+  }
+  if (!tieneCaracterEspecial) {
+    return "La contraseña debe tener al menos un caracter especial";
+  }
+  if (password.length < MIN_CARACTERES) {
+    return `La contraseña debe tener al menos ${MIN_CARACTERES} caracteres`;
+  }
+  if (new TextEncoder().encode(password).length > 72) {
+    return "La contraseña no puede superar los 72 bytes";
+  }
+  return "";
+}
 
 export function ResetPassword() {
   const { token } = useParams();
@@ -23,10 +63,9 @@ export function ResetPassword() {
     e.preventDefault();
     setMessage("");
 
-    if (password.length < MIN_CARACTERES) {
-      showMessage(
-        `La contraseña debe tener mínimo ${MIN_CARACTERES} caracteres`
-      );
+    const passwordError = validarPassword(password);
+    if (passwordError) {
+      showMessage(passwordError);
       return;
     }
 
@@ -96,13 +135,14 @@ export function ResetPassword() {
         <h2>Cambiar contraseña</h2>
 
         <p>Ingresa tu nueva contraseña para continuar.</p>
-
+        
         <input
           type="password"
           placeholder="Nueva contraseña"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           minLength={MIN_CARACTERES}
+          maxLength={72}
           autoComplete="new-password"
           required
         />
@@ -113,6 +153,7 @@ export function ResetPassword() {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           minLength={MIN_CARACTERES}
+          maxLength={72}
           autoComplete="new-password"
           required
         />
