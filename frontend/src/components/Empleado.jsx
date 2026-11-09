@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { API_ROOT } from "../lib/api";
 import logo from "../assets/image.png";
 
@@ -50,9 +51,12 @@ export function Empleado() {
     const [resumen, setResumen] = useState(null);
     const [cargando, setCargando] = useState(true);
     const [message, setMessage] = useState("");
+    const [nombreEmpleado, setNombreEmpleado] = useState("");
+    const [mostrarBienvenida, setMostrarBienvenida] = useState(true);
 
     const navigate = useNavigate();
     const location = useLocation();
+    const reduceMotion = useReducedMotion();
     const perfilId = new URLSearchParams(location.search).get("perfilId");
     const perfilPath = (path) => perfilId ? `${path}?perfilId=${encodeURIComponent(perfilId)}` : path;
     const fechaActual = new Date();
@@ -106,6 +110,42 @@ export function Empleado() {
         return () => window.clearTimeout(temporizador);
     }, [cargarPanel]);
 
+    useEffect(() => {
+        let vigente = true;
+
+        async function cargarNombreEmpleado() {
+            try {
+                const response = await fetch(`${API_ROOT}/inser/me`, {
+                    credentials: "include"
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || "No se pudo cargar el nombre del empleado.");
+                }
+
+                if (vigente) setNombreEmpleado(data.user?.nombre || "");
+            } catch (error) {
+                if (vigente) {
+                    setMessage(error.message || "No se pudo cargar el nombre del empleado.");
+                }
+            }
+        }
+
+        void cargarNombreEmpleado();
+        return () => {
+            vigente = false;
+        };
+    }, []);
+
+    useEffect(() => {
+        const temporizador = window.setTimeout(() => {
+            setMostrarBienvenida(false);
+        }, 10000);
+
+        return () => window.clearTimeout(temporizador);
+    }, []);
+
     async function cerrarSesion() {
         if (perfilId) {
             navigate("/admin");
@@ -152,8 +192,17 @@ export function Empleado() {
                         <span className="empleado-menu-indicator" aria-hidden="true">02</span>
                         Gestionar mis citas
                     </button>
+                    {!perfilId && (
+                        <button
+                            type="button"
+                            onClick={() => navigate("/actualizar-datos-empleado")}
+                        >
+                            <span className="empleado-menu-indicator" aria-hidden="true">03</span>
+                            Actualizar datos
+                        </button>
+                    )}
                     <button type="button" onClick={cerrarSesion}>
-                        <span className="empleado-menu-indicator" aria-hidden="true">03</span>
+                        <span className="empleado-menu-indicator" aria-hidden="true">{perfilId ? "03" : "04"}</span>
                         {perfilId ? "Volver al panel administrador" : "Cerrar sesión"}
                     </button>
                 </nav>
@@ -168,8 +217,33 @@ export function Empleado() {
                 <section className="empleado-welcome">
                     <div className="empleado-welcome-copy">
                         <span className="empleado-eyebrow">PANEL DEL EQUIPO</span>
-                        <h2>Tu jornada, en orden.</h2>
-                        <p>Un resumen claro para que puedas enfocarte en cada cliente.</p>
+                        <AnimatePresence mode="wait" initial={false}>
+                            {mostrarBienvenida ? (
+                                <m.div
+                                    key="empleado-greeting"
+                                    className="empleado-welcome-message"
+                                    initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12, filter: "blur(4px)" }}
+                                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                                    exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -10, filter: "blur(4px)" }}
+                                    transition={{ duration: reduceMotion ? 0.2 : 0.45, ease: [0.22, 0.61, 0.36, 1] }}
+                                >
+                                    <h2>{nombreEmpleado ? `¡Bienvenido, ${nombreEmpleado}!` : "¡Bienvenido a tu espacio de trabajo!"}</h2>
+                                    <p>Un resumen claro para que puedas enfocarte en cada cliente.</p>
+                                </m.div>
+                            ) : (
+                                <m.div
+                                    key="empleado-workspace"
+                                    className="empleado-welcome-message"
+                                    initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12, filter: "blur(4px)" }}
+                                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                                    exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -10, filter: "blur(4px)" }}
+                                    transition={{ duration: reduceMotion ? 0.2 : 0.45, ease: [0.22, 0.61, 0.36, 1] }}
+                                >
+                                    <h2>Tu espacio para organizar cada jornada.</h2>
+                                    <p>Consulta tus citas y acompaña cada servicio desde aquí.</p>
+                                </m.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                     <div className="empleado-today">
                         <span className="empleado-today-mark" aria-hidden="true">HOY</span>
