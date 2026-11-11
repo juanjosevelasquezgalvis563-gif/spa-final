@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { API_ROOT } from "../lib/api";
 
 const CLAVE_CARRITO = "jc-catalogo-carrito-v1";
@@ -25,16 +25,9 @@ export default function CatalogoProductos() {
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState("");
   const [mensajeCarrito, setMensajeCarrito] = useState("");
-  const [mensajePago, setMensajePago] = useState("");
-  const [esErrorPago, setEsErrorPago] = useState(false);
-  const [verificandoPago, setVerificandoPago] = useState(false);
-  const [iniciandoPago, setIniciandoPago] = useState(false);
+  const [mensajeSolicitud, setMensajeSolicitud] = useState("");
+  const [esErrorSolicitud, setEsErrorSolicitud] = useState(false);
   const [solicitandoCompra, setSolicitandoCompra] = useState(false);
-  const location = useLocation();
-  const transactionId = useMemo(
-    () => new URLSearchParams(location.search).get("id"),
-    [location.search]
-  );
   const productosPorId = useMemo(
     () => new Map(productos.map((producto) => [Number(producto.id), producto])),
     [productos]
@@ -48,41 +41,6 @@ export default function CatalogoProductos() {
     (item) => !productosPorId.has(item.producto_id)
       || !productosPorId.get(item.producto_id)?.disponible
   );
-
-  const mostrarEstadoPago = useCallback((data) => {
-    setEsErrorPago(false);
-    if (data.estado === "APPROVED" && !data.requiereAtencion) {
-      setCarrito([]);
-      setMensajePago("¡Pago aprobado! Tu compra quedó registrada correctamente.");
-    } else if (data.requiereAtencion) {
-      setMensajePago("Wompi aprobó el pago, pero la reserva venció. Comunícate con el salón para confirmar tu pedido.");
-    } else if (data.estado === "PENDING") {
-      setMensajePago("El pago sigue pendiente. Puedes volver a verificarlo en unos momentos.");
-    } else {
-      setMensajePago(`El pago no se completó (${data.estado.toLowerCase()}). Puedes revisar tu carrito e intentarlo de nuevo.`);
-    }
-  }, []);
-
-  const verificarPago = useCallback(async (id) => {
-    setVerificandoPago(true);
-    setMensajePago("");
-    try {
-      const response = await fetch(
-        `${API_ROOT}/inser/cliente/pedidos/wompi/${encodeURIComponent(id)}`,
-        { credentials: "include" }
-      );
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(data.message || "No se pudo verificar el pago.");
-      }
-      mostrarEstadoPago(data);
-    } catch (error) {
-      setEsErrorPago(true);
-      setMensajePago(error.message || "No se pudo verificar el pago.");
-    } finally {
-      setVerificandoPago(false);
-    }
-  }, [mostrarEstadoPago]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -142,17 +100,11 @@ export default function CatalogoProductos() {
     }
   }, [carrito, carritoListo]);
 
-  useEffect(() => {
-    if (transactionId) {
-      void Promise.resolve().then(() => verificarPago(transactionId));
-    }
-  }, [transactionId, verificarPago]);
-
   function agregarAlCarrito(producto) {
-    setMensajePago("");
+    setMensajeSolicitud("");
     const existente = carrito.find((item) => item.producto_id === Number(producto.id));
     if (existente?.cantidad >= 20) {
-      setMensajePago("Puedes agregar hasta 20 unidades de cada producto por pedido.");
+      setMensajeSolicitud("Puedes agregar hasta 20 unidades de cada producto por pedido.");
       return;
     }
 
@@ -178,44 +130,13 @@ export default function CatalogoProductos() {
     setCarrito((actual) => actual.filter((item) => item.producto_id !== productoId));
   }
 
-  async function iniciarPago() {
-    const items = carrito.map(({ producto_id, cantidad }) => ({ producto_id, cantidad }));
-    if (!items.length) return;
-
-    setIniciandoPago(true);
-    setMensajePago("");
-    setEsErrorPago(false);
-    try {
-      const response = await fetch(`${API_ROOT}/inser/cliente/pedidos/checkout`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items })
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(data.message || "No se pudo iniciar el pago.");
-      }
-
-      const checkout = new URL(data.checkoutUrl);
-      if (checkout.origin !== "https://checkout.wompi.co") {
-        throw new Error("El servidor devolvió un enlace de pago no válido.");
-      }
-      window.location.assign(checkout.href);
-    } catch (error) {
-      setEsErrorPago(true);
-      setMensajePago(error.message || "No se pudo iniciar el pago.");
-      setIniciandoPago(false);
-    }
-  }
-
   async function solicitarCompra() {
     const items = carrito.map(({ producto_id, cantidad }) => ({ producto_id, cantidad }));
     if (!items.length) return;
 
     setSolicitandoCompra(true);
-    setMensajePago("");
-    setEsErrorPago(false);
+    setMensajeSolicitud("");
+    setEsErrorSolicitud(false);
     try {
       const response = await fetch(`${API_ROOT}/inser/cliente/pedidos/solicitar`, {
         method: "POST",
@@ -229,10 +150,10 @@ export default function CatalogoProductos() {
       }
 
       setCarrito([]);
-      setMensajePago(`${data.message} Referencia: ${data.pedido}`);
+      setMensajeSolicitud(`${data.message} Referencia: ${data.pedido}`);
     } catch (error) {
-      setEsErrorPago(true);
-      setMensajePago(error.message || "No se pudo enviar la solicitud.");
+      setEsErrorSolicitud(true);
+      setMensajeSolicitud(error.message || "No se pudo enviar la solicitud.");
     } finally {
       setSolicitandoCompra(false);
     }
@@ -260,21 +181,12 @@ export default function CatalogoProductos() {
           )}
         </div>
 
-        {mensajePago && (
+        {mensajeSolicitud && (
           <div
-            className={`catalogo-productos-payment-message${esErrorPago ? " error" : ""}`}
-            role={esErrorPago ? "alert" : "status"}
+            className={`catalogo-productos-feedback${esErrorSolicitud ? " error" : ""}`}
+            role={esErrorSolicitud ? "alert" : "status"}
           >
-            <p>{mensajePago}</p>
-            {transactionId && (
-              <button
-                type="button"
-                onClick={() => verificarPago(transactionId)}
-                disabled={verificandoPago}
-              >
-                {verificandoPago ? "Verificando..." : "Verificar pago"}
-              </button>
-            )}
+            {mensajeSolicitud}
           </div>
         )}
 
@@ -345,20 +257,10 @@ export default function CatalogoProductos() {
                   className="catalogo-carrito-request"
                   type="button"
                   onClick={solicitarCompra}
-                  disabled={solicitandoCompra || iniciandoPago || !carritoListo || cargando
+                  disabled={solicitandoCompra || !carritoListo || cargando
                     || carritoTieneProductosNoDisponibles}
                 >
                   {solicitandoCompra ? "Enviando solicitud..." : "Solicitar al salón"}
-                </button>
-                <button
-                  className="catalogo-carrito-checkout"
-                  type="button"
-                  onClick={iniciarPago}
-                  disabled={iniciandoPago || solicitandoCompra || !carritoListo || cargando
-                    || carritoTieneProductosNoDisponibles}
-                >
-                  {iniciandoPago ? "Preparando pago..." : "Pagar con Wompi"}
-                  {!iniciandoPago && <span aria-hidden="true">→</span>}
                 </button>
               </div>
               {carritoTieneProductosNoDisponibles && (
@@ -368,8 +270,7 @@ export default function CatalogoProductos() {
                 </p>
               )}
               <p className="catalogo-carrito-note">
-                Puedes enviar la solicitud para confirmarla con el salón o pagar en línea.
-                Wompi mostrará los medios habilitados en la cuenta.
+                El salón revisará tu solicitud y se comunicará contigo para coordinar la compra.
               </p>
             </>
           )}

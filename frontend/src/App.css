@@ -13176,8 +13176,7 @@ PROFESIONALES
   font-weight: 700;
 }
 
-.admin-pedido-status.confirmed,
-.admin-pedido-status.approved {
+.admin-pedido-status.confirmed {
   border-color: #a1a1aa;
   background: #e4e4e7;
   color: #18181b;
@@ -13402,49 +13401,6 @@ PROFESIONALES
   color: #27272a;
 }
 
-.catalogo-productos-payment-message {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 20px;
-  padding: 14px 16px;
-  border: 1px solid #d4d4d8;
-  border-radius: 10px;
-  background: #fff;
-  color: #3f3f46;
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.catalogo-productos-payment-message.error {
-  border-color: #a1a1aa;
-  background: #f4f4f5;
-  color: #27272a;
-}
-
-.catalogo-productos-payment-message p {
-  margin: 0;
-}
-
-.catalogo-productos-payment-message button {
-  flex: none;
-  padding: 8px 12px;
-  border: 1px solid #d4d4d8;
-  border-radius: 7px;
-  background: #f4f4f5;
-  color: #18181b;
-  font: inherit;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.catalogo-productos-payment-message button:disabled {
-  cursor: wait;
-  opacity: .6;
-}
-
 .catalogo-carrito {
   margin-bottom: 34px;
   padding: clamp(18px, 3vw, 26px);
@@ -13599,13 +13555,11 @@ PROFESIONALES
 
 .catalogo-carrito-actions {
   display: grid;
-  grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr);
   margin-top: 18px;
 }
 
-.catalogo-carrito-request,
-.catalogo-carrito-checkout {
+.catalogo-carrito-request {
   display: flex;
   width: 100%;
   min-height: 48px;
@@ -13623,30 +13577,14 @@ PROFESIONALES
   transition: background .2s ease, transform .2s ease;
 }
 
-.catalogo-carrito-request {
-  border-color: #d4d4d8;
-  background: #fff;
-  color: #27272a;
-}
-
 .catalogo-carrito-request:hover:not(:disabled) {
-  transform: translateY(-2px);
-  background: #f4f4f5;
-}
-
-.catalogo-carrito-checkout:hover:not(:disabled) {
   transform: translateY(-2px);
   background: #3f3f46;
 }
 
-.catalogo-carrito-request:disabled,
-.catalogo-carrito-checkout:disabled {
+.catalogo-carrito-request:disabled {
   cursor: not-allowed;
   opacity: .55;
-}
-
-.catalogo-carrito-checkout span {
-  font-size: 18px;
 }
 
 .catalogo-carrito-note {
@@ -14081,11 +14019,6 @@ PROFESIONALES
     grid-row: 2;
   }
 
-  .catalogo-productos-payment-message {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
   .catalogo-productos-grid {
     grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
     gap: 12px;
@@ -14114,7 +14047,6 @@ PROFESIONALES
   }
 
   .catalogo-carrito-request,
-  .catalogo-carrito-checkout,
   .catalogo-producto-add {
     transition: none;
   }

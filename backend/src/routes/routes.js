@@ -37,6 +37,13 @@ import { obtenerCitasParaResena } from "../controllers/ClienteController.js";
 import {admin} from "../controllers/AdminController.js";
 import {middlewareAdmin} from "../middlewares/middlewareAdmin.js";
 import { productosAdmin } from "../controllers/AdminController.js";
+import { productosCatalogo } from "../controllers/AdminController.js";
+import {
+    solicitarCompra,
+    solicitudesCompraAdmin,
+    actualizarSolicitudCompra
+} from "../controllers/PedidoController.js";
+import { productosCreate } from "../controllers/AdminController.js";
 import {productosUpdate} from "../controllers/AdminController.js";
 import { productosDelete } from "../controllers/AdminController.js";
 import { comprasAdmin } from "../controllers/AdminController.js";
@@ -53,6 +60,7 @@ import {
 } from "../middlewares/rateLimiter.js";
 import rateLimit from "express-rate-limit";
 import { authCookieOptions } from "../config/cookies.js";
+import { cargarImagenProducto } from "../middlewares/productImageUpload.js";
 
 
 
@@ -82,6 +90,13 @@ const registroLimiter = rateLimit({
     message: { message: "Demasiados intentos de registro. Intenta de nuevo en 15 minutos." }
 });
 
+const carritoActionLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 10,
+    standardHeaders: true,
+    message: { message: "Demasiados intentos de compra. Inténtalo más tarde." }
+});
+
 
 router.get('/captcha', captchaLimiter, obtenerCaptcha);
 router.post('/captcha/verificar', captchaLimiter, verificarCaptcha);
@@ -103,6 +118,8 @@ router.post("/logout", (req, res) => {
 
 
 router.get('/cliente/servicios',middlewareCliente,servicios);
+router.get('/cliente/productos', middlewareCliente, productosCatalogo);
+router.post('/cliente/pedidos/solicitar', middlewareCliente, carritoActionLimiter, solicitarCompra);
 router.post('/cliente',middlewareCliente,cliente);
 router.get('/cliente',middlewareCliente, obtenerCliente);
 router.put('/cliente/cancelar/:id',middlewareCliente,cancelarSuCita);
@@ -129,8 +146,11 @@ router.get('/empleado/citaRealizarEmpleado',middlewareEmpleado,citaRealizarEmple
 
 router.get('/administrador',middlewareAdmin,admin);
 router.get('/administrador/perfiles',middlewareAdmin,perfilesAdmin);
+router.get('/administrador/pedidos/solicitudes', middlewareAdmin, solicitudesCompraAdmin);
+router.put('/administrador/pedidos/solicitudes/:id', middlewareAdmin, actualizarSolicitudCompra);
 router.post('/administrador/perfil-activo',middlewareAdmin,activarPerfilAdmin);
 router.get('/administrador/productos',middlewareAdmin,productosAdmin);
+router.post('/administrador/productos',middlewareAdmin,cargarImagenProducto,productosCreate);
 router.put('/administrador/productos/:id',middlewareAdmin,productosUpdate);
 router.delete('/administrador/productos/:id',middlewareAdmin,productosDelete);
 router.post('/administrador/compras',middlewareAdmin,comprasAdmin);

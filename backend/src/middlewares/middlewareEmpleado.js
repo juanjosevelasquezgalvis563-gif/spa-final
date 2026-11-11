@@ -1,14 +1,13 @@
-import jwt from 'jsonwebtoken'
 import Usuario from '../models/Usuario.js';
+import { obtenerSesion } from "./session.js";
 
 export async function middlewareEmpleado(req,res,next){
-    const token = req.cookies.token;
-    if(!token){
+    const decoded = obtenerSesion(req, res);
+    if(!decoded){
         return res.status(401).json({message: 'sin token'})
     }
    
     try{
-        const decoded = jwt.verify(token, process.env.JWT_SECRET)
         const perfilActivo = decoded.rol === 'administrador' && req.cookies.adminPerfil
             ? JSON.parse(req.cookies.adminPerfil)
             : null;

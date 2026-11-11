@@ -1,5 +1,7 @@
 const isProduction = process.env.NODE_ENV === "production";
 
+export const SESSION_IDLE_TIMEOUT_SECONDS = 10 * 60;
+
 export const authCookieOptions = {
     httpOnly: true,
     secure: isProduction,
@@ -7,7 +9,11 @@ export const authCookieOptions = {
     path: "/"
 };
 
-export const adminProfileCookieOptions = {
+export const sessionCookieOptions = {
     ...authCookieOptions,
-    maxAge: 60 * 60 * 1000
+    maxAge: SESSION_IDLE_TIMEOUT_SECONDS * 1000
+};
+
+export const adminProfileCookieOptions = {
+    ...sessionCookieOptions
 };

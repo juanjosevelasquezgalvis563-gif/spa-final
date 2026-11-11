@@ -4,6 +4,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
+import { PRODUCT_IMAGES_DIR } from "./src/config/productImages.js";
 import authRoutes from "./src/routes/routes.js";
 import db from "./src/config/db.js";
 import { iniciarRecordatorios } from "./src/controllers/recordatorios.js";
@@ -32,6 +33,14 @@ app.use(cors({
 
 app.use(cookieParser());
 app.use(express.json());
+app.use("/uploads/products", express.static(PRODUCT_IMAGES_DIR, {
+    dotfiles: "deny",
+    index: false,
+    setHeaders: (res) => {
+        res.setHeader("X-Content-Type-Options", "nosniff");
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    }
+}));
 
 app.get("/health", (req, res) => {
     res.json({

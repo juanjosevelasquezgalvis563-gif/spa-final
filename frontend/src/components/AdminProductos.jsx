@@ -340,9 +340,7 @@ export default function AdminProductos() {
                       ? "Pendiente"
                       : solicitud.estado === "CONFIRMED"
                         ? "Confirmada"
-                        : solicitud.estado === "APPROVED"
-                          ? "Pagada en línea"
-                          : "Rechazada"}
+                        : "Rechazada"}
                   </span>
                 </header>
                 <ul className="admin-pedido-items">

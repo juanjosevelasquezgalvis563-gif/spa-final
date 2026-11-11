@@ -1,6 +1,8 @@
 import Resena from "../models/reseña.js";
 import Cita from "../models/citas.js";
 import MovimientoPuntos from "../models/MovimientoPuntos.js";
+import Usuario from "../models/Usuario.js";
+import Servicio from "../models/servicios.js";
 
 export async function crearResena(req, res) {
     try {
@@ -98,6 +100,24 @@ export async function obtenerResenas(req, res) {
                 usuario_id: req.user.id,
                 estado: "visible"
             },
+            include: [
+                {
+                    model: Cita,
+                    as: "cita",
+                    attributes: ["id", "fecha", "empleado_id", "servicio_id"],
+                    include: [
+                        {
+                            model: Usuario,
+                            as: "empleado",
+                            attributes: ["nombre"]
+                        },
+                        {
+                            model: Servicio,
+                            attributes: ["nombre"]
+                        }
+                    ]
+                }
+            ],
             order: [["fecha_creacion", "DESC"]]
         });
 

@@ -3,7 +3,10 @@ import Cita from "./citas.js";
 import Servicio from "./servicios.js";
 import Producto from "./productos.js";
 import Compra from "./compras.js";
+import Pedido from "./pedidos.js";
+import PedidoDetalle from "./pedidoDetalles.js";
 import PasswordReset from "./password_resets.js";
+import Resena from "./reseña.js";
 
 
 Usuario.hasMany(Cita, {
@@ -41,6 +44,16 @@ Cita.belongsTo(Servicio, {
     foreignKey: "servicio_id"
 });
 
+Cita.hasOne(Resena, {
+    foreignKey: "cita_id",
+    as: "resena"
+});
+
+Resena.belongsTo(Cita, {
+    foreignKey: "cita_id",
+    as: "cita"
+});
+
 
 Usuario.hasMany(PasswordReset, {
     foreignKey: "usuario_id",
@@ -59,4 +72,27 @@ Producto.hasMany(Compra,{
 
 Compra.belongsTo(Producto,{
     foreignKey:'producto_id'
+});
+
+Usuario.hasMany(Pedido, {
+    foreignKey: "usuario_id",
+    as: "pedidos"
+});
+
+Pedido.belongsTo(Usuario, {
+    foreignKey: "usuario_id",
+    as: "cliente"
+});
+
+Pedido.hasMany(PedidoDetalle, {
+    foreignKey: "pedido_id",
+    as: "detalles"
+});
+
+PedidoDetalle.belongsTo(Pedido, {
+    foreignKey: "pedido_id"
+});
+
+PedidoDetalle.belongsTo(Producto, {
+    foreignKey: "producto_id"
 });

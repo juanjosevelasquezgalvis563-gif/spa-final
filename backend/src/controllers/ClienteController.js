@@ -8,7 +8,7 @@ import { Op } from "sequelize";
 export async function servicios(req, res) {
     try {
         const servicio = await Servicio.findAll({
-            attributes: ['nombre', 'precio', 'image'],
+            attributes: ['id', 'nombre', 'descripcion', 'precio', 'image'],
 
         });
         res.json(servicio);
@@ -348,6 +348,11 @@ export async function obtenerCitasParaResena(req, res) {
       include: [
         {
           model: Servicio,
+          attributes: ["nombre"]
+        },
+        {
+          model: Usuario,
+          as: "empleado",
           attributes: ["nombre"]
         }
       ],

@@ -564,7 +564,7 @@ export function Cliente() {
 
             <p>
               El descuento se muestra como beneficio disponible.
-              El canje todavía debe realizarse al reservar o pagar.
+              El canje debe coordinarse con el salón al reservar el servicio.
             </p>
           </div>
 
