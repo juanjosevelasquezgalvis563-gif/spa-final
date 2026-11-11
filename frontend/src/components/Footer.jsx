@@ -18,7 +18,7 @@ export default function Footer() {
              resaltar tu esencia y devolverte la confianza.
           </p>
           <a
-            href="#servicios"
+            href="#catalogo-servicios"
             className="footer-cta"
           >
             Descubre nuestros servicios <span>↗</span>
