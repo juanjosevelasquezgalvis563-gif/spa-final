@@ -11,12 +11,24 @@ import Profesionales from './components/Profesionales';
 import Educate from './components/Educate';
 import CatalogoServicios from './components/CatalogoServicios';
 import Novedades from './components/novedades';
+import { useSession } from './context/useSession';
 
 import logo from './assets/image.png';
 
 function App() {
   const navigate = useNavigate();
+  const { user, loading } = useSession();
   const [scrolled, setScrolled] = useState(false);
+  const rutaProductos = user?.rol === "cliente"
+    ? "/cliente/productos"
+    : user?.rol === "administrador"
+      ? "/admin/productos"
+      : "/login?redirect=%2Fcliente%2Fproductos";
+  const rutaPanel = user?.rol === "administrador"
+    ? "/admin"
+    : user?.rol === "empleado"
+      ? "/empleado"
+      : "/cliente";
 
   useEffect(() => {
     const onScroll = () => {
@@ -103,26 +115,82 @@ function App() {
           </nav>
 
           <nav className="auth-buttons" aria-label="Acceso de usuario">
-            <button
-              type="button"
-              onClick={() => navigate('/login')}
-              className="btn-login"
-            >
-              Iniciar Sesión
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('/registro')}
-              className="btn-register"
-            >
-              Registrarse
-            </button>
+            {!loading && (user ? (
+              <>
+                <span className="auth-user-name" title={user.nombre}>
+                  Hola, {user.nombre}
+                </span>
+                <button type="button" onClick={() => navigate(rutaPanel)} className="btn-login">
+                  Mi panel
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => navigate('/login')}
+                  className="btn-login"
+                >
+                  Iniciar Sesión
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/registro')}
+                  className="btn-register"
+                >
+                  Registrarse
+                </button>
+              </>
+            ))}
           </nav>
         </div>
       </header>
 
       <main className="landing-main">
         <Hero />
+        <section className="landing-admin-access" aria-labelledby="landing-productos-title">
+          <div className="landing-admin-access-copy">
+            <span className="landing-admin-eyebrow">
+              <i aria-hidden="true" />
+              CATÁLOGO DE PRODUCTOS
+            </span>
+            <h2 id="landing-productos-title">Encuentra el cuidado ideal para ti</h2>
+            <p>
+              Explora los productos que tenemos en el salón y descubre nuevas
+              opciones para cuidar tu cabello y resaltar tu esencia.
+            </p>
+            <button type="button" disabled={loading} onClick={() => navigate(rutaProductos)}>
+              {loading ? "Verificando sesión..." : "Explorar catálogo"} <span aria-hidden="true">→</span>
+            </button>
+          </div>
+          <div className="landing-admin-visual" aria-hidden="true">
+            <div className="landing-admin-preview">
+              <div className="landing-admin-preview-top">
+                <span>CATÁLOGO</span>
+                <span className="landing-admin-preview-status">EN SALÓN</span>
+              </div>
+              <div className="landing-admin-preview-product">
+                <span className="landing-admin-product-swatch swatch-one" />
+                <span><i /><i /></span>
+                <b />
+              </div>
+              <div className="landing-admin-preview-product">
+                <span className="landing-admin-product-swatch swatch-two" />
+                <span><i /><i /></span>
+                <b />
+              </div>
+              <div className="landing-admin-preview-product">
+                <span className="landing-admin-product-swatch swatch-three" />
+                <span><i /><i /></span>
+                <b />
+              </div>
+              <div className="landing-admin-preview-footer">
+                <span>CUIDADO Y BELLEZA</span>
+                <span>JC / 01</span>
+              </div>
+            </div>
+          </div>
+        </section>
         <About />
         <CatalogoServicios />
         <Carousel />
