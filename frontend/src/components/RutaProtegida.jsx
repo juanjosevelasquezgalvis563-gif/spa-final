@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { API_ROOT } from "../lib/api";
+import { useSession } from "../context/useSession";
 
 /**
  * Protege una ruta verificando la sesión real contra el backend.
@@ -14,53 +13,9 @@ import { API_ROOT } from "../lib/api";
  */
 export function RutaProtegida({ children, rol }) {
   const location = useLocation();
-  const [estado, setEstado] = useState("cargando");
+  const { user, loading } = useSession();
 
-  useEffect(() => {
-    let vigente = true;
-
-    async function verificar() {
-      try {
-        const response = await fetch(`${API_ROOT}/inser/me`, {
-          method: "GET",
-          credentials: "include",
-        });
-
-        // 401 o 403: no hay sesión válida o el rol no corresponde.
-        if (response.status === 401 || response.status === 403) {
-          if (vigente) setEstado("denegado");
-          return;
-        }
-
-        if (!response.ok) {
-          if (vigente) setEstado("permitido");
-          return;
-        }
-
-        const data = await response.json();
-        const usuario = data.user;
-        const perfilId = new URLSearchParams(location.search).get("perfilId");
-
-        const administradorEnPerfil = usuario?.rol === "administrador" && Boolean(perfilId);
-        if (rol && usuario?.rol !== rol && !administradorEnPerfil) {
-          if (vigente) setEstado("denegado");
-          return;
-        }
-
-        if (vigente) setEstado("permitido");
-      } catch (error) {
-        if (vigente) setEstado("denegado");
-      }
-    }
-
-    verificar();
-
-    return () => {
-      vigente = false;
-    };
-  }, [rol, location.search]);
-
-  if (estado === "cargando") {
+  if (loading) {
     return (
       <div className="ruta-cargando">
         <p>Verificando sesión...</p>
@@ -68,7 +23,9 @@ export function RutaProtegida({ children, rol }) {
     );
   }
 
-  if (estado === "denegado") {
+  const perfilId = new URLSearchParams(location.search).get("perfilId");
+  const administradorEnPerfil = user?.rol === "administrador" && Boolean(perfilId);
+  if (!user || (rol && user.rol !== rol && !administradorEnPerfil)) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
