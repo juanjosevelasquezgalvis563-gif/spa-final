@@ -1,10 +1,18 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { AnimatePresence, m, useReducedMotion } from 'motion/react';
 import { API_ROOT } from '../lib/api';
+
+function urlImagenProducto(image) {
+    if (!image) return "";
+    if (/^(https?:|data:|blob:)/i.test(image)) return image;
+    return `${API_ROOT}${image.startsWith("/") ? "" : "/"}${image}`;
+}
 
 export function Admin() {
 
     const [admin, SetAdmin] = useState(null);
+    const [mostrarBienvenida, setMostrarBienvenida] = useState(true);
     const [productos, SetProductos] = useState([]);
     const [historial, SetHistorial] = useState([]);
     const [message, SetMessage] = useState('');
@@ -18,6 +26,7 @@ export function Admin() {
     const [cargandoPerfiles, SetCargandoPerfiles] = useState(false);
 
     const navigate = useNavigate();
+    const reduceMotion = useReducedMotion();
 
     async function obtenerAdmin() {
         try {
@@ -222,23 +231,54 @@ export function Admin() {
         return () => clearTimeout(temporizador);
     }, [message]);
 
+    useEffect(() => {
+        const temporizador = window.setTimeout(() => {
+            setMostrarBienvenida(false);
+        }, 10000);
+
+        return () => window.clearTimeout(temporizador);
+    }, []);
+
     return (
         <div className="admin-dashboard">
 
             <header className="admin-topbar">
 
                 <div className="admin-topbar-text">
-
-                    <h1 className="admin-saludo">
-                        Hola, {admin ? admin.nombre : 'Admin'}
-                        <span className="admin-saludo-emoji">
-                            👋
-                        </span>
-                    </h1>
-
-                    <p className="admin-subtitulo">
-                        Aquí tienes el resumen de tu inventario y operaciones.
-                    </p>
+                    <AnimatePresence mode="wait" initial={false}>
+                        {mostrarBienvenida ? (
+                            <m.div
+                                key="admin-greeting"
+                                className="admin-welcome-message"
+                                initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12, filter: 'blur(4px)' }}
+                                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                                exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -10, filter: 'blur(4px)' }}
+                                transition={{ duration: reduceMotion ? 0.2 : 0.45, ease: [0.22, 0.61, 0.36, 1] }}
+                            >
+                                <h1 className="admin-saludo">
+                                    Hola, {admin ? admin.nombre : 'Admin'}
+                                    <span className="admin-saludo-emoji">👋</span>
+                                </h1>
+                                <p className="admin-subtitulo">
+                                    Aquí tienes el resumen de tu inventario y operaciones.
+                                </p>
+                            </m.div>
+                        ) : (
+                            <m.div
+                                key="admin-workspace"
+                                className="admin-welcome-message"
+                                initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12, filter: 'blur(4px)' }}
+                                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                                exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -10, filter: 'blur(4px)' }}
+                                transition={{ duration: reduceMotion ? 0.2 : 0.45, ease: [0.22, 0.61, 0.36, 1] }}
+                            >
+                                <h1 className="admin-saludo">Tu espacio de gestión</h1>
+                                <p className="admin-subtitulo">
+                                    Administra inventario, perfiles y operaciones desde un solo lugar.
+                                </p>
+                            </m.div>
+                        )}
+                    </AnimatePresence>
 
                 </div>
 
@@ -247,9 +287,20 @@ export function Admin() {
                         <span className="admin-avatar">♛</span>
 
                         <div className="admin-identity-text">
-                            <span className="admin-nombre">
-                                {admin.nombre}
-                            </span>
+                            <AnimatePresence initial={false}>
+                                {mostrarBienvenida && (
+                                    <m.span
+                                        key="admin-identity-name"
+                                        className="admin-nombre"
+                                        initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 6, filter: 'blur(3px)' }}
+                                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                                        exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -6, filter: 'blur(3px)' }}
+                                        transition={{ duration: reduceMotion ? 0.2 : 0.35 }}
+                                    >
+                                        {admin.nombre}
+                                    </m.span>
+                                )}
+                            </AnimatePresence>
 
                             <span className="admin-rol">
                                 {admin.rol}
@@ -257,6 +308,8 @@ export function Admin() {
                         </div>
                     </div>
                 )}
+
+                <Link className="admin-home-link" to="/">Página principal</Link>
 
             </header>
 
@@ -279,9 +332,14 @@ export function Admin() {
                         Inventario de productos
                     </h2>
 
-                    <span className="admin-total">
-                        {productos.length} en catálogo
-                    </span>
+                    <div className="admin-productos-actions">
+                        <span className="admin-total">
+                            {productos.length} en catálogo
+                        </span>
+                        <Link className="admin-productos-link" to="/admin/productos">
+                            Agregar productos
+                        </Link>
+                    </div>
                 </div>
 
                 {productos.length === 0 ? (
@@ -336,7 +394,7 @@ export function Admin() {
                                         <td>
                                             <div className="admin-imagen">
                                                 <img
-                                                    src={producto.image}
+                                                    src={urlImagenProducto(producto.image)}
                                                     alt={producto.nombre}
                                                 />
                                             </div>
@@ -691,4 +749,3 @@ export function Admin() {
 }
 
 export default Admin;
-
