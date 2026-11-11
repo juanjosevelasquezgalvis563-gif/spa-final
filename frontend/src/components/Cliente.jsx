@@ -1,7 +1,8 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import logo from '../assets/image.png'; 
 import { API_ROOT } from '../lib/api';
+import { useSession } from "../context/useSession";
 
 export function Cliente() {
   const [message, SetMessage] = useState("");
@@ -30,9 +31,24 @@ export function Cliente() {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useSession();
   const perfilId = new URLSearchParams(location.search).get("perfilId");
   const perfilPath = (path) => perfilId ? `${path}?perfilId=${encodeURIComponent(perfilId)}` : path;
   const navegarPerfil = (path) => navigate(perfilPath(path));
+
+  async function cerrarSesion() {
+    if (perfilId) {
+      navigate("/admin");
+      return;
+    }
+
+    try {
+      await logout();
+      navigate("/");
+    } catch (error) {
+      SetMessage(error.message || "No se pudo cerrar la sesión.");
+    }
+  }
 
   const obtenerNombreCliente = useCallback(async () => {
     try {
@@ -345,12 +361,20 @@ export function Cliente() {
           Agendar cita
         </button>
 
+        <button onClick={() => navegarPerfil("/cliente/productos")}>
+          Productos
+        </button>
+
         <button onClick={() => navegarPerfil("/perfil")}>
           Actualizar datos
         </button>
 
-        <button onClick={() => perfilId ? navigate("/admin") : navigate("/login")}>
-          Cerrar sesión
+        <button onClick={() => navigate("/")}>
+          Ir a la página principal
+        </button>
+
+        <button onClick={cerrarSesion}>
+          {perfilId ? "Volver al panel administrador" : "Cerrar sesión"}
         </button>
 
         <button
