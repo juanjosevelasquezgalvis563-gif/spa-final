@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import logo from "../assets/image.png";
 import { API_ROOT } from "../lib/api";
+import { useSession } from "../context/useSession";
 
 export function Login() {
   const [email, setEmail] = useState("");
@@ -10,16 +11,33 @@ export function Login() {
   const [message, setMessage] = useState("");
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user, setAuthenticatedUser } = useSession();
+  const requestedPath = new URLSearchParams(location.search).get("redirect")
+    || location.state?.from?.pathname;
 
   function redirigirUsuario(user) {
+    setAuthenticatedUser(user);
     if (user.rol === "administrador") {
-      navigate("/admin");
+      navigate(requestedPath === "/admin/productos" ? requestedPath : "/admin");
     } else if (user.rol === "cliente") {
-      navigate("/cliente");
+      navigate(requestedPath === "/cliente/productos" ? requestedPath : "/cliente");
     } else if (user.rol === "empleado") {
       navigate("/empleado");
     }
   }
+
+  useEffect(() => {
+    if (!user) return;
+
+    if (user.rol === "administrador") {
+      navigate(requestedPath === "/admin/productos" ? requestedPath : "/admin", { replace: true });
+    } else if (user.rol === "cliente") {
+      navigate(requestedPath === "/cliente/productos" ? requestedPath : "/cliente", { replace: true });
+    } else if (user.rol === "empleado") {
+      navigate("/empleado", { replace: true });
+    }
+  }, [navigate, requestedPath, user]);
 
   async function handleSubmit(e) {
     e.preventDefault();
