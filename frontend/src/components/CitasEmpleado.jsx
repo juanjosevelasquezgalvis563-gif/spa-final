@@ -144,6 +144,9 @@ export function CitasEmpleado() {
                     Volver al panel administrador
                 </button>
             )}
+            <button type="button" className="menu-btn" onClick={() => navigate('/')}>
+                Página principal
+            </button>
 
             <header className="gestionar-citas-header">
                 <div>
