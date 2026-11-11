@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { API_ROOT } from "../lib/api";
 import logo from "../assets/image.png";
+import { useSession } from "../context/useSession";
 
 const API_URL = `${API_ROOT}/inser/empleado`;
 
@@ -56,6 +57,7 @@ export function Empleado() {
 
     const navigate = useNavigate();
     const location = useLocation();
+    const { logout } = useSession();
     const reduceMotion = useReducedMotion();
     const perfilId = new URLSearchParams(location.search).get("perfilId");
     const perfilPath = (path) => perfilId ? `${path}?perfilId=${encodeURIComponent(perfilId)}` : path;
@@ -153,17 +155,8 @@ export function Empleado() {
         }
 
         try {
-            const response = await fetch(`${API_ROOT}/inser/logout`, {
-                method: "POST",
-                credentials: "include"
-            });
-
-            if (!response.ok) {
-                throw new Error("No se pudo cerrar la sesión.");
-            }
-
-            localStorage.removeItem("user");
-            navigate("/login");
+            await logout();
+            navigate("/");
         } catch (error) {
             setMessage(error.message || "Error de conexión al cerrar sesión.");
         }
@@ -192,17 +185,21 @@ export function Empleado() {
                         <span className="empleado-menu-indicator" aria-hidden="true">02</span>
                         Gestionar mis citas
                     </button>
+                    <button type="button" onClick={() => navigate("/")}>
+                        <span className="empleado-menu-indicator" aria-hidden="true">03</span>
+                        Ir a la página principal
+                    </button>
                     {!perfilId && (
                         <button
                             type="button"
                             onClick={() => navigate("/actualizar-datos-empleado")}
                         >
-                            <span className="empleado-menu-indicator" aria-hidden="true">03</span>
+                            <span className="empleado-menu-indicator" aria-hidden="true">04</span>
                             Actualizar datos
                         </button>
                     )}
                     <button type="button" onClick={cerrarSesion}>
-                        <span className="empleado-menu-indicator" aria-hidden="true">{perfilId ? "03" : "04"}</span>
+                        <span className="empleado-menu-indicator" aria-hidden="true">{perfilId ? "04" : "05"}</span>
                         {perfilId ? "Volver al panel administrador" : "Cerrar sesión"}
                     </button>
                 </nav>
