@@ -1,3 +1,4 @@
+import "./Educate.css";
 import video1 from "../assets/educate1.mp4";
 import video2 from "../assets/educate2.mp4";
 import video3 from "../assets/educate3.mp4";
@@ -61,9 +62,12 @@ function Reproductor({ leccion }) {
       {leccion.video ? (
         <video
           src={leccion.video}
+          width="720"
+          height="1280"
           controls
           playsInline
           preload="metadata"
+          aria-label={`Video de la lección: ${leccion.titulo}`}
         >
           Tu navegador no puede reproducir este video.
         </video>
