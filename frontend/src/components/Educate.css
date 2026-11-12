@@ -1,0 +1,45 @@
+.edu-section .edu-feature-media {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse at center, #e8e8e8, transparent 70%),
+    #f5f5f5;
+}
+
+.edu-section .edu-player {
+  width: min(100%, 360px, 41.6vh);
+  aspect-ratio: 9 / 16;
+  margin-inline: auto;
+  border: 1px solid rgba(24, 24, 27, 0.12);
+  border-radius: 12px;
+  background: #111;
+  box-shadow: 0 14px 36px rgba(24, 24, 27, 0.2);
+}
+
+.edu-section .edu-player video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #111;
+}
+
+.edu-section .edu-lesson-media .edu-player {
+  width: min(100%, 320px, 41.6vh);
+}
+
+.edu-section .edu-media-caption {
+  align-self: center;
+}
+
+@media (max-width: 600px) {
+  .edu-section .edu-player {
+    width: min(100%, 360px, 41.6vh);
+    border-radius: 10px;
+  }
+
+  .edu-section .edu-lesson-media .edu-player {
+    width: min(100%, 320px, 41.6vh);
+  }
+}
