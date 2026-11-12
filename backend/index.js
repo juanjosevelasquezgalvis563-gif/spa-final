@@ -8,6 +8,7 @@ import { PRODUCT_IMAGES_DIR } from "./src/config/productImages.js";
 import authRoutes from "./src/routes/routes.js";
 import db from "./src/config/db.js";
 import { iniciarRecordatorios } from "./src/controllers/recordatorios.js";
+import EmailRegistration from "./src/models/EmailRegistration.js";
 
 dotenv.config();
 
@@ -54,6 +55,8 @@ app.use("/inser", authRoutes);
 try {
     await db.authenticate();
     console.log("Base de datos conectada con Sequelize");
+    await EmailRegistration.sync();
+    console.log("Tabla de confirmación de correo lista");
 
     app.listen(PORT, () => {
         console.log(`Servidor backend activo en http://localhost:${PORT}`);

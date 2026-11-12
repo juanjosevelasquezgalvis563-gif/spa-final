@@ -1,5 +1,11 @@
 import {Router} from "express";
-import { obtenerCaptcha, registro, verificarCaptcha } from "../controllers/RegistroController.js";
+import {
+    obtenerCaptcha,
+    registro,
+    reenviarCodigoRegistro,
+    verificarCaptcha,
+    verificarCorreoRegistro
+} from "../controllers/RegistroController.js";
 import {actualizarDatos} from "../controllers/RegistroController.js";
 import {login, me,loginGoogle} from "../controllers/LoginController.js";
 
@@ -58,7 +64,7 @@ import {
     forgotPasswordIpLimiter,
     forgotPasswordEmailLimiter
 } from "../middlewares/rateLimiter.js";
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { authCookieOptions } from "../config/cookies.js";
 import { cargarImagenProducto } from "../middlewares/productImageUpload.js";
 
@@ -90,6 +96,28 @@ const registroLimiter = rateLimit({
     message: { message: "Demasiados intentos de registro. Intenta de nuevo en 15 minutos." }
 });
 
+const registroCorreoLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 3,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => {
+        const email = req.body?.email;
+        return typeof email === "string" && email.trim()
+            ? `email:${email.trim().toLowerCase()}`
+            : ipKeyGenerator(req.ip);
+    },
+    message: { message: "Demasiados códigos solicitados para este correo. Intenta de nuevo más tarde." }
+});
+
+const registroCodigoLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Demasiados intentos de confirmación. Intenta de nuevo más tarde." }
+});
+
 const carritoActionLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     limit: 10,
@@ -100,7 +128,9 @@ const carritoActionLimiter = rateLimit({
 
 router.get('/captcha', captchaLimiter, obtenerCaptcha);
 router.post('/captcha/verificar', captchaLimiter, verificarCaptcha);
-router.post('/registrar', registroLimiter, registro);
+router.post('/registrar', registroLimiter, registroCorreoLimiter, registro);
+router.post('/registrar/verificar', registroCodigoLimiter, verificarCorreoRegistro);
+router.post('/registrar/reenviar-codigo', registroCorreoLimiter, reenviarCodigoRegistro);
 router.put('/registrarr',middleware,actualizarDatos);
 
 
