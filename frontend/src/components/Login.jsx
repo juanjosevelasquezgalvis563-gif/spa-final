@@ -4,10 +4,12 @@ import { GoogleLogin } from "@react-oauth/google";
 import logo from "../assets/image.png";
 import { API_ROOT } from "../lib/api";
 import { useSession } from "../context/useSession";
+import PasswordVisibilityToggle from "./PasswordVisibilityToggle";
 
 export function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [mostrarPassword, setMostrarPassword] = useState(false);
   const [message, setMessage] = useState("");
 
   const navigate = useNavigate();
@@ -147,16 +149,22 @@ export function Login() {
 
           <div className="login-group">
             <label htmlFor="login-password">Contraseña</label>
-            <input
-              id="login-password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="login-input"
-              autoComplete="current-password"
-              required
-            />
+            <div className="password-field">
+              <input
+                id="login-password"
+                type={mostrarPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="login-input"
+                autoComplete="current-password"
+                required
+              />
+              <PasswordVisibilityToggle
+                visible={mostrarPassword}
+                onToggle={() => setMostrarPassword((visible) => !visible)}
+              />
+            </div>
           </div>
 
           <div className="login-footer-links">
