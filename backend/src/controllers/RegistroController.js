@@ -1,13 +1,22 @@
 import bcrypt from 'bcrypt';
 import { randomInt, randomUUID } from 'node:crypto';
+import nodemailer from 'nodemailer';
+import { Op } from 'sequelize';
+import db from '../config/db.js';
 import Usuario from '../models/Usuario.js';
+import EmailRegistration from '../models/EmailRegistration.js';
 
 const captchaChallenges = new Map();
 const CAPTCHA_TTL_MS = 5 * 60 * 1000;
 const CAPTCHA_MAX_CHALLENGES = 5000;
-const CAPTCHA_REQUIRED_SELECTIONS = 4;
-const CAPTCHA_REQUIRED_ROUNDS = 3;
+const CAPTCHA_REQUIRED_SELECTIONS = 1;
+const CAPTCHA_REQUIRED_ROUNDS = 1;
+const CAPTCHA_DISTRACTOR_COUNT = 4;
 const CAPTCHA_IMAGE_SIZE = 320;
+const EMAIL_CODE_TTL_MS = 10 * 60 * 1000;
+const EMAIL_REGISTRATION_TTL_MS = 30 * 60 * 1000;
+const EMAIL_CODE_MAX_ATTEMPTS = 5;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const captchaProofs = new Map();
 const captchaSessions = new Map();
 const CAPTCHA_SHAPES = [
@@ -101,7 +110,8 @@ function crearDesafioCaptcha(sessionId, round) {
     }
 
     const target = CAPTCHA_SHAPES[randomInt(CAPTCHA_SHAPES.length)];
-    const distractors = barajar(CAPTCHA_SHAPES.filter((shape) => shape !== target)).slice(0, 4);
+    const distractors = barajar(CAPTCHA_SHAPES.filter((shape) => shape !== target))
+        .slice(0, CAPTCHA_DISTRACTOR_COUNT);
     const opciones = [
         ...barajar(target.images).slice(0, CAPTCHA_REQUIRED_SELECTIONS).map((photoId) => ({
             shape: target,
@@ -130,7 +140,9 @@ function crearDesafioCaptcha(sessionId, round) {
         sessionId,
         round,
         totalRounds: CAPTCHA_REQUIRED_ROUNDS,
-        prompt: `Selecciona todas las imágenes que contienen ${target.name}.`,
+        prompt: CAPTCHA_REQUIRED_SELECTIONS === 1
+            ? `Selecciona la imagen que contiene ${target.name}.`
+            : `Selecciona todas las imágenes que contienen ${target.name}.`,
         images: opcionesBarajadas.map((opcion, index) => ({
             id: index,
             src: crearImagenCaptcha(opcion.photoId)
@@ -148,13 +160,17 @@ export function obtenerCaptcha(req, res) {
 export function verificarCaptcha(req, res) {
     const { challengeId, captchaAnswer } = req.body;
     if (typeof challengeId !== 'string' || !Array.isArray(captchaAnswer)) {
-        return res.status(400).json({ message: 'Selecciona al menos 4 imágenes para verificar.' });
+        return res.status(400).json({ message: 'Selecciona una imagen para verificar.' });
     }
-    if (captchaAnswer.length < CAPTCHA_REQUIRED_SELECTIONS) {
-        return res.status(400).json({ message: 'Debes seleccionar al menos 4 imágenes.' });
-    }
-    if (captchaAnswer.length !== CAPTCHA_REQUIRED_SELECTIONS || captchaAnswer.some((id) => !Number.isInteger(id) || id < 0 || id >= 8)) {
-        return res.status(400).json({ message: 'Selecciona exactamente 4 imágenes para esta verificación.' });
+    if (
+        captchaAnswer.length !== CAPTCHA_REQUIRED_SELECTIONS ||
+        captchaAnswer.some((id) =>
+            !Number.isInteger(id) ||
+            id < 0 ||
+            id >= CAPTCHA_REQUIRED_SELECTIONS + CAPTCHA_DISTRACTOR_COUNT
+        )
+    ) {
+        return res.status(400).json({ message: 'Selecciona solo una imagen para verificar.' });
     }
 
     const challenge = captchaChallenges.get(challengeId);
@@ -218,10 +234,99 @@ function consumirCaptchaProof(proof) {
     return Boolean(expiresAt && expiresAt > Date.now());
 }
 
-export async function registro(req, res) {
+function obtenerTransportadorCorreo() {
+    const missingConfig = ["EMAIL_USER", "EMAIL_PASSWORD"]
+        .filter((name) => !process.env[name]?.trim());
 
+    if (missingConfig.length) {
+        console.error(
+            "Configuración faltante para confirmar correo:",
+            missingConfig.join(", ")
+        );
+        return null;
+    }
+
+    return nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASSWORD
+        }
+    });
+}
+
+function crearCodigoCorreo() {
+    return randomInt(0, 1_000_000).toString().padStart(6, "0");
+}
+
+async function enviarCodigoCorreo(transporter, email, code) {
+    await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "Confirma tu correo electrónico",
+        text: `Tu código de confirmación es ${code}. Es válido durante 10 minutos. No lo compartas con nadie.`,
+        html: `
+            <div style="font-family:Arial,sans-serif;color:#18181b;max-width:520px;margin:0 auto;padding:32px">
+                <h2 style="margin:0 0 16px">Confirma tu correo</h2>
+                <p>Usa este código para terminar de crear tu cuenta:</p>
+                <p style="font-size:32px;font-weight:700;letter-spacing:8px;margin:24px 0">${code}</p>
+                <p>El código vence en 10 minutos. Si no solicitaste esta cuenta, puedes ignorar este mensaje.</p>
+            </div>
+        `
+    });
+
+}
+
+function validarDatosRegistro({ nombre, telefono, email, password }) {
+    if (
+        typeof nombre !== "string" ||
+        typeof telefono !== "string" ||
+        typeof email !== "string" ||
+        typeof password !== "string" ||
+        !nombre.trim() ||
+        !telefono.trim() ||
+        !email.trim() ||
+        !password
+    ) {
+        return "Todos los campos son obligatorios";
+    }
+    if (nombre.trim().length < 5 || nombre.trim().length > 255) {
+        return "El nombre debe tener entre 5 y 255 caracteres";
+    }
+    if (telefono.trim().length < 10 || telefono.trim().length > 255) {
+        return "El teléfono debe tener entre 10 y 255 caracteres";
+    }
+    if (email.trim().length > 254 || !EMAIL_REGEX.test(email.trim())) {
+        return "Ingresa un correo electrónico válido";
+    }
+    if (Buffer.byteLength(password, "utf8") > 72) {
+        return "La contraseña no puede superar los 72 bytes";
+    }
+
+    let tieneMayuscula = false;
+    let tieneMinuscula = false;
+    let tieneNumero = false;
+    let tieneCaracterEspecial = false;
+
+    for (const caracter of password) {
+        if (caracter >= "A" && caracter <= "Z") tieneMayuscula = true;
+        else if (caracter >= "a" && caracter <= "z") tieneMinuscula = true;
+        else if (caracter >= "0" && caracter <= "9") tieneNumero = true;
+        else if ("@#$%&*()_".includes(caracter)) tieneCaracterEspecial = true;
+    }
+
+    if (!tieneMayuscula) return "La contraseña debe tener al menos una mayúscula";
+    if (!tieneMinuscula) return "La contraseña debe tener al menos una minúscula";
+    if (!tieneNumero) return "La contraseña debe tener al menos un número";
+    if (!tieneCaracterEspecial) return "La contraseña debe tener al menos un caracter especial";
+    if (password.length < 8) return "La contraseña debe tener al menos 8 caracteres";
+
+    return null;
+}
+
+export async function registro(req, res) {
     try {
-        const { nombre, telefono, email, password, captchaProof } = req.body;
+        const { nombre, telefono, email, password, captchaProof } = req.body ?? {};
 
         if (!consumirCaptchaProof(captchaProof)) {
             return res.status(400).json({
@@ -229,87 +334,11 @@ export async function registro(req, res) {
             });
         }
 
+        const errorDatos = validarDatosRegistro({ nombre, telefono, email, password });
+        if (errorDatos) return res.status(400).json({ message: errorDatos });
 
-        if (!nombre || !telefono || !email || !password) {
-            return res.status(400).json({
-                message: "Todos los campos son obligatorios"
-            });
-        }
-
-        let tieneMayuscula = false;
-        let tieneMinuscula = false;
-        let tieneNumero = false;
-        let tieneCaracterEspecial = false;
-
-        for (let i = 0; i < password.length; i++) {
-
-            if (password[i] >= 'A' && password[i] <= 'Z') {
-                tieneMayuscula = true;
-            }
-            else if (password[i] >= 'a' && password[i] <= 'z') {
-                tieneMinuscula = true;
-            }
-            else if (password[i] >= '0' && password[i] <= '9') {
-                tieneNumero = true;
-            }
-            else if (
-                password[i] == '@' ||
-                password[i] == '#' ||
-                password[i] == '$' ||
-                password[i] == '%' ||
-                password[i] == '&' ||
-                password[i] == '*' ||
-                password[i] == '(' ||
-                password[i] == ')' ||
-                password[i] == '_'
-            ) {
-                tieneCaracterEspecial = true;
-            }
-        }
-
-        if (!tieneMayuscula) {
-            return res.status(400).json({
-                message: "La contraseña debe tener al menos una mayúscula"
-            });
-        }
-        else if (!tieneMinuscula) {
-            return res.status(400).json({
-                message: "La contraseña debe tener al menos una minúscula"
-            });
-        }
-        else if (!tieneNumero) {
-            return res.status(400).json({
-                message: "La contraseña debe tener al menos un número"
-            });
-        }
-        else if (!tieneCaracterEspecial) {
-            return res.status(400).json({
-                message: "La contraseña debe tener al menos un caracter especial"
-            });
-        }
-        else if (password.length < 8) {
-            return res.status(400).json({
-                message: "La contraseña debe tener al menos 8 caracteres"
-            });
-        }
-
-        if (nombre.length < 5) {
-            return res.status(400).json({
-                message: "El nombre debe tener al menos 5 caracteres"
-            });
-        }
-
-        if (telefono.length < 10) {
-            return res.status(400).json({
-                message: "El teléfono debe tener al menos 10 caracteres"
-            });
-        }
-
-        const usuario = await Usuario.findOne({
-            where: {
-                email: email
-            }
-        });
+        const correoNormalizado = email.trim().toLowerCase();
+        const usuario = await Usuario.findOne({ where: { email: correoNormalizado } });
 
         if (usuario) {
             return res.status(400).json({
@@ -317,23 +346,202 @@ export async function registro(req, res) {
             });
         }
 
-        const hash = await bcrypt.hash(password, 10);
+        const transporter = obtenerTransportadorCorreo();
+        if (!transporter) {
+            return res.status(503).json({
+                message: "El servicio de confirmación por correo no está configurado"
+            });
+        }
 
-        await Usuario.create({
-            nombre: nombre,
-            telefono: telefono,
-            email: email,
-            password: hash,
-            rol: 'cliente'
+        const codigo = crearCodigoCorreo();
+        const [passwordHash, codeHash] = await Promise.all([
+            bcrypt.hash(password, 10),
+            bcrypt.hash(codigo, 10)
+        ]);
+        const ahora = new Date();
+
+        await EmailRegistration.destroy({
+            where: { expires_at: { [Op.lt]: ahora } }
+        });
+        await EmailRegistration.upsert({
+            nombre: nombre.trim(),
+            telefono: telefono.trim(),
+            email: correoNormalizado,
+            password_hash: passwordHash,
+            code_hash: codeHash,
+            expires_at: new Date(ahora.getTime() + EMAIL_CODE_TTL_MS),
+            created_at: ahora,
+            attempts: 0
         });
 
-        return res.status(201).json({
-            message: "Usuario registrado correctamente"
+        try {
+            await enviarCodigoCorreo(transporter, correoNormalizado, codigo);
+        } catch (error) {
+            await EmailRegistration.destroy({ where: { email: correoNormalizado } });
+            throw error;
+        }
+
+        return res.status(202).json({
+            message: "Enviamos un código a tu correo. Ingrésalo para confirmar la dirección y crear tu cuenta."
         });
 
     } catch (error) {
+        console.error("Error al iniciar el registro:", error);
         return res.status(500).json({
-            message: error.message
+            message: "No se pudo enviar el código de confirmación"
+        });
+    }
+}
+
+export async function verificarCorreoRegistro(req, res) {
+    try {
+        const email = typeof req.body?.email === "string"
+            ? req.body.email.trim().toLowerCase()
+            : "";
+        const codigo = typeof req.body?.codigo === "string"
+            ? req.body.codigo.trim()
+            : "";
+
+        if (!EMAIL_REGEX.test(email) || !/^\d{6}$/.test(codigo)) {
+            return res.status(400).json({
+                message: "Ingresa el correo y el código de 6 dígitos"
+            });
+        }
+
+        const registroPendiente = await EmailRegistration.findOne({
+            where: { email }
+        });
+
+        if (!registroPendiente || registroPendiente.expires_at <= new Date()) {
+            if (registroPendiente) await registroPendiente.destroy();
+            return res.status(400).json({
+                message: "El código expiró o no existe. Inicia el registro nuevamente."
+            });
+        }
+
+        if (registroPendiente.attempts >= EMAIL_CODE_MAX_ATTEMPTS) {
+            await registroPendiente.destroy();
+            return res.status(429).json({
+                message: "Se agotaron los intentos. Inicia el registro nuevamente."
+            });
+        }
+
+        const codigoValido = await bcrypt.compare(codigo, registroPendiente.code_hash);
+        if (!codigoValido) {
+            await registroPendiente.increment("attempts");
+            await registroPendiente.reload();
+
+            if (registroPendiente.attempts >= EMAIL_CODE_MAX_ATTEMPTS) {
+                await registroPendiente.destroy();
+                return res.status(429).json({
+                    message: "Se agotaron los intentos. Inicia el registro nuevamente."
+                });
+            }
+
+            return res.status(400).json({
+                message: "El código no es correcto. Revisa tu correo e inténtalo de nuevo."
+            });
+        }
+
+        try {
+            await db.transaction(async (transaction) => {
+                const usuarioExistente = await Usuario.findOne({
+                    where: { email },
+                    transaction
+                });
+
+                if (usuarioExistente) {
+                    const error = new Error("Este usuario ya está registrado en el sistema");
+                    error.code = "EMAIL_ALREADY_REGISTERED";
+                    throw error;
+                }
+
+                await Usuario.create({
+                    nombre: registroPendiente.nombre,
+                    telefono: registroPendiente.telefono,
+                    email,
+                    password: registroPendiente.password_hash,
+                    rol: "cliente"
+                }, { transaction });
+
+                await registroPendiente.destroy({ transaction });
+            });
+        } catch (error) {
+            if (error.code === "EMAIL_ALREADY_REGISTERED" || error.name === "SequelizeUniqueConstraintError") {
+                await registroPendiente.destroy();
+                return res.status(409).json({
+                    message: "Este usuario ya está registrado en el sistema"
+                });
+            }
+            throw error;
+        }
+
+        return res.status(201).json({
+            message: "Correo confirmado y cuenta creada. Ya puedes iniciar sesión."
+        });
+    } catch (error) {
+        console.error("Error al confirmar el correo de registro:", error);
+        return res.status(500).json({
+            message: "No se pudo confirmar el correo"
+        });
+    }
+}
+
+export async function reenviarCodigoRegistro(req, res) {
+    try {
+        const email = typeof req.body?.email === "string"
+            ? req.body.email.trim().toLowerCase()
+            : "";
+
+        if (email.length > 254 || !EMAIL_REGEX.test(email)) {
+            return res.status(400).json({
+                message: "Ingresa un correo electrónico válido"
+            });
+        }
+
+        const registroPendiente = await EmailRegistration.findOne({
+            where: { email }
+        });
+
+        if (!registroPendiente || Date.now() - registroPendiente.created_at.getTime() > EMAIL_REGISTRATION_TTL_MS) {
+            if (registroPendiente) await registroPendiente.destroy();
+            return res.status(400).json({
+                message: "No hay un registro pendiente para ese correo. Vuelve a completar el formulario."
+            });
+        }
+
+        const transporter = obtenerTransportadorCorreo();
+        if (!transporter) {
+            return res.status(503).json({
+                message: "El servicio de confirmación por correo no está configurado"
+            });
+        }
+
+        const codigo = crearCodigoCorreo();
+        const codeHash = await bcrypt.hash(codigo, 10);
+        const ahora = new Date();
+
+        try {
+            await enviarCodigoCorreo(transporter, email, codigo);
+        } catch (error) {
+            console.error("Error al reenviar el código de confirmación:", error);
+            return res.status(500).json({
+                message: "No se pudo reenviar el código de confirmación"
+            });
+        }
+
+        registroPendiente.code_hash = codeHash;
+        registroPendiente.expires_at = new Date(ahora.getTime() + EMAIL_CODE_TTL_MS);
+        registroPendiente.attempts = 0;
+        await registroPendiente.save();
+
+        return res.json({
+            message: "Enviamos un nuevo código a tu correo. Es válido durante 10 minutos."
+        });
+    } catch (error) {
+        console.error("Error al solicitar un nuevo código de registro:", error);
+        return res.status(500).json({
+            message: "No se pudo reenviar el código de confirmación"
         });
     }
 }
