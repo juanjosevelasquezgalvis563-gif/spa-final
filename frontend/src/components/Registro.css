@@ -1,0 +1,35 @@
+.auth-card-register .registro-email-confirmation {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-card-register .registro-email-confirmation label {
+  color: #3d3346;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.auth-card-register .registro-code-input {
+  min-height: 60px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  text-align: center;
+}
+
+.auth-card-register .registro-email-confirmation > p {
+  margin: 0;
+  color: #756d7c;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.auth-card-register .registro-email-confirmation .registro-captcha-refresh {
+  width: 100%;
+}
+
+.auth-card-register .registro-email-confirmation button:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
