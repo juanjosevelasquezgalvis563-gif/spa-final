@@ -42,14 +42,14 @@ export async function citasHoy(req, res) {
     try {
         const empleadoId = req.user.id;
         const ahora = new Date();
-        const inicioHoy = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth(), ahora.getUTCDate(), 0, 0, 0));
-        const finHoy = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth(), ahora.getUTCDate() + 1, 0, 0, 0));
+        const inicioHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 0, 0, 0);
+        const finHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() + 1, 0, 0, 0);
 
        
         const cantidad = await Cita.count({
             where: {
                 empleado_id: empleadoId,
-                estado: { [Op.in]: ['pendiente', 'confirmada'] },
+                estado: { [Op.in]: ['pendiente', 'confirmada', 'en_curso'] },
 
                 fecha: {
                     [Op.gte]: inicioHoy,
@@ -119,27 +119,12 @@ export async function comfirmarCita(req, res) {
             return res.status(404).json({ message: 'Cita no encontrada' });
         }
 
-        if (cita.estado === 'confirmada') {
-            return res.status(400).json({ message: 'No se puede confirmar una cita que ya esta confirmada' });
+        if (cita.estado !== 'pendiente') {
+            return res.status(400).json({ message: 'Solo se pueden confirmar citas pendientes' });
         }
 
-        if (cita.estado === 'finalizada') {
-            return res.status(400).json({ message: 'No se puede confirmar una cita que ya esta finalizada' });
-        }
-
-        if (cita.estado === 'cancelada') {
-            return res.status(400).json({ message: 'No se puede confirmar una cita que ya esta cancelada' });
-        }
-        await Cita.update(
-            {
-                estado: 'confirmada'
-            },
-            {
-                where: {
-                    id: id
-                }
-            }
-        );
+        cita.estado = 'confirmada';
+        await cita.save();
 
         return res.status(200).json({ message: 'Cita confirmada' });
 
@@ -147,6 +132,38 @@ export async function comfirmarCita(req, res) {
         return res.status(401).json({ message: 'error al comfirmar la cita' });
     }
 
+}
+
+export async function comenzarCita(req, res) {
+    try {
+        const cita = await Cita.findOne({
+            where: {
+                id: req.params.id,
+                empleado_id: req.user.id
+            }
+        });
+
+        if (!cita) {
+            return res.status(404).json({ message: 'Cita no encontrada' });
+        }
+
+        if (cita.estado !== 'confirmada') {
+            return res.status(400).json({ message: 'Solo se puede comenzar una cita confirmada' });
+        }
+
+        cita.estado = 'en_curso';
+        cita.inicio_atencion = new Date();
+        cita.fin_atencion = null;
+        await cita.save();
+
+        return res.status(200).json({
+            message: 'Servicio iniciado',
+            inicio_atencion: cita.inicio_atencion
+        });
+    } catch (error) {
+        console.error('Error al comenzar la cita:', error);
+        return res.status(500).json({ message: 'No se pudo comenzar la cita' });
+    }
 }
 
 export async function cancelarCita(req, res) {
@@ -165,12 +182,11 @@ export async function cancelarCita(req, res) {
             return res.status(404).json({ message: 'Cita no encontrada' });
         }
 
-        if (cita.estado === 'finalizada') {
-            return res.status(401).json({ message: 'No se puede cancelar una cita finalizada' });
+        if (cita.estado === 'finalizada' || cita.estado === 'en_curso') {
+            return res.status(400).json({ message: 'No se puede cancelar una cita en curso o finalizada' });
         }
         if (cita.estado === 'cancelada') {
-            return res.status(400).json({ message: 'No se puede finalizar una cita que ya esta cancelada' });
-
+            return res.status(400).json({ message: 'La cita ya está cancelada' });
         }
 
         await Cita.update(
@@ -213,9 +229,9 @@ export async function finalizarCita(req, res) {
             });
         }
 
-        if (cita.estado !== 'confirmada') {
+        if (cita.estado !== 'en_curso' || !cita.inicio_atencion) {
             return res.status(400).json({
-                message: 'La cita debe estar confirmada'
+                message: 'La cita debe estar en curso antes de finalizarla'
             });
         }
 
@@ -227,15 +243,14 @@ export async function finalizarCita(req, res) {
             });
         }
 
-        await Cita.update(
-            { estado: 'finalizada' },
-            {
-                where: {
-                    id: id,
-                    empleado_id: empleadoId
-                }
-            }
+        const finAtencion = new Date();
+        const duracionMinutos = Math.max(
+            0,
+            Math.floor((finAtencion.getTime() - new Date(cita.inicio_atencion).getTime()) / 60000)
         );
+        cita.estado = 'finalizada';
+        cita.fin_atencion = finAtencion;
+        await cita.save();
 
         const puntos = Math.floor(Number(servicio.precio) / 1000);
 
@@ -251,7 +266,8 @@ export async function finalizarCita(req, res) {
 
         return res.status(200).json({
             message: 'Cita finalizada',
-            puntos_ganados: puntos
+            puntos_ganados: puntos,
+            duracion_minutos: duracionMinutos
         });
 
     } catch (error) {
@@ -271,7 +287,7 @@ export async function citaRealizarEmpleado(req, res) {
             where: {
                 empleado_id: empleadoId,
                 estado: {
-                    [Op.in]: ['pendiente', 'confirmada']
+                    [Op.in]: ['pendiente', 'confirmada', 'en_curso']
                 },
             },
             include: [
