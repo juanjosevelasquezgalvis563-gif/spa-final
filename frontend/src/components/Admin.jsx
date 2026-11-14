@@ -1,7 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, m, useReducedMotion } from 'motion/react';
 import { API_ROOT } from '../lib/api';
+import RegistrarPago from './RegistrarPago';
+import HistorialPagos from './HistorialPagos';
 
 function urlImagenProducto(image) {
     if (!image) return "";
@@ -15,6 +18,10 @@ export function Admin() {
     const [mostrarBienvenida, setMostrarBienvenida] = useState(true);
     const [productos, SetProductos] = useState([]);
     const [historial, SetHistorial] = useState([]);
+    const [cantidadesDescontar, SetCantidadesDescontar] = useState({});
+    const [historialVisible, SetHistorialVisible] = useState(false);
+    const [historialCargado, SetHistorialCargado] = useState(false);
+    const [cargandoHistorial, SetCargandoHistorial] = useState(false);
     const [message, SetMessage] = useState('');
 
     const [productoId, SetProductoId] = useState("");
@@ -24,6 +31,7 @@ export function Admin() {
     const [rolPerfil, SetRolPerfil] = useState('empleado');
     const [perfiles, SetPerfiles] = useState([]);
     const [cargandoPerfiles, SetCargandoPerfiles] = useState(false);
+    const [productoDescontando, SetProductoDescontando] = useState(null);
 
     const navigate = useNavigate();
     const reduceMotion = useReducedMotion();
@@ -51,6 +59,8 @@ export function Admin() {
         }
     }
 
+    
+
     async function obtenerProductos() {
         try {
             const response = await fetch(
@@ -65,7 +75,7 @@ export function Admin() {
 
             if (response.ok) {
                 SetProductos(data);
-            }else{
+            } else {
                 SetMessage(data.message);
             }
 
@@ -89,12 +99,58 @@ export function Admin() {
             if (response.ok) {
                 SetMessage(data.message);
                 obtenerProductos();
-            }else{
+            } else {
                 SetMessage(data.message);
             }
 
         } catch {
             SetMessage('Error de conexion con el servidor');
+        }
+    }
+
+    async function descontarStock(producto) {
+        const cantidad = Number(cantidadesDescontar[producto.id]);
+
+        if (!Number.isInteger(cantidad) || cantidad < 1) {
+            SetMessage('Ingresa una cantidad entera mayor que cero para descontar.');
+            return;
+        }
+
+        SetProductoDescontando(producto.id);
+
+        try {
+            const response = await fetch(
+                `${API_ROOT}/inser/administrador/productos/${producto.id}/descontar-stock`,
+                {
+                    method: 'PUT',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cantidad })
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                SetMessage(data.message || 'No se pudo descontar el stock.');
+                return;
+            }
+
+            SetProductos((actuales) => actuales.map((item) =>
+                item.id === producto.id ? { ...item, ...data.producto } : item
+            ));
+
+            SetCantidadesDescontar((actuales) => ({
+                ...actuales,
+                [producto.id]: ''
+            }));
+
+            SetMessage(data.message);
+
+        } catch {
+            SetMessage('Error de conexión al descontar el stock.');
+        } finally {
+            SetProductoDescontando(null);
         }
     }
 
@@ -139,20 +195,40 @@ export function Admin() {
         }
     }
 
-    async function historialCompras(){
-        try{
-            const response = await fetch(`${API_ROOT}/inser/administrador/historialCompras`,{
-                method:'GET',
-                credentials:'include'
-            });
+    async function historialCompras() {
+        SetCargandoHistorial(true);
+
+        try {
+            const response = await fetch(
+                `${API_ROOT}/inser/administrador/historialCompras`,
+                {
+                    method: 'GET',
+                    credentials: 'include'
+                }
+            );
+
             const data = await response.json();
-            if(response.ok){
+
+            if (response.ok) {
                 SetHistorial(data);
-            }else{
+                SetHistorialCargado(true);
+            } else {
                 SetMessage(data.message);
             }
-        }catch{
+
+        } catch {
             SetMessage('Error de conexion con el servidor');
+        } finally {
+            SetCargandoHistorial(false);
+        }
+    }
+
+    async function alternarHistorial() {
+        const mostrar = !historialVisible;
+        SetHistorialVisible(mostrar);
+
+        if (mostrar && !historialCargado) {
+            await historialCompras();
         }
     }
 
@@ -165,6 +241,7 @@ export function Admin() {
                 `${API_ROOT}/inser/administrador/perfiles?rol=${rol}`,
                 { credentials: 'include' }
             );
+
             const data = await response.json();
 
             if (response.ok) {
@@ -172,6 +249,7 @@ export function Admin() {
             } else {
                 SetMessage(data.message || 'No se pudieron cargar los perfiles.');
             }
+
         } catch {
             SetMessage('Error de conexión al cargar los perfiles.');
         } finally {
@@ -187,9 +265,13 @@ export function Admin() {
                     method: 'POST',
                     credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: usuario.id, rol: rolPerfil })
+                    body: JSON.stringify({
+                        id: usuario.id,
+                        rol: rolPerfil
+                    })
                 }
             );
+
             const data = await response.json();
 
             if (response.ok) {
@@ -197,6 +279,7 @@ export function Admin() {
             } else {
                 SetMessage(data.message || 'No se pudo abrir el perfil.');
             }
+
         } catch {
             SetMessage('Error de conexión al abrir el perfil.');
         }
@@ -215,7 +298,6 @@ export function Admin() {
         void Promise.resolve().then(() => {
             obtenerAdmin();
             obtenerProductos();
-            historialCompras();
             obtenerPerfiles('empleado');
             limpiarPerfilActivo();
         });
@@ -237,7 +319,17 @@ export function Admin() {
         }, 10000);
 
         return () => window.clearTimeout(temporizador);
+
     }, []);
+
+    function cerrarSesion() {
+    fetch(`${API_ROOT}/inser/logout`, {
+        method: 'POST',
+        credentials: 'include'
+    }).then(() => {
+        navigate('/login');
+    });
+}
 
     return (
         <div className="admin-dashboard">
@@ -259,6 +351,7 @@ export function Admin() {
                                     Hola, {admin ? admin.nombre : 'Admin'}
                                     <span className="admin-saludo-emoji">👋</span>
                                 </h1>
+
                                 <p className="admin-subtitulo">
                                     Aquí tienes el resumen de tu inventario y operaciones.
                                 </p>
@@ -273,13 +366,13 @@ export function Admin() {
                                 transition={{ duration: reduceMotion ? 0.2 : 0.45, ease: [0.22, 0.61, 0.36, 1] }}
                             >
                                 <h1 className="admin-saludo">Tu espacio de gestión</h1>
+
                                 <p className="admin-subtitulo">
                                     Administra inventario, perfiles y operaciones desde un solo lugar.
                                 </p>
                             </m.div>
                         )}
                     </AnimatePresence>
-
                 </div>
 
                 {admin && (
@@ -309,7 +402,13 @@ export function Admin() {
                     </div>
                 )}
 
-                <Link className="admin-home-link" to="/">Página principal</Link>
+                <Link className="admin-home-link" to="/">
+                    Página principal
+                </Link>
+
+                <button onClick={cerrarSesion}>
+    Cerrar sesión
+</button>
 
             </header>
 
@@ -322,279 +421,257 @@ export function Admin() {
 
             <div className="admin-grid">
 
-            <section className="admin-panel">
+                <section className="admin-panel">
 
-                <div className="admin-panel-head">
-                    <h2 className="admin-panel-title">
-                        <span className="admin-panel-icon">
-                            📦
-                        </span>
-                        Inventario de productos
-                    </h2>
+                    <div className="admin-panel-head">
+                        <h2 className="admin-panel-title">
+                            <span className="admin-panel-icon">📦</span>
+                            Inventario de productos
+                        </h2>
 
-                    <div className="admin-productos-actions">
-                        <span className="admin-total">
-                            {productos.length} en catálogo
-                        </span>
-                        <Link className="admin-productos-link" to="/admin/productos">
-                            Agregar productos
-                        </Link>
+                        <div className="admin-productos-actions">
+                            <span className="admin-total">
+                                {productos.length} en catálogo
+                            </span>
+
+                            <Link className="admin-productos-link" to="/admin/productos">
+                                Agregar productos
+                            </Link>
+                        </div>
                     </div>
-                </div>
 
-                {productos.length === 0 ? (
+                    {productos.length === 0 ? (
+                        <p className="admin-vacio">
+                            Todavía no hay productos registrados.
+                        </p>
+                    ) : (
+                        <div className="admin-tabla-wrap">
 
-                    <p className="admin-vacio">
-                        Todavía no hay productos registrados.
-                    </p>
+                            <table className="admin-tabla">
 
-                ) : (
+                                <thead>
+                                    <tr>
+                                        <th className="admin-th-imagen">Imagen</th>
+                                        <th className="admin-th-nombre">Nombre</th>
+                                        <th className="admin-th-precio">Precio</th>
+                                        <th className="admin-th-stock">Stock</th>
+                                        <th className="admin-th-estado">Estado</th>
+                                        <th className="admin-th-accion">Acción</th>
+                                    </tr>
+                                </thead>
 
-                    <div className="admin-tabla-wrap">
+                                <tbody>
+                                    {productos.map((producto) => (
+                                        <tr
+                                            key={producto.id}
+                                            className="admin-fila"
+                                        >
+                                            <td>
+                                                <div className="admin-imagen">
+                                                    <img
+                                                        src={urlImagenProducto(producto.image)}
+                                                        alt={producto.nombre}
+                                                    />
+                                                </div>
+                                            </td>
 
-                        <table className="admin-tabla">
+                                            <td className="admin-celda-nombre">
+                                                {producto.nombre}
+                                            </td>
 
-                            <thead>
-                                <tr>
-                                    <th className="admin-th-imagen">
-                                        Imagen
-                                    </th>
+                                            <td className="admin-celda-precio">
+                                                ${producto.precio}
+                                            </td>
 
-                                    <th className="admin-th-nombre">
-                                        Nombre
-                                    </th>
+                                            <td>
+                                                <span className="admin-stock">
+                                                    {producto.stock}
+                                                </span>
+                                            </td>
 
-                                    <th className="admin-th-precio">
-                                        Precio
-                                    </th>
+                                            <td>
+                                                <span
+                                                    className="admin-badge"
+                                                    data-estado={producto.estado}
+                                                >
+                                                    {producto.estado}
+                                                </span>
+                                            </td>
 
-                                    <th className="admin-th-stock">
-                                        Stock
-                                    </th>
+                                            <td>
+                                                <div className="admin-acciones">
 
-                                    <th className="admin-th-estado">
-                                        Estado
-                                    </th>
+                                                    <button
+                                                        className="admin-btn-editar"
+                                                        onClick={() =>
+                                                            navigate(`/actualizarProducto/${producto.id}`)
+                                                        }
+                                                    >
+                                                        ✏️
+                                                    </button>
 
-                                    <th className="admin-th-accion">
-                                        Acción
-                                    </th>
-                                </tr>
-                            </thead>
+                                                    <button
+                                                        className="admin-btn-eliminar"
+                                                        title="Eliminar producto"
+                                                        aria-label={`Eliminar ${producto.nombre}`}
+                                                        onClick={() => eliminarProducto(producto.id)}
+                                                    >
+                                                        🗑️
+                                                    </button>
 
-                            <tbody>
+                                                    <div className="admin-stock-ajuste">
+                                                        <input
+                                                            type="number"
+                                                            min="1"
+                                                            max={producto.stock}
+                                                            value={cantidadesDescontar[producto.id] ?? ''}
+                                                            onChange={(event) => SetCantidadesDescontar((actuales) => ({
+                                                                ...actuales,
+                                                                [producto.id]: event.target.value
+                                                            }))}
+                                                            aria-label={`Unidades a descontar de ${producto.nombre}`}
+                                                            placeholder="Cant."
+                                                        />
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => descontarStock(producto)}
+                                                            disabled={producto.stock < 1 || productoDescontando === producto.id}
+                                                        >
+                                                            {productoDescontando === producto.id ? '…' : 'Descontar'}
+                                                        </button>
+                                                    </div>
+
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+
+                            </table>
+                        </div>
+                    )}
+
+                </section>
+
+                <section className="admin-panel admin-panel-compra">
+
+                    <div className="admin-panel-head">
+                        <h2 className="admin-panel-title">
+                            <span className="admin-panel-icon">🛒</span>
+                            Realizar compra
+                        </h2>
+                    </div>
+
+                    <div>
+                        <form className="admin-form" onSubmit={handleSubmit}>
+
+                            <label className="admin-label" htmlFor="producto">
+                                Producto
+                            </label>
+
+                            <select
+                                id="producto"
+                                className="admin-input"
+                                value={productoId}
+                                onChange={(e) => SetProductoId(e.target.value)}
+                                required
+                            >
+                                <option value="">
+                                    Seleccione un producto
+                                </option>
 
                                 {productos.map((producto) => (
-
-                                    <tr
+                                    <option
                                         key={producto.id}
-                                        className="admin-fila"
+                                        value={producto.id}
                                     >
-
-                                        <td>
-                                            <div className="admin-imagen">
-                                                <img
-                                                    src={urlImagenProducto(producto.image)}
-                                                    alt={producto.nombre}
-                                                />
-                                            </div>
-                                        </td>
-
-                                        <td className="admin-celda-nombre">
-                                            {producto.nombre}
-                                        </td>
-
-                                        <td className="admin-celda-precio">
-                                            ${producto.precio}
-                                        </td>
-
-                                        <td>
-                                            <span className="admin-stock">
-                                                {producto.stock}
-                                            </span>
-                                        </td>
-
-                                        <td>
-                                            <span
-                                                className="admin-badge"
-                                                data-estado={producto.estado}
-                                            >
-                                                {producto.estado}
-                                            </span>
-                                        </td>
-
-                                        <td>
-                                            <div className="admin-acciones">
-
-                                                <button
-                                                    className="admin-btn-editar"
-                                                    onClick={() =>
-                                                        navigate(
-                                                            `/actualizarProducto/${producto.id}`
-                                                        )
-                                                    }
-                                                >
-                                                    ✏️
-                                                </button>
-
-                                                <button
-                                                    className="admin-btn-eliminar"
-                                                    title="Eliminar producto"
-                                                    aria-label={`Eliminar ${producto.nombre}`}
-                                                    onClick={() =>
-                                                        eliminarProducto(producto.id)
-                                                    }
-                                                >
-                                                    🗑️
-                                                </button>
-
-                                            </div>
-                                        </td>
-
-                                    </tr>
-
+                                        {producto.nombre}
+                                    </option>
                                 ))}
+                            </select>
 
-                            </tbody>
+                            <label className="admin-label" htmlFor="fecha-compra">
+                                Fecha de compra
+                            </label>
 
-                        </table>
-                      
+                            <input
+                                id="fecha-compra"
+                                className="admin-input"
+                                type="date"
+                                value={fecha}
+                                onChange={(e) => SetFecha(e.target.value)}
+                                required
+                            />
 
+                            <div className="admin-form-fila">
+
+                                <div className="admin-form-col">
+                                    <label className="admin-label" htmlFor="cantidad-compra">
+                                        Cantidad
+                                    </label>
+
+                                    <input
+                                        id="cantidad-compra"
+                                        className="admin-input"
+                                        type="number"
+                                        placeholder="Cantidad"
+                                        value={cantidad}
+                                        onChange={(e) => SetCantidad(e.target.value)}
+                                        min="1"
+                                        required
+                                    />
+
+                                    <span className="admin-help">
+                                        Mínimo 1
+                                    </span>
+                                </div>
+
+                                <div className="admin-form-col">
+                                    <label className="admin-label" htmlFor="precio-compra">
+                                        Precio de compra
+                                    </label>
+
+                                    <input
+                                        id="precio-compra"
+                                        className="admin-input"
+                                        type="number"
+                                        placeholder="Precio de compra"
+                                        value={precio_compra}
+                                        onChange={(e) => SetPrecioCompra(e.target.value)}
+                                        min="0"
+                                        required
+                                    />
+
+                                    <span className="admin-help">
+                                        Mínimo 0
+                                    </span>
+                                </div>
+
+                            </div>
+
+                            <button
+                                className="admin-btn-comprar"
+                                type="submit"
+                            >
+                                Registrar compra
+                            </button>
+
+                        </form>
                     </div>
 
-                )}
-
-            </section>
-
-            <section className="admin-panel admin-panel-compra">
-
-                <div className="admin-panel-head">
-                    <h2 className="admin-panel-title">
-                        <span className="admin-panel-icon">
-                            🛒
-                        </span>
-                        Realizar compra
-                    </h2>
-                </div>
-
-                <div>
-
-                    <form className="admin-form" onSubmit={handleSubmit}>
-
-                        <label className="admin-label" htmlFor="producto">
-                            Producto
-                        </label>
-
-                        <select
-                            id="producto"
-                            className="admin-input"
-                            value={productoId}
-                            onChange={(e) =>
-                                SetProductoId(e.target.value)
-                            }
-                            required
-                        >
-
-                            <option value="">
-                                Seleccione un producto
-                            </option>
-
-                            {productos.map((producto) => (
-                                <option
-                                    key={producto.id}
-                                    value={producto.id}
-                                >
-                                    {producto.nombre}
-                                </option>
-                            ))}
-
-                        </select>
-
-                        <label className="admin-label" htmlFor="fecha-compra">
-                            Fecha de compra
-                        </label>
-
-                        <input
-                            id="fecha-compra"
-                            className="admin-input"
-                            type="date"
-                            value={fecha}
-                            onChange={(e) =>
-                                SetFecha(e.target.value)
-                            }
-                            required
-                        />
-
-                        <div className="admin-form-fila">
-
-                            <div className="admin-form-col">
-
-                                <label className="admin-label" htmlFor="cantidad-compra">
-                                    Cantidad
-                                </label>
-
-                                <input
-                                    id="cantidad-compra"
-                                    className="admin-input"
-                                    type="number"
-                                    placeholder="Cantidad"
-                                    value={cantidad}
-                                    onChange={(e) =>
-                                        SetCantidad(e.target.value)
-                                    }
-                                    min="1"
-                                    required
-                                />
-
-                                <span className="admin-help">
-                                    Mínimo 1
-                                </span>
-
-                            </div>
-
-                            <div className="admin-form-col">
-
-                                <label className="admin-label" htmlFor="precio-compra">
-                                    Precio de compra
-                                </label>
-
-                                <input
-                                    id="precio-compra"
-                                    className="admin-input"
-                                    type="number"
-                                    placeholder="Precio de compra"
-                                    value={precio_compra}
-                                    onChange={(e) =>
-                                        SetPrecioCompra(e.target.value)
-                                    }
-                                    min="0"
-                                    required
-                                />
-
-                                <span className="admin-help">
-                                    Mínimo 0
-                                </span>
-
-                            </div>
-
-                        </div>
-
-                        <button
-                            className="admin-btn-comprar"
-                            type="submit"
-                        >
-                            Registrar compra
-                        </button>
-
-                    </form>
-
-                </div>
-
-            </section>
+                </section>
 
             </div>
 
+            {/* Registro de pagos de citas finalizadas */}
+            <RegistrarPago rol="administrador" />
+
+            {/* Historial de pagos registrados */}
+            <HistorialPagos />
+
             <section className="admin-perfiles">
+
                 <div className="admin-panel-head admin-perfiles-head">
                     <div>
                         <h2 className="admin-panel-title">
@@ -602,7 +679,12 @@ export function Admin() {
                             Perfiles de usuarios
                         </h2>
                     </div>
-                    <div className="admin-perfiles-roles" role="group" aria-label="Filtrar perfiles por rol">
+
+                    <div
+                        className="admin-perfiles-roles"
+                        role="group"
+                        aria-label="Filtrar perfiles por rol"
+                    >
                         <button
                             type="button"
                             className={rolPerfil === 'empleado' ? 'activo' : ''}
@@ -611,7 +693,10 @@ export function Admin() {
                                 SetRolPerfil('empleado');
                                 obtenerPerfiles('empleado');
                             }}
-                        >Empleados</button>
+                        >
+                            Empleados
+                        </button>
+
                         <button
                             type="button"
                             className={rolPerfil === 'cliente' ? 'activo' : ''}
@@ -620,126 +705,146 @@ export function Admin() {
                                 SetRolPerfil('cliente');
                                 obtenerPerfiles('cliente');
                             }}
-                        >Clientes</button>
+                        >
+                            Clientes
+                        </button>
                     </div>
                 </div>
 
-                {cargandoPerfiles && <p className="admin-perfiles-vacio">Cargando perfiles…</p>}
-                {!cargandoPerfiles && perfiles.length === 0 && (
-                    <p className="admin-perfiles-vacio">No hay perfiles registrados.</p>
+                {cargandoPerfiles && (
+                    <p className="admin-perfiles-vacio">
+                        Cargando perfiles…
+                    </p>
                 )}
+
+                {!cargandoPerfiles && perfiles.length === 0 && (
+                    <p className="admin-perfiles-vacio">
+                        No hay perfiles registrados.
+                    </p>
+                )}
+
                 <div className="admin-perfiles-lista">
-                        {perfiles.map((usuario) => (
-                        <article className="admin-perfil-item" key={usuario.id}>
-                            <span className="admin-perfil-avatar" aria-hidden="true">{usuario.nombre?.charAt(0)?.toUpperCase() || 'U'}</span>
+                    {perfiles.map((usuario) => (
+                        <article
+                            className="admin-perfil-item"
+                            key={usuario.id}
+                        >
+                            <span className="admin-perfil-avatar" aria-hidden="true">
+                                {usuario.nombre?.charAt(0)?.toUpperCase() || 'U'}
+                            </span>
+
                             <span className="admin-perfil-item-texto">
                                 <strong>{usuario.nombre}</strong>
                                 <small>{usuario.email}</small>
-                                <span className="admin-perfil-rol">{usuario.rol}</span>
+                                <span className="admin-perfil-rol">
+                                    {usuario.rol}
+                                </span>
                             </span>
+
                             <span className="admin-perfil-citas-resumen">
                                 <strong>{usuario.resumenCitas.total} citas</strong>
-                                <small>Pendientes {usuario.resumenCitas.pendientes} · Confirmadas {usuario.resumenCitas.confirmadas}</small>
-                                <small>Finalizadas {usuario.resumenCitas.finalizadas} · Canceladas {usuario.resumenCitas.canceladas}</small>
+                                <small>
+                                    Pendientes {usuario.resumenCitas.pendientes} · Confirmadas {usuario.resumenCitas.confirmadas}
+                                </small>
+                                <small>
+                                    Finalizadas {usuario.resumenCitas.finalizadas} · Canceladas {usuario.resumenCitas.canceladas}
+                                </small>
                             </span>
-                            <button type="button" className="admin-perfil-ir" onClick={() => abrirPerfil(usuario)}>
+
+                            <button
+                                type="button"
+                                className="admin-perfil-ir"
+                                onClick={() => abrirPerfil(usuario)}
+                            >
                                 Ir al panel y gestionar citas
                             </button>
                         </article>
                     ))}
                 </div>
+
             </section>
 
+            {/* Historial de compras */}
             <section className="admin-historial">
 
                 <div className="admin-panel-head">
                     <h2 className="admin-panel-title">
-                        <span className="admin-panel-icon">
-                            🕘
-                        </span>
+                        <span className="admin-panel-icon">🕘</span>
                         Últimas compras
                     </h2>
 
-                    <span className="admin-total">
-                        {historial.length} registradas
-                    </span>
+                    <button
+                        type="button"
+                        className="admin-historial-toggle"
+                        aria-expanded={historialVisible}
+                        aria-controls="admin-historial-detalle"
+                        onClick={alternarHistorial}
+                    >
+                        {cargandoHistorial
+                            ? 'Cargando…'
+                            : historialVisible
+                                ? 'Ocultar compras'
+                                : 'Ver compras'}
+                    </button>
                 </div>
 
-                {historial.length === 0 ? (
+                {historialVisible && (
+                    cargandoHistorial ? (
+                        <p className="admin-historial-vacio" role="status">
+                            Cargando compras...
+                        </p>
+                    ) : historial.length === 0 ? (
+                        <p className="admin-historial-vacio">
+                            Todavía no hay compras registradas.
+                        </p>
+                    ) : (
+                        <div className="admin-historial-tabla-wrap">
 
-                    <p className="admin-historial-vacio">
-                        Todavía no hay compras registradas.
-                    </p>
+                            <table className="admin-historial-tabla">
 
-                ) : (
-
-                    <div className="admin-historial-tabla-wrap">
-
-                        <table className="admin-historial-tabla">
-
-                            <thead>
-                                <tr>
-                                    <th>
-                                        Fecha
-                                    </th>
-
-                                    <th>
-                                        Producto
-                                    </th>
-
-                                    <th className="admin-historial-cantidad">
-                                        Cantidad
-                                    </th>
-
-                                    <th>
-                                        Precio de compra
-                                    </th>
-
-                                    <th>
-                                        Total
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-
-                                {historial.map((histo) => (
-
-                                    <tr
-                                        key={histo.id}
-                                        className="admin-historial-fila"
-                                    >
-
-                                        <td className="admin-historial-fecha">
-                                            {histo.fecha?.split("T")[0]}
-                                        </td>
-
-                                        <td className="admin-historial-producto">
-                                            {histo?.Producto?.nombre}
-                                        </td>
-
-                                        <td className="admin-historial-cantidad">
-                                            {histo.cantidad}
-                                        </td>
-
-                                        <td className="admin-historial-precio">
-                                            {histo.precio_compra}
-                                        </td>
-
-                                        <td className="admin-historial-total">
-                                            {histo.total}
-                                        </td>
-
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Producto</th>
+                                        <th className="admin-historial-cantidad">Cantidad</th>
+                                        <th>Precio de compra</th>
+                                        <th>Total</th>
                                     </tr>
+                                </thead>
 
-                                ))}
+                                <tbody>
+                                    {historial.map((histo) => (
+                                        <tr
+                                            key={histo.id}
+                                            className="admin-historial-fila"
+                                        >
+                                            <td className="admin-historial-fecha">
+                                                {histo.fecha?.split("T")[0]}
+                                            </td>
 
-                            </tbody>
+                                            <td className="admin-historial-producto">
+                                                {histo?.Producto?.nombre}
+                                            </td>
 
-                        </table>
+                                            <td className="admin-historial-cantidad">
+                                                {histo.cantidad}
+                                            </td>
 
-                    </div>
+                                            <td className="admin-historial-precio">
+                                                {histo.precio_compra}
+                                            </td>
 
+                                            <td className="admin-historial-total">
+                                                {histo.total}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+
+                            </table>
+
+                        </div>
+                    )
                 )}
 
             </section>
