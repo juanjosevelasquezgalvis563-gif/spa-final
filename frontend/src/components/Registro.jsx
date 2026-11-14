@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import logo from "../assets/image.png";
 import { API_ROOT } from "../lib/api";
@@ -12,39 +12,44 @@ export function Registro() {
   const [password, setPassword] = useState("");
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [message, setMessage] = useState("");
-  const [captcha, setCaptcha] = useState(null);
-  const [captchaAnswer, setCaptchaAnswer] = useState([]);
-  const [captchaProof, setCaptchaProof] = useState("");
-  const [captchaRound, setCaptchaRound] = useState(1);
-  const [verificandoCaptcha, setVerificandoCaptcha] = useState(false);
-  const [cargandoCaptcha, setCargandoCaptcha] = useState(true);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileLoaded, setTurnstileLoaded] = useState(false);
+  const [turnstileWidgetId, setTurnstileWidgetId] = useState(null);
+  const [turnstileError, setTurnstileError] = useState("");
   const [cargando, setCargando] = useState(false);
   const [awaitingVerification, setAwaitingVerification] = useState(false);
   const [confirmationCode, setConfirmationCode] = useState("");
   const [verificandoCorreo, setVerificandoCorreo] = useState(false);
   const [reenviandoCodigo, setReenviandoCodigo] = useState(false);
 
-  const cargarCaptcha = useCallback(async (reiniciarProgreso = false) => {
-    setCargandoCaptcha(true);
-    setCaptcha(null);
-    setCaptchaAnswer([]);
-    setCaptchaProof("");
-    if (reiniciarProgreso) setCaptchaRound(1);
+  // 1. Crea una referencia para el contenedor de Turnstile
+  const turnstileRef = useRef(null);
 
-    try {
-      const response = await fetch(`${API_ROOT}/inser/captcha`);
-      if (!response.ok) throw new Error("No se pudo cargar la verificación");
-      setCaptcha(await response.json());
-    } catch {
-      setMessage("No se pudo cargar el CAPTCHA. Vuelve a intentarlo.");
-    } finally {
-      setCargandoCaptcha(false);
-    }
+  // Asegura que las funciones de callback sean estables para useEffect
+  const onTurnstileVerify = useCallback((token) => {
+    console.log("Turnstile verificado, token:", token);
+    setTurnstileToken(token);
+    setMessage("");
+  }, []);
+  const onTurnstileError = useCallback(() => {
+    console.error("Error en Turnstile (callback).");
+    setTurnstileToken("");
+    setMessage("Error al completar la verificación de seguridad. Inténtalo de nuevo.");
   }, []);
 
-  useEffect(() => {
-    void Promise.resolve().then(cargarCaptcha);
-  }, [cargarCaptcha]);
+  // Función para resetear el widget sin quitarlo del DOM
+  const resetTurnstile = useCallback(() => {
+    if (window.turnstile && turnstileWidgetId) {
+      window.turnstile.reset(turnstileWidgetId);
+      console.log("Turnstile reset.");
+    } else {
+        // Si no hay widget ID, intenta forzar un re-render para crearlo de nuevo
+        setTurnstileWidgetId(null);
+    }
+    setTurnstileToken('');
+    setMessage(''); // Limpiar mensaje al resetear
+  }, [turnstileWidgetId]);
+
 
   useEffect(() => {
     if (!message) return undefined;
@@ -53,71 +58,103 @@ export function Registro() {
     return () => clearTimeout(timer);
   }, [message]);
 
-  function seleccionarImagen(imageId) {
-    if (!captcha || verificandoCaptcha || captchaProof) return;
-
-    setCaptchaAnswer((seleccionadas) => (
-      seleccionadas.includes(imageId)
-        ? []
-        : [imageId]
-    ));
-  }
-
-  async function verificarSeleccion() {
-    if (!captcha || verificandoCaptcha || captchaProof) return;
-    if (captchaAnswer.length !== 1) {
-      setMessage("Selecciona una imagen antes de verificar el CAPTCHA.");
+  useEffect(() => {
+    const scriptId = "cloudflare-turnstile";
+    if (document.getElementById(scriptId)) {
+      setTurnstileLoaded(true);
+      console.log("Turnstile script ya cargado.");
       return;
     }
 
-    setVerificandoCaptcha(true);
-    setMessage("");
+    const script = document.createElement("script");
+    script.id = scriptId;
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+        setTurnstileLoaded(true);
+        console.log("Turnstile script cargado exitosamente.");
+    };
+    script.onerror = (e) => {
+        console.error("Error al cargar el script de Turnstile:", e);
+        setTurnstileError("No se pudo cargar la verificación de seguridad. Comprueba tu conexión.");
+        setMessage("No se pudo cargar la verificación de seguridad. Comprueba tu conexión.");
+    };
+    document.head.appendChild(script);
+  }, []);
 
-    try {
-      const response = await fetch(`${API_ROOT}/inser/captcha/verificar`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          challengeId: captcha.challengeId,
-          captchaAnswer,
-        }),
-      });
-      const data = await response.json().catch(() => ({}));
+  // 2. Este useEffect gestiona el ciclo de vida del widget de Turnstile
+  useEffect(() => {
+    // Condiciones para renderizar el widget
+    const shouldRender = turnstileLoaded && !awaitingVerification && turnstileRef.current && window.turnstile && !turnstileWidgetId;
+    // Condiciones para remover el widget (si existe y ya no debería estar visible)
+    const shouldRemove = turnstileWidgetId && (awaitingVerification || !turnstileRef.current || !window.turnstile);
 
-      if (!response.ok) {
-        setMessage(data.message || "No se pudo verificar la imagen. Inténtalo otra vez.");
-        if (data.captcha) {
-          setCaptcha(data.captcha);
-          setCaptchaAnswer([]);
-        }
+    if (shouldRender) {
+      console.log("Condiciones para renderizar Turnstile cumplidas. Ref:", turnstileRef.current);
+      const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+      console.log("VITE_TURNSTILE_SITE_KEY:", siteKey);
+
+      if (!siteKey) {
+        setMessage("Configuración de seguridad incompleta.");
+        setTurnstileError("Error: Clave de sitio de Turnstile no configurada.");
+        console.error("VITE_TURNSTILE_SITE_KEY no está configurada o es vacía.");
         return;
       }
 
-      if (data.verified && data.captchaProof) {
-        setCaptchaProof(data.captchaProof);
-        setMessage("¡Verificación completada! Ahora puedes registrarte.");
-      } else {
-        setCaptcha(data.captcha);
-        setCaptchaAnswer([]);
-        const rondaCompletada = data.roundCompleted ?? captchaRound;
-        setCaptchaRound(data.round ?? rondaCompletada + 1);
-        setMessage(`Verificación ${rondaCompletada} completada. Continúa con la siguiente.`);
+      try {
+        // Usa la referencia directa al elemento para renderizar
+        const id = window.turnstile.render(turnstileRef.current, {
+          sitekey: siteKey,
+          callback: onTurnstileVerify,
+          "error-callback": onTurnstileError,
+        });
+        setTurnstileWidgetId(id);
+        setTurnstileError(""); // Limpiar cualquier error previo
+        console.log("Turnstile widget renderizado con ID:", id);
+      } catch (error) {
+        console.error("Error al renderizar Turnstile (en el try/catch):", error);
+        setTurnstileError("No se pudo cargar la verificación de seguridad.");
+        setMessage("No se pudo cargar la verificación de seguridad. Inténtalo más tarde.");
       }
-    } catch {
-      setMessage("Error de conexión al verificar la imagen.");
-      await cargarCaptcha();
-    } finally {
-      setVerificandoCaptcha(false);
+    } else if (shouldRemove) {
+      console.log("Removiendo widget debido a cambio de condiciones o limpieza.");
+      window.turnstile.remove(turnstileWidgetId);
+      setTurnstileWidgetId(null);
+      setTurnstileToken(""); // Limpiar token si el widget es removido
     }
-  }
+
+    // Función de limpieza: se ejecuta cuando el componente se desmonta o antes de que el efecto se vuelva a ejecutar
+    return () => {
+      if (turnstileWidgetId && typeof window !== "undefined" && window.turnstile) {
+        console.log("Limpieza: Removiendo widget con ID:", turnstileWidgetId);
+        window.turnstile.remove(turnstileWidgetId);
+        // No se establece setTurnstileWidgetId(null) aquí para evitar bucles si el estado es la causa del re-render
+      }
+    };
+  }, [turnstileLoaded, awaitingVerification, turnstileRef, turnstileWidgetId, onTurnstileVerify, onTurnstileError]); // Dependencias
+
+  // Función para restablecer completamente el widget (remover y forzar re-render)
+  const restablecerTurnstile = useCallback(() => {
+    if (turnstileWidgetId && typeof window !== "undefined" && window.turnstile) {
+      console.log("restablecerTurnstile: Removiendo widget y forzando re-render.");
+      window.turnstile.remove(turnstileWidgetId);
+      setTurnstileWidgetId(null); // Esto dispara el useEffect para intentar renderizar de nuevo
+      setTurnstileToken("");
+    } else {
+        console.log("restablecerTurnstile: No hay widget para remover, forzando intento de re-render.");
+        setTurnstileWidgetId(null); // Asegurar null, para que useEffect intente renderizar
+    }
+  }, [turnstileWidgetId]);
+
 
   async function handleSubmit(e) {
     e.preventDefault();
 
     if (awaitingVerification) return;
 
-    if (!captchaProof) {
-      setMessage("Debes completar el CAPTCHA primero: selecciona una imagen y verifica tu selección.");
+    if (!turnstileToken) {
+      setMessage("Debes completar la verificación de seguridad antes de registrarte.");
       return;
     }
 
@@ -136,7 +173,7 @@ export function Registro() {
             telefono,
             email,
             password,
-            captchaProof,
+            turnstileToken, // Asegúrate de que este nombre coincide con el backend
           }),
         }
       );
@@ -145,7 +182,7 @@ export function Registro() {
 
       if (response.ok) {
         setAwaitingVerification(true);
-        setConfirmationCode("");
+                setConfirmationCode("");
         setMessage(data.message || "Enviamos un código a tu correo para confirmar la dirección.");
       } else {
         setMessage(data.message || "No se pudo registrar el usuario");
@@ -153,7 +190,8 @@ export function Registro() {
     } catch {
       setMessage("Error de conexión con el servidor");
     } finally {
-      await cargarCaptcha();
+      // Usar restablecerTurnstile para una limpieza completa
+      restablecerTurnstile();
       setCargando(false);
     }
   }
@@ -166,7 +204,7 @@ export function Registro() {
     }
 
     setVerificandoCorreo(true);
-    setMessage("");
+                setMessage("");
 
     try {
       const response = await fetch(`${API_ROOT}/inser/registrar/verificar`, {
@@ -212,12 +250,12 @@ export function Registro() {
           (response.ok
             ? "Enviamos un nuevo código a tu correo."
             : "No se pudo reenviar el código.")
-      );
+  );
     } catch {
       setMessage("Error de conexión al reenviar el código.");
     } finally {
       setReenviandoCodigo(false);
-    }
+}
   }
 
   return (
@@ -362,58 +400,21 @@ export function Registro() {
           />
         </div>
 
-        <fieldset className="registro-captcha" disabled={cargandoCaptcha || cargando || verificandoCaptcha || Boolean(captchaProof)}>
-          <legend>Verificación de seguridad</legend>
-          <p className="registro-captcha-status">
-            Verificación única
-          </p>
-          <p className="registro-captcha-prompt">
-            {cargandoCaptcha ? "Cargando imágenes…" : captcha?.prompt?.replace(/\s*\(son\s+\d+\)\.?/i, "")}
-          </p>
-          {captcha && (
-            <div className="registro-captcha-images">
-              {captcha.images.map((image, index) => (
-                <button
-                  className={`registro-captcha-option${captchaAnswer.includes(image.id) ? " seleccionada" : ""}`}
-                  type="button"
-                  key={image.id}
-                  aria-label={`Seleccionar imagen ${index + 1}`}
-                  aria-pressed={captchaAnswer.includes(image.id)}
-                  onClick={() => seleccionarImagen(image.id)}
-                >
-                  <img src={image.src} alt={`Opción ${index + 1}`} />
-                  <span>{captchaAnswer.includes(image.id) ? "✓" : ""}</span>
-                </button>
-              ))}
-            </div>
+        <div className="turnstile-container">
+          {turnstileError && (
+            <p className="turnstile-status error" role="alert">{turnstileError}</p>
           )}
-          <button
-            className="registro-captcha-refresh"
-            type="button"
-            onClick={() => cargarCaptcha(true)}
-            disabled={cargandoCaptcha || cargando}
-          >
-            Cargar otras imágenes
-          </button>
-          <p className="registro-captcha-status" aria-live="polite">
-            {captchaAnswer.length} de 1 imagen seleccionada
-          </p>
-          <button
-            className="registro-captcha-verify"
-            type="button"
-            onClick={verificarSeleccion}
-            disabled={cargandoCaptcha || cargando || verificandoCaptcha || Boolean(captchaProof)}
-          >
-            {verificandoCaptcha ? "Verificando…" : "Verificar CAPTCHA"}
-          </button>
-          {verificandoCaptcha && <p className="registro-captcha-status">Verificando selección…</p>}
-          {captchaProof && <p className="registro-captcha-status exitoso" role="status">Verificación completada ✓</p>}
-        </fieldset>
+          {!turnstileError && (
+            // 3. Adjunta la referencia al div donde Turnstile debe renderizarse
+            // Ya no es estrictamente necesario el id="turnstile-widget" si se usa el ref
+            <div ref={turnstileRef} />
+          )}
+        </div>
 
         <button
           className="registro-button"
           type="submit"
-          disabled={cargando || cargandoCaptcha || verificandoCaptcha}
+          disabled={cargando || !turnstileToken}
         >
           {cargando ? "Enviando código..." : "Registrarse"}
         </button>
@@ -424,6 +425,16 @@ export function Registro() {
           <p className="registro-message" role="status">
             {message}
           </p>
+        )}
+        {/* Usar resetTurnstile para que el usuario pueda intentar la verificación de nuevo */}
+        {message && message.includes("verificación de seguridad") && (
+            <button
+                className="registro-captcha-refresh"
+                type="button"
+                onClick={resetTurnstile}
+            >
+                Reintentar Verificación
+            </button>
         )}
 
           <p className="auth-switch">
@@ -436,3 +447,5 @@ export function Registro() {
 }
 
 export default Registro;
+
+
