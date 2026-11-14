@@ -1,10 +1,6 @@
 import {Router} from "express";
 import {
-    obtenerCaptcha,
     registro,
-    reenviarCodigoRegistro,
-    verificarCaptcha,
-    verificarCorreoRegistro
 } from "../controllers/RegistroController.js";
 import {actualizarDatos} from "../controllers/RegistroController.js";
 import {login, me,loginGoogle} from "../controllers/LoginController.js";
@@ -16,6 +12,7 @@ import {middleware} from "../middlewares/middleware.js";
 import {empleado} from "../controllers/EmpleadoController.js";
 import { middlewareEmpleado } from "../middlewares/middlewareEmpleado.js";
 import { comfirmarCita } from "../controllers/EmpleadoController.js";
+import { comenzarCita } from "../controllers/EmpleadoController.js";
 import { finalizarCita } from "../controllers/EmpleadoController.js";
 import { cancelarCita } from "../controllers/EmpleadoController.js";
 import { citasHoy } from "../controllers/EmpleadoController.js";
@@ -24,7 +21,7 @@ import {citasFinalizadasEmpleado} from "../controllers/EmpleadoController.js";
 import {citaRealizarEmpleado} from "../controllers/EmpleadoController.js";
 
 import { cliente} from "../controllers/ClienteController.js"
-import {servicios} from "../controllers/ClienteController.js"
+import { servicios, empleadosDisponibles } from "../controllers/ClienteController.js"
 import { obtenerCliente} from "../controllers/ClienteController.js";
 import {cancelarSuCita} from "../controllers/ClienteController.js";
 import { actualizarCita } from "../controllers/ClienteController.js";
@@ -51,11 +48,13 @@ import {
 } from "../controllers/PedidoController.js";
 import { productosCreate } from "../controllers/AdminController.js";
 import {productosUpdate} from "../controllers/AdminController.js";
+import { descontarStockProducto } from "../controllers/AdminController.js";
 import { productosDelete } from "../controllers/AdminController.js";
 import { comprasAdmin } from "../controllers/AdminController.js";
 import { historialCompras } from "../controllers/AdminController.js";
 import { perfilesAdmin, activarPerfilAdmin } from "../controllers/AdminController.js";
-
+import { citasFinalizadasParaPago, registrarPago} from "../controllers/AdminController.js";
+import {historialPagos} from "../controllers/AdminController.js";
 
 
 import { forgotPassword } from "../controllers/RecuperaPassword.js";
@@ -126,11 +125,9 @@ const carritoActionLimiter = rateLimit({
 });
 
 
-router.get('/captcha', captchaLimiter, obtenerCaptcha);
-router.post('/captcha/verificar', captchaLimiter, verificarCaptcha);
 router.post('/registrar', registroLimiter, registroCorreoLimiter, registro);
-router.post('/registrar/verificar', registroCodigoLimiter, verificarCorreoRegistro);
-router.post('/registrar/reenviar-codigo', registroCorreoLimiter, reenviarCodigoRegistro);
+router.post('/registrar/verificar', registroCodigoLimiter );
+router.post('/registrar/reenviar-codigo', registroCorreoLimiter);
 router.put('/registrarr',middleware,actualizarDatos);
 
 
@@ -148,6 +145,7 @@ router.post("/logout", (req, res) => {
 
 
 router.get('/cliente/servicios',middlewareCliente,servicios);
+router.get('/cliente/empleados', middlewareCliente, empleadosDisponibles);
 router.get('/cliente/productos', middlewareCliente, productosCatalogo);
 router.post('/cliente/pedidos/solicitar', middlewareCliente, carritoActionLimiter, solicitarCompra);
 router.post('/cliente',middlewareCliente,cliente);
@@ -167,24 +165,29 @@ router.get("/cliente/citasParaResena",middlewareCliente,obtenerCitasParaResena);
 
 router.get('/empleado',middlewareEmpleado,empleado);
 router.put('/empleado/comfirmar/:id',middlewareEmpleado,comfirmarCita);
+router.put('/empleado/comenzar/:id',middlewareEmpleado,comenzarCita);
 router.put('/empleado/finalizar/:id',middlewareEmpleado,finalizarCita);
 router.put('/empleado/cancelar/:id',middlewareEmpleado,cancelarCita);
 router.get('/empleado/citasHoy',middlewareEmpleado,citasHoy);
 router.get('/empleado/citasPendientesEmpleado',middlewareEmpleado,citasPendientesEmpleado);
 router.get('/empleado/citasFinalizadasEmpleado',middlewareEmpleado,citasFinalizadasEmpleado);
 router.get('/empleado/citaRealizarEmpleado',middlewareEmpleado,citaRealizarEmpleado);
+router.get('/empleado/citasFinalizadasPago', middlewareEmpleado, citasFinalizadasParaPago);
+router.post('/empleado/registrarPago', middlewareEmpleado, registrarPago);
 
 router.get('/administrador',middlewareAdmin,admin);
 router.get('/administrador/perfiles',middlewareAdmin,perfilesAdmin);
-router.get('/administrador/pedidos/solicitudes', middlewareAdmin, solicitudesCompraAdmin);
-router.put('/administrador/pedidos/solicitudes/:id', middlewareAdmin, actualizarSolicitudCompra);
 router.post('/administrador/perfil-activo',middlewareAdmin,activarPerfilAdmin);
 router.get('/administrador/productos',middlewareAdmin,productosAdmin);
 router.post('/administrador/productos',middlewareAdmin,cargarImagenProducto,productosCreate);
 router.put('/administrador/productos/:id',middlewareAdmin,productosUpdate);
+router.put('/administrador/productos/:id/descontar-stock',middlewareAdmin,descontarStockProducto);
 router.delete('/administrador/productos/:id',middlewareAdmin,productosDelete);
 router.post('/administrador/compras',middlewareAdmin,comprasAdmin);
 router.get('/administrador/historialCompras',middlewareAdmin,historialCompras);
+router.get('/administrador/citasFinalizadasPago', middlewareAdmin, citasFinalizadasParaPago);
+router.post('/administrador/registrarPago', middlewareAdmin, registrarPago);
+router.get('/administrador/historialPagos',middlewareAdmin,historialPagos);
 
 
 
