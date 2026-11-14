@@ -2,19 +2,113 @@ import Servicio from '../models/servicios.js';
 import Cita from '../models/citas.js';
 import Usuario from '../models/Usuario.js';
 import Resena from '../models/reseña.js';
-import { Op } from "sequelize";
+import { Op, col, fn, where } from "sequelize";
 
+const EMPLEADO_ESPECIALIDAD = {
+    "valentina alvarez": "manicurista",
+    "melany arango": "manicurista",
+    "evelyn nino": "estilista",
+    "steven piedradita": "estilista",
+    "steven piedrahita": "estilista"
+};
+
+const SERVICIO_ESPECIALIDAD = {
+    manicurista: [
+        "uñas", "manicure", "manicura", "pedicure", "pedispa", "dipping",
+        "rubber", "builder", "gel", "soft gel", "esculpidas", "retiro",
+        "poly", "press", "nail", "nail art", "acrilicas"
+    ],
+    estilista: [
+        "corte", "cepillado", "keratina", "tinte", "peinado", "maquillaje",
+        "cabello", "color", "alisado", "estilo", "pestañas", "cejas",
+        "depilacion", "hidratacion", "lifting", "laminado", "balayage",
+        "social", "facial", "porcelanizacion", "limpieza"
+    ]
+};
+
+const normalizarTexto = (valor = "") => String(valor)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+
+const obtenerEspecialidadEmpleado = (empleado) => {
+    const nombre = normalizarTexto(empleado?.nombre || "");
+    return EMPLEADO_ESPECIALIDAD[nombre] || null;
+};
+
+const obtenerEspecialidadServicio = (servicio) => {
+    const nombre = normalizarTexto(servicio?.nombre || "");
+
+    if (!nombre) {
+        return null;
+    }
+
+    for (const [especialidad, palabras] of Object.entries(SERVICIO_ESPECIALIDAD)) {
+        if (palabras.some((palabra) => nombre.includes(palabra))) {
+            return especialidad;
+        }
+    }
+
+    return null;
+};
+
+const puedeRealizarServicio = (empleado, servicio) => {
+    const especialidadEmpleado = obtenerEspecialidadEmpleado(empleado);
+    const especialidadServicio = obtenerEspecialidadServicio(servicio);
+
+    if (!especialidadEmpleado) {
+        return true;
+    }
+
+    if (!especialidadServicio) {
+        return true;
+    }
+
+    return especialidadEmpleado === especialidadServicio;
+};
 
 export async function servicios(req, res) {
     try {
         const servicio = await Servicio.findAll({
-            attributes: ['id', 'nombre', 'descripcion', 'precio', 'image'],
-
+            attributes: ['id', 'nombre', 'precio'],
+            order: [['id', 'ASC']]
         });
         res.json(servicio);
 
     } catch (error) {
         res.status(500).json({ message:'Error al obtener los servicios' });
+    }
+}
+
+export async function empleadosDisponibles(req, res) {
+    try {
+        const { servicio_id } = req.query;
+
+        let empleados = await Usuario.findAll({
+            attributes: ['id', 'nombre'],
+            where: { rol: 'empleado' },
+            order: [['nombre', 'ASC']]
+        });
+
+        if (servicio_id) {
+            const servicio = await Servicio.findOne({
+                where: { id: servicio_id }
+            });
+
+            if (!servicio) {
+                return res.status(404).json({ message: 'El servicio seleccionado no existe.' });
+            }
+
+            empleados = empleados.filter((empleado) => puedeRealizarServicio(empleado, servicio));
+        }
+
+        return res.json(empleados.map((empleado) => ({
+            id: empleado.id,
+            nombre: empleado.nombre || 'Empleado'
+        })));
+    } catch (error) {
+        return res.status(500).json({ message: 'Error al obtener los empleados disponibles' });
     }
 }
 
@@ -27,6 +121,47 @@ export async function cliente(req, res) {
         if (!fecha || !hora || !empleado_id || !servicio_id) {
             return res.status(400).json({
                 message: "Todos los campos son requeridos"
+            });
+        }
+
+        const empleado = await Usuario.findOne({
+            where: { id: empleado_id, rol: 'empleado' }
+        });
+
+        if (!empleado) {
+            return res.status(400).json({
+                message: "Selecciona un empleado válido."
+            });
+        }
+
+        const citaEnCurso = await Cita.findOne({
+            where: {
+                empleado_id,
+                estado: 'en_curso',
+                [Op.and]: where(fn('DATE', col('fecha')), fecha)
+            },
+            attributes: ['id']
+        });
+
+        if (citaEnCurso) {
+            return res.status(409).json({
+                message: "Este empleado tiene una cita en curso. Intenta agendarla unos minutos más tarde."
+            });
+        }
+
+        const servicio = await Servicio.findOne({
+            where: { id: servicio_id }
+        });
+
+        if (!servicio) {
+            return res.status(404).json({
+                message: "El servicio seleccionado no existe."
+            });
+        }
+
+        if (!puedeRealizarServicio(empleado, servicio)) {
+            return res.status(400).json({
+                message: `Este empleado no puede realizar el servicio ${servicio.nombre}.`
             });
         }
 
@@ -180,6 +315,28 @@ export async function actualizarCita(req, res) {
         }
         if (cita.estado === 'cancelada') {
             return res.status(403).json({ message: 'No se puede reprogramar una cita cancelada' });
+        }
+
+        const empleado = await Usuario.findOne({
+            where: { id: empleado_id, rol: 'empleado' }
+        });
+
+        if (!empleado) {
+            return res.status(400).json({ message: 'Selecciona un empleado válido.' });
+        }
+
+        const servicio = await Servicio.findOne({
+            where: { id: servicio_id }
+        });
+
+        if (!servicio) {
+            return res.status(404).json({ message: 'El servicio seleccionado no existe.' });
+        }
+
+        if (!puedeRealizarServicio(empleado, servicio)) {
+            return res.status(400).json({
+                message: `Este empleado no puede realizar el servicio ${servicio.nombre}.`
+            });
         }
 
         await Cita.update(
