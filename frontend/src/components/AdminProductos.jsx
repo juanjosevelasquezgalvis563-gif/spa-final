@@ -16,20 +16,12 @@ function formatearPrecio(precio) {
   }).format(Number(precio) || 0);
 }
 
-function formatearCentavos(centavos) {
-  return formatearPrecio(Number(centavos) / 100);
-}
-
 export default function AdminProductos() {
   const [productos, setProductos] = useState([]);
-  const [solicitudes, setSolicitudes] = useState([]);
   const [imagen, setImagen] = useState(null);
   const [cargando, setCargando] = useState(true);
-  const [cargandoSolicitudes, setCargandoSolicitudes] = useState(true);
   const [guardando, setGuardando] = useState(false);
-  const [solicitudEnProceso, setSolicitudEnProceso] = useState(null);
   const [mensaje, setMensaje] = useState("");
-  const [mensajeSolicitudes, setMensajeSolicitudes] = useState("");
   const [esError, setEsError] = useState(false);
   const formularioRef = useRef(null);
   const navigate = useNavigate();
@@ -70,60 +62,8 @@ export default function AdminProductos() {
         if (!controller.signal.aborted) setCargando(false);
       });
 
-    fetch(`${API_ROOT}/inser/administrador/pedidos/solicitudes`, {
-      credentials: "include",
-      signal: controller.signal
-    })
-      .then(async (response) => {
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(data.message || "No se pudieron cargar las solicitudes.");
-        }
-        if (!Array.isArray(data)) {
-          throw new Error("El servidor devolvió solicitudes con un formato inválido.");
-        }
-        setSolicitudes(data);
-      })
-      .catch((error) => {
-        if (error.name !== "AbortError") {
-          setMensajeSolicitudes(error.message || "No se pudieron cargar las solicitudes.");
-        }
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setCargandoSolicitudes(false);
-      });
-
     return () => controller.abort();
   }, []);
-
-  async function atenderSolicitud(id, estado) {
-    setSolicitudEnProceso(id);
-    setMensajeSolicitudes("");
-    try {
-      const response = await fetch(
-        `${API_ROOT}/inser/administrador/pedidos/solicitudes/${id}`,
-        {
-          method: "PUT",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ estado })
-        }
-      );
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(data.message || "No se pudo actualizar la solicitud.");
-      }
-
-      setSolicitudes((actuales) => actuales.map((solicitud) =>
-        solicitud.id === id ? { ...solicitud, estado } : solicitud
-      ));
-      setMensajeSolicitudes(data.message || "Solicitud actualizada.");
-    } catch (error) {
-      setMensajeSolicitudes(error.message || "No se pudo actualizar la solicitud.");
-    } finally {
-      setSolicitudEnProceso(null);
-    }
-  }
 
   function seleccionarImagen(event) {
     const archivo = event.target.files?.[0] || null;
@@ -134,8 +74,11 @@ export default function AdminProductos() {
       return;
     }
 
-    const formatosPermitidos = ["image/jpeg", "image/png", "image/webp"];
-    if (!formatosPermitidos.includes(archivo.type)) {
+    const extension = archivo.name.split(".").pop()?.toLowerCase();
+    const formatosPermitidos = ["image/jpeg", "image/jpg", "image/pjpeg", "image/png", "image/webp"];
+    const extensionesPermitidas = ["jpg", "jpeg", "png", "webp"];
+    if (!formatosPermitidos.includes(archivo.type.toLowerCase())
+      && !extensionesPermitidas.includes(extension)) {
       setImagen(null);
       event.target.value = "";
       setMensaje("Elige una imagen JPG, PNG o WEBP.");
@@ -240,7 +183,7 @@ export default function AdminProductos() {
               <input
                 name="image"
                 type="file"
-                accept="image/png,image/jpeg,image/webp"
+                accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                 onChange={seleccionarImagen}
                 required
               />
@@ -307,77 +250,6 @@ export default function AdminProductos() {
         </section>
       </div>
 
-      <section className="admin-pedidos-section" aria-labelledby="admin-pedidos-heading">
-        <div className="admin-productos-section-heading">
-          <span>03</span>
-          <div>
-            <h2 id="admin-pedidos-heading">Solicitudes y pedidos</h2>
-            <p>Revisa las solicitudes y compras realizadas por tus clientes.</p>
-          </div>
-        </div>
-
-        {mensajeSolicitudes && (
-          <p className="admin-productos-message" role="status">{mensajeSolicitudes}</p>
-        )}
-
-        {cargandoSolicitudes ? (
-          <p className="admin-productos-empty" role="status">Cargando solicitudes...</p>
-        ) : solicitudes.length === 0 ? (
-          <p className="admin-productos-empty">Aún no hay solicitudes de compra.</p>
-        ) : (
-          <div className="admin-pedidos-list">
-            {solicitudes.map((solicitud) => (
-              <article className="admin-pedido-card" key={solicitud.id}>
-                <header className="admin-pedido-card-header">
-                  <div>
-                    <span>{solicitud.referencia}</span>
-                    <h3>{solicitud.cliente?.nombre || "Cliente"}</h3>
-                    <p>{solicitud.cliente?.email}</p>
-                    {solicitud.cliente?.telefono && <p>{solicitud.cliente.telefono}</p>}
-                  </div>
-                  <span className={`admin-pedido-status ${solicitud.estado.toLowerCase()}`}>
-                    {solicitud.estado === "REQUESTED"
-                      ? "Pendiente"
-                      : solicitud.estado === "CONFIRMED"
-                        ? "Confirmada"
-                        : "Rechazada"}
-                  </span>
-                </header>
-                <ul className="admin-pedido-items">
-                  {solicitud.detalles?.map((detalle) => (
-                    <li key={detalle.id}>
-                      <span>{detalle.nombre_producto} × {detalle.cantidad}</span>
-                      <strong>{formatearCentavos(detalle.subtotal_centavos)}</strong>
-                    </li>
-                  ))}
-                </ul>
-                <div className="admin-pedido-card-footer">
-                  <span>{new Date(solicitud.creado_en).toLocaleString("es-CO")}</span>
-                  <strong>{formatearCentavos(solicitud.total_centavos)}</strong>
-                </div>
-                {solicitud.estado === "REQUESTED" && (
-                  <div className="admin-pedido-actions">
-                    <button
-                      type="button"
-                      onClick={() => atenderSolicitud(solicitud.id, "CONFIRMED")}
-                      disabled={solicitudEnProceso === solicitud.id}
-                    >
-                      Confirmar solicitud
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => atenderSolicitud(solicitud.id, "REJECTED")}
-                      disabled={solicitudEnProceso === solicitud.id}
-                    >
-                      Rechazar
-                    </button>
-                  </div>
-                )}
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
     </main>
   );
 }
