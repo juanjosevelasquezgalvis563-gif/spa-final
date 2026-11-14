@@ -4,6 +4,7 @@ import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { API_ROOT } from "../lib/api";
 import logo from "../assets/image.png";
 import { useSession } from "../context/useSession";
+import RegistrarPago from "./RegistrarPago";
 
 const API_URL = `${API_ROOT}/inser/empleado`;
 
@@ -30,6 +31,14 @@ async function obtenerJson(ruta) {
 
 function obtenerFechaKey(fecha) {
     return typeof fecha === "string" ? fecha.slice(0, 10) : "";
+}
+
+function obtenerFechaHoyKeyLocal(date = new Date()) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
 }
 
 function formatearFecha(fecha) {
@@ -61,14 +70,24 @@ export function Empleado() {
     const reduceMotion = useReducedMotion();
     const perfilId = new URLSearchParams(location.search).get("perfilId");
     const perfilPath = (path) => perfilId ? `${path}?perfilId=${encodeURIComponent(perfilId)}` : path;
+    const abrirGestionCitas = (filtro) => {
+        const parametros = new URLSearchParams({ filtro });
+        if (perfilId) parametros.set("perfilId", perfilId);
+        navigate(`/citasEmpleado?${parametros.toString()}`);
+    };
+    const activarTarjetaConTeclado = (event, filtro) => {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            abrirGestionCitas(filtro);
+        }
+    };
     const fechaActual = new Date();
-    const hoyKey = fechaActual.toISOString().slice(0, 10);
+    const hoyKey = obtenerFechaHoyKeyLocal(fechaActual);
     const hoyLabel = new Intl.DateTimeFormat("es-CO", {
         weekday: "long",
         day: "numeric",
         month: "long",
-        year: "numeric",
-        timeZone: "UTC"
+        year: "numeric"
     }).format(fechaActual);
 
     const cargarPanel = useCallback(async () => {
@@ -97,6 +116,7 @@ export function Empleado() {
                     .filter((cita) =>
                         obtenerFechaKey(cita.fecha) === hoyKey
                         && cita.estado?.toLowerCase() !== "cancelada"
+                        && cita.estado?.toLowerCase() !== "finalizada"
                     )
                     .sort((a, b) => formatearHora(a.hora).localeCompare(formatearHora(b.hora)))
             });
@@ -180,7 +200,7 @@ export function Empleado() {
                     </button>
                     <button
                         type="button"
-                        onClick={() => navigate(perfilPath("/citasEmpleado"))}
+                        onClick={() => abrirGestionCitas("pendientes")}
                     >
                         <span className="empleado-menu-indicator" aria-hidden="true">02</span>
                         Gestionar mis citas
@@ -261,7 +281,14 @@ export function Empleado() {
                 )}
 
                 <section className="empleado-stats" aria-label="Resumen de citas">
-                    <article className="empleado-stat-card empleado-stat-primary">
+                    <article
+                        className="empleado-stat-card empleado-stat-primary"
+                        role="link"
+                        tabIndex={0}
+                        aria-label="Ver citas de hoy"
+                        onClick={() => abrirGestionCitas("hoy")}
+                        onKeyDown={(event) => activarTarjetaConTeclado(event, "hoy")}
+                    >
                         <div className="empleado-stat-topline">
                             <span>CITAS DE HOY</span>
                             <span className="empleado-stat-icon" aria-hidden="true">01</span>
@@ -269,7 +296,14 @@ export function Empleado() {
                         <strong>{cargando ? "—" : resumen?.citasHoy ?? "—"}</strong>
                         <p>Por atender durante la jornada</p>
                     </article>
-                    <article className="empleado-stat-card">
+                    <article
+                        className="empleado-stat-card"
+                        role="link"
+                        tabIndex={0}
+                        aria-label="Ver citas pendientes"
+                        onClick={() => abrirGestionCitas("pendientes")}
+                        onKeyDown={(event) => activarTarjetaConTeclado(event, "pendientes")}
+                    >
                         <div className="empleado-stat-topline">
                             <span>PENDIENTES</span>
                             <span className="empleado-stat-icon" aria-hidden="true">02</span>
@@ -277,7 +311,14 @@ export function Empleado() {
                         <strong>{cargando ? "—" : resumen?.pendientes ?? "—"}</strong>
                         <p>Esperan confirmación</p>
                     </article>
-                    <article className="empleado-stat-card">
+                    <article
+                        className="empleado-stat-card"
+                        role="link"
+                        tabIndex={0}
+                        aria-label="Ver citas finalizadas"
+                        onClick={() => abrirGestionCitas("finalizadas")}
+                        onKeyDown={(event) => activarTarjetaConTeclado(event, "finalizadas")}
+                    >
                         <div className="empleado-stat-topline">
                             <span>FINALIZADAS</span>
                             <span className="empleado-stat-icon" aria-hidden="true">03</span>
@@ -286,6 +327,8 @@ export function Empleado() {
                         <p>Servicios completados</p>
                     </article>
                 </section>
+
+                <RegistrarPago rol={perfilId ? "administrador" : "empleado"} />
 
                 <section className="empleado-feature-grid">
                     <article className="empleado-next-card">
@@ -324,7 +367,7 @@ export function Empleado() {
                         <button
                             type="button"
                             className="empleado-text-link"
-                            onClick={() => navigate(perfilPath("/citasEmpleado"))}
+                            onClick={() => abrirGestionCitas("pendientes")}
                         >
                             Ver agenda completa <span aria-hidden="true">→</span>
                         </button>
@@ -337,7 +380,7 @@ export function Empleado() {
                         <p>Confirma citas, consulta los servicios y mantén cada turno actualizado.</p>
                         <button
                             type="button"
-                            onClick={() => navigate(perfilPath("/citasEmpleado"))}
+                            onClick={() => abrirGestionCitas("pendientes")}
                         >
                             Abrir gestión de citas <span aria-hidden="true">→</span>
                         </button>
