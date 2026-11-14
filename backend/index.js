@@ -8,7 +8,7 @@ import { PRODUCT_IMAGES_DIR } from "./src/config/productImages.js";
 import authRoutes from "./src/routes/routes.js";
 import db from "./src/config/db.js";
 import { iniciarRecordatorios } from "./src/controllers/recordatorios.js";
-import EmailRegistration from "./src/models/EmailRegistration.js";
+
 
 dotenv.config();
 
@@ -27,6 +27,8 @@ app.use(cors({
     origin: [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
         frontendOrigin
     ].filter(Boolean),
     credentials: true
@@ -39,6 +41,7 @@ app.use("/uploads/products", express.static(PRODUCT_IMAGES_DIR, {
     index: false,
     setHeaders: (res) => {
         res.setHeader("X-Content-Type-Options", "nosniff");
+        res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
         res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
     }
 }));
@@ -55,8 +58,7 @@ app.use("/inser", authRoutes);
 try {
     await db.authenticate();
     console.log("Base de datos conectada con Sequelize");
-    await EmailRegistration.sync();
-    console.log("Tabla de confirmación de correo lista");
+    
 
     app.listen(PORT, () => {
         console.log(`Servidor backend activo en http://localhost:${PORT}`);
