@@ -6185,7 +6185,63 @@ button:hover {
 .admin-acciones {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
+}
+
+.admin-stock-ajuste {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-basis: 100%;
+}
+
+.admin-stock-ajuste input {
+    width: 64px;
+    min-width: 0;
+    height: 34px;
+    padding: 5px 7px;
+    border: 1px solid rgba(43, 24, 63, .18);
+    border-radius: 8px;
+    background: #fff;
+    color: #242229;
+}
+
+.admin-stock-ajuste button,
+.admin-historial-toggle {
+    min-height: 36px;
+    padding: 7px 11px;
+    border: 1px solid rgba(255, 255, 255, .18);
+    border-radius: 9px;
+    background: #29292e;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .18s ease, transform .18s ease;
+}
+
+.admin-stock-ajuste button {
+    min-height: 34px;
+    padding: 6px 8px;
+    border-color: rgba(43, 24, 63, .14);
+    background: #f2f0eb;
+    color: #29272e;
+}
+
+.admin-stock-ajuste button:hover:not(:disabled),
+.admin-historial-toggle:hover {
+    background: #44444b;
+    transform: translateY(-1px);
+}
+
+.admin-stock-ajuste button:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+.admin-historial-toggle {
+    white-space: nowrap;
 }
 
 
@@ -7230,11 +7286,21 @@ button:hover {
 }
 
 .cita-container .cita-category-card .cita-seleccionar-servicio {
-    color: #3f3f46;
+    display: inline-block;
+    margin-top: 8px;
+    padding: 8px 16px;
+    border: 1px solid #3f3f46;
+    border-radius: 999px;
+    background: #18181b;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.2;
 }
 
 .cita-container .cita-category-card:hover .cita-seleccionar-servicio {
-    color: #09090b;
+    background: #09090b;
+    color: #fff;
 }
 
 .cita-container button.cita-detail-card {
@@ -7263,6 +7329,10 @@ button:hover {
 
 .cita-container .cita-detail-card .servicio-info strong {
     color: #18181b;
+}
+
+.cita-container .cita-detail-card .servicio-nombre-seleccionado {
+    font-weight: 800;
 }
 
 .cita-container .cita-detail-card .servicio-info > span:not(.cita-servicio-precio):not(.cita-seleccionar-servicio) {
@@ -7304,6 +7374,10 @@ button:hover {
 .cita-container .cita-detail-card.seleccionado {
     outline: 2px solid #71717a;
     outline-offset: 2px;
+}
+
+.cita-container .cita-detail-card.seleccionado .cita-seleccionar-servicio {
+    font-weight: 800;
 }
 
 .cita-container .cita-volver-categorias {
@@ -11745,6 +11819,32 @@ PROFESIONALES
   line-height: 1.6;
 }
 
+.gestionar-citas-filtros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin: -8px 0 22px;
+}
+
+.gestionar-citas-filtros button {
+    min-height: 38px;
+    padding: 8px 14px;
+    border: 1px solid var(--agenda-line);
+    border-radius: 999px;
+    background: #fff;
+    color: #48484e;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.gestionar-citas-filtros button.activo {
+    border-color: #222225;
+    background: #222225;
+    color: #fff;
+}
+
 .gestionar-citas-total {
   display: flex;
   align-items: center;
@@ -11783,14 +11883,68 @@ PROFESIONALES
 
 .gestionar-citas .empleado-lista {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
   align-items: start;
-  gap: 14px;
+    gap: 18px;
   padding: 0;
   border: 0;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+}
+
+.agenda-estados-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 16px;
+}
+
+.agenda-estado-panel {
+    min-width: 0;
+    padding: 18px;
+    border: 1px solid var(--agenda-line);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, .72);
+}
+
+.agenda-estado-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    text-align: left;
+}
+
+.agenda-estado-panel-titulo {
+    flex: 1;
+    color: var(--agenda-ink);
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 600;
+}
+
+.agenda-estado-panel-contenido {
+    margin-top: 14px;
+}
+
+.agenda-estado-panel-citas {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 12px;
+}
+
+.agenda-estado-vacio {
+    margin: 0;
+    padding: 18px 12px;
+    border: 1px dashed var(--agenda-line);
+    border-radius: 12px;
+    color: var(--agenda-muted);
+    font-size: 13px;
+    text-align: center;
 }
 
 .gestionar-citas .empleado-card {
@@ -11907,9 +12061,217 @@ PROFESIONALES
   white-space: nowrap;
 }
 
+.cita-tiempo-servicio {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid #e5e5e8;
+    border-radius: 12px;
+    background: #f7f7f8;
+}
+
+.cita-tiempo-servicio span {
+    color: #77777e;
+    font-size: 11px;
+    font-weight: 650;
+}
+
+.cita-tiempo-servicio strong {
+    color: #222225;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+}
+
+.registrar-pago-cita {
+    display: grid;
+    gap: 14px;
+    width: 100%;
+    max-width: 1440px;
+    margin: 24px auto 0;
+    padding: 24px;
+    border: 1px solid #e3e3e6;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .045);
+}
+
+.registrar-pago-panel-head {
+    padding-bottom: 14px;
+    border-bottom: 1px solid #ededee;
+}
+
+.registrar-pago-panel-head span {
+    color: #77777e;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .16em;
+}
+
+.registrar-pago-panel-head h2 {
+    margin: 7px 0 4px;
+    color: #202023;
+    font-family: var(--font-display);
+    font-size: 22px;
+}
+
+.registrar-pago-panel-head p,
+.registrar-pago-estado {
+    margin: 0;
+    color: #77777e;
+    font-size: 12px;
+}
+
+.registrar-pago-abrir,
+.registrar-pago-form > button {
+    min-height: 38px;
+    padding: 8px 13px;
+    border: 1px solid #d5d5d9;
+    border-radius: 9px;
+    background: #f5f5f6;
+    color: #303034;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.registrar-pago-form {
+    display: grid;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid #e5e5e8;
+    border-radius: 11px;
+    background: #fafafa;
+}
+
+.registrar-pago-servicio,
+.registrar-pago-mensaje {
+    margin: 0;
+    color: #55555b;
+    font-size: 12px;
+}
+
+.registrar-pago-titulo {
+    margin: 0;
+    color: #27272b;
+    font-size: 14px;
+    font-weight: 750;
+}
+
+.registrar-pago-form label {
+    display: grid;
+    gap: 6px;
+    color: #48484e;
+    font-size: 11px;
+    font-weight: 650;
+}
+
+.registrar-pago-form input,
+.registrar-pago-form select {
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 10px;
+    border: 1px solid #dedee2;
+    border-radius: 8px;
+    background: #fff;
+    color: #27272a;
+    font: inherit;
+    font-size: 12px;
+}
+
+.registrar-pago-form > button {
+    background: #222225;
+    color: #fff;
+}
+
+.registrar-pago-form > button:disabled {
+    opacity: .6;
+    cursor: wait;
+}
+
+.registrar-pago-mensaje.error {
+    color: #992e2e;
+}
+
+.cita-tiempo-en-curso {
+    border-color: #c9c9cd;
+    background: #f1f1f2;
+}
+
+.registrar-pago-cita {
+    display: grid;
+    gap: 10px;
+}
+
+.registrar-pago-abrir,
+.registrar-pago-form > button {
+    min-height: 38px;
+    padding: 8px 13px;
+    border: 1px solid #d5d5d9;
+    border-radius: 9px;
+    background: #f5f5f6;
+    color: #303034;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.registrar-pago-form {
+    display: grid;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid #e5e5e8;
+    border-radius: 11px;
+    background: #fafafa;
+}
+
+.registrar-pago-servicio,
+.registrar-pago-mensaje {
+    margin: 0;
+    color: #55555b;
+    font-size: 12px;
+}
+
+.registrar-pago-form label {
+    display: grid;
+    gap: 6px;
+    color: #48484e;
+    font-size: 11px;
+    font-weight: 650;
+}
+
+.registrar-pago-form input {
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 10px;
+    border: 1px solid #dedee2;
+    border-radius: 8px;
+    background: #fff;
+    color: #27272a;
+    font: inherit;
+    font-size: 12px;
+}
+
+.registrar-pago-form > button {
+    background: #222225;
+    color: #fff;
+}
+
+.registrar-pago-form > button:disabled {
+    opacity: .6;
+    cursor: wait;
+}
+
+.registrar-pago-mensaje.error {
+    color: #992e2e;
+}
+
 .gestionar-citas .empleado-botones {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-top: auto;
   padding-top: 15px;
@@ -11931,6 +12293,12 @@ PROFESIONALES
 
 .gestionar-citas .empleado-botones button:hover {
   transform: translateY(-1px);
+}
+
+.gestionar-citas .empleado-botones button:disabled {
+    opacity: .48;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .gestionar-citas .empleado-botones .btn-confirmar {
@@ -12009,6 +12377,7 @@ PROFESIONALES
   .gestionar-citas .empleado-lista {
     grid-template-columns: minmax(0, 1fr);
   }
+
 }
 
 @media (max-width: 520px) {
@@ -12036,6 +12405,10 @@ PROFESIONALES
     padding: 17px;
     border-radius: 16px;
   }
+
+    .agenda-estado-panel-citas {
+        grid-template-columns: minmax(0, 1fr);
+    }
 
   .cita-agenda-detalles {
     grid-template-columns: minmax(0, 1fr);
@@ -12282,6 +12655,15 @@ PROFESIONALES
   background: var(--emp-white);
   box-shadow: 0 5px 16px rgba(0, 0, 0, .035);
   transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.empleado-stat-card[role="link"] {
+    cursor: pointer;
+}
+
+.empleado-stat-card[role="link"]:focus-visible {
+    outline: 3px solid #77777e;
+    outline-offset: 3px;
 }
 
 .empleado-stat-card:hover {
