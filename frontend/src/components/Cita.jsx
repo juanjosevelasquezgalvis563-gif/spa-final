@@ -1,52 +1,77 @@
 import { useEffect, useState } from "react";
 import { API_ROOT } from "../lib/api";
 
-const serviciosPagina = [
-  { id: 1, nombre: "Pestañas" },
-  { id: 2, nombre: "Lavado de pelo" },
-  { id: 3, nombre: "Uñas" },
-];
-
-function obtenerCategoria(nombre) {
-  const nombreNormalizado = nombre
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-
-  if (/\b(unas?|manicure|pedicure)\b/.test(nombreNormalizado)) return "Uñas";
-  if (nombreNormalizado.includes("pestana")) return "Pestañas";
-  if (/(pelo|cabello|corte|cepillado|color|keratina)/.test(nombreNormalizado)) return "Cabello";
-  if (nombreNormalizado.includes("facial")) return "Cuidado facial";
-  if (nombreNormalizado.includes("maquillaje")) return "Maquillaje";
-  return nombre;
-}
-
 export function Cita() {
 
   const [fecha, SetFecha] = useState("");
   const [hora, SetHora] = useState("");
   const [empleadoId, SetEmpleadoId] = useState("");
   const [servicioId, SetServicioId] = useState("");
-  const [categoriaSeleccionada, SetCategoriaSeleccionada] = useState("");
+  const [unasAbiertas, SetUnasAbiertas] = useState(false);
   const [message, SetMessage] = useState("");
-  const [servicios, SetServicios] = useState(serviciosPagina);
+  const [servicios, SetServicios] = useState([]);
+  const [empleados, SetEmpleados] = useState([]);
   const [cargandoServicios, SetCargandoServicios] = useState(true);
 
   const servicioSeleccionado = servicios.find(
     (servicio) => String(servicio.id) === String(servicioId)
   );
-  const categorias = servicios.reduce((grupos, servicio) => {
-    const nombre = obtenerCategoria(servicio.nombre);
-    if (!grupos[nombre]) grupos[nombre] = [];
-    grupos[nombre].push(servicio);
-    return grupos;
-  }, {});
-  const serviciosCategoria = categorias[categoriaSeleccionada] || [];
+  const tipoProfesionalLabel = () => {
+    const nombre = (servicioSeleccionado?.nombre || "").toLowerCase();
 
+    if (nombre.includes("uñas") || nombre.includes("manicure") || nombre.includes("manicura") || nombre.includes("nail")) {
+      return "Manicuristas disponibles";
+    }
+
+    if (nombre.includes("corte") || nombre.includes("cepillado") || nombre.includes("keratina") || nombre.includes("tinte") || nombre.includes("peinado") || nombre.includes("maquillaje") || nombre.includes("cabello") || nombre.includes("color") || nombre.includes("alisado") || nombre.includes("estilo")) {
+      return "Estilistas disponibles";
+    }
+
+    return "Profesionales disponibles";
+  };
+  const serviciosUnas = servicios.slice(0, 17);
+  const otrosServicios = servicios.slice(17);
+  const renderServicio = (servicio, independiente = false) => {
+    const seleccionado = servicioId !== "" && Number(servicio.id) === Number(servicioId);
+
+    return (
+      <button
+        className={`servicio-card cita-service-card cita-detail-card${seleccionado ? " seleccionado" : ""}`}
+        key={servicio.id}
+        type="button"
+        aria-pressed={seleccionado}
+        onClick={() => SetServicioId(String(servicio.id))}
+      >
+        <span className="servicio-info">
+          <strong className={seleccionado ? "servicio-nombre-seleccionado" : ""}>
+            {servicio.nombre}
+          </strong>
+          <span className="cita-servicio-precio">
+            {servicio.precio != null && servicio.precio !== ""
+              ? `$${Number(servicio.precio).toLocaleString("es-CO")}`
+              : ""}
+          </span>
+          <span className="cita-seleccionar-servicio">
+            {independiente ? "Ver" : "Seleccionar"}
+          </span>
+        </span>
+      </button>
+    );
+  };
 
 
   async function handleSubmit(e) {
     e.preventDefault();
+
+    if (!fecha || !hora || !empleadoId || !servicioId) {
+      SetMessage("Completa fecha, hora, empleado y servicio para agendar la cita.");
+      return;
+    }
+
+    if (!empleados.some((empleado) => String(empleado.id) === String(empleadoId))) {
+      SetMessage("Este empleado no puede realizar el servicio seleccionado.");
+      return;
+    }
 
     try {
       const response = await fetch(
@@ -74,7 +99,7 @@ export function Cita() {
         SetHora("");
         SetEmpleadoId("");
       } else {
-        SetMessage(data.message);
+        SetMessage(data.message || "No se pudo agendar la cita.");
       }
 
     } catch {
@@ -99,7 +124,7 @@ export function Cita() {
           SetMessage("No se pudo cargar la lista de servicios.");
           return;
         }
-        SetServicios(data.length > 0 ? data : serviciosPagina);
+        SetServicios(data);
       }else{
         SetMessage(data.message || "No se pudo cargar la lista de servicios.");
       }
@@ -111,10 +136,62 @@ export function Cita() {
     }
   }
 
+  async function obtenerEmpleados(servicioActual = servicioId) {
+    try {
+      const params = new URLSearchParams();
+      if (servicioActual) {
+        params.set("servicio_id", String(servicioActual));
+      }
+
+      const query = params.toString() ? `?${params.toString()}` : "";
+      const response = await fetch(
+        `${API_ROOT}/inser/cliente/empleados${query}`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        SetMessage(data.message || "No se pudo cargar la lista de empleados.");
+        SetEmpleados([]);
+        return;
+      }
+
+      if (!Array.isArray(data)) {
+        SetEmpleados([]);
+        return;
+      }
+
+      SetEmpleados(data);
+      if (servicioActual && !data.some((empleado) => String(empleado.id) === String(empleadoId))) {
+        SetEmpleadoId("");
+      }
+    } catch {
+      SetMessage("Error de conexión con el servidor al cargar empleados.");
+      SetEmpleados([]);
+    }
+  }
+
   useEffect(() => {
-    const temporizador = window.setTimeout(Servicios, 0);
+    const temporizador = window.setTimeout(() => {
+      Servicios();
+      obtenerEmpleados();
+    }, 0);
     return () => window.clearTimeout(temporizador);
   }, []);
+
+  useEffect(() => {
+    if (!servicioId) {
+      SetEmpleadoId("");
+      obtenerEmpleados("");
+      return;
+    }
+
+    obtenerEmpleados(servicioId);
+  }, [servicioId]);
 
   useEffect(() => {
     if (!message) return;
@@ -156,27 +233,12 @@ export function Cita() {
 
           <div className="servicios-head">
             <h2 className="servicios-titulo">
-              {categoriaSeleccionada || "Elige una categoría"}
+              {unasAbiertas ? "Uñas" : "Elige un servicio"}
             </h2>
             <span className="servicios-count">
-              {categoriaSeleccionada
-                ? `${serviciosCategoria.length} servicios`
-                : `${Object.keys(categorias).length} categorías`}
+              {`${servicios.length} servicios`}
             </span>
           </div>
-
-          {categoriaSeleccionada && (
-            <button
-              className="cita-volver-categorias"
-              type="button"
-              onClick={() => {
-                SetCategoriaSeleccionada("");
-                SetServicioId("");
-              }}
-            >
-              ← Ver todas las categorías
-            </button>
-          )}
 
           {cargandoServicios ? (
             <p className="cita-servicios-estado" role="status">Cargando servicios...</p>
@@ -184,63 +246,26 @@ export function Cita() {
             <p className="cita-servicios-estado">No hay servicios disponibles en este momento.</p>
           ) : (
             <div className="servicios-grid">
-              {categoriaSeleccionada
-                ? serviciosCategoria.map((servicio) => (
-                    <button
-                      className={`servicio-card cita-service-card cita-detail-card${String(servicio.id) === String(servicioId) ? " seleccionado" : ""}`}
-                      key={servicio.id}
-                      type="button"
-                      onClick={() => SetServicioId(String(servicio.id))}
-                    >
-                      {servicio.image && (
-                        <div className="servicio-media">
-                          <img
-                            src={servicio.image}
-                            alt=""
-                            className="servicio-image"
-                          />
-                        </div>
-                      )}
-                      <span className="servicio-info">
-                        <strong>{servicio.nombre}</strong>
-                        {servicio.descripcion && <span>{servicio.descripcion}</span>}
-                        {servicio.precio != null && (
-                          <span className="cita-servicio-precio">
-                            ${Number(servicio.precio).toLocaleString("es-CO")}
-                          </span>
-                        )}
-                        <span className="cita-seleccionar-servicio">
-                          {String(servicio.id) === String(servicioId) ? "Seleccionado" : "Elegir servicio"}
-                        </span>
-                      </span>
-                    </button>
-                  ))
-                : Object.entries(categorias).map(([nombre, serviciosGrupo]) => (
-                    <button
-                      className="servicio-card cita-service-card cita-category-card"
-                      key={nombre}
-                      type="button"
-                      onClick={() => {
-                        SetCategoriaSeleccionada(nombre);
-                        SetServicioId("");
-                      }}
-                    >
-                      {serviciosGrupo[0].image && (
-                        <div className="servicio-media">
-                          <img
-                            src={serviciosGrupo[0].image}
-                            alt=""
-                            className="servicio-image"
-                          />
-                        </div>
-                      )}
-                      <span className="servicio-info">
-                        <strong>{nombre}</strong>
-                        <span>{serviciosGrupo.length} {serviciosGrupo.length === 1 ? "servicio disponible" : "servicios disponibles"}</span>
-                        <span className="cita-seleccionar-servicio">Ver servicios</span>
-                      </span>
-                    </button>
-                  ))}
+              {serviciosUnas.length > 0 && (
+                <button
+                  className="servicio-card cita-service-card cita-category-card"
+                  type="button"
+                  aria-expanded={unasAbiertas}
+                  onClick={() => {
+                    SetUnasAbiertas(!unasAbiertas);
+                    SetServicioId("");
+                  }}
+                >
+                  <span className="servicio-info">
+                    <strong>Uñas</strong>
+                    <span>{serviciosUnas.length} servicios disponibles</span>
+                    <span className="cita-seleccionar-servicio">Ver</span>
+                  </span>
+                </button>
+              )}
+
+              {unasAbiertas && serviciosUnas.map((servicio) => renderServicio(servicio, false))}
+              {otrosServicios.map((servicio) => renderServicio(servicio, true))}
             </div>
           )}
 
@@ -305,34 +330,25 @@ export function Cita() {
 
               <label htmlFor="cita-empleado">
                 <span className="cita-label-icon" aria-hidden="true">✂️</span>
-                Empleado
+                {tipoProfesionalLabel()}
               </label>
 
-              <select
-                id="cita-empleado"
-                value={empleadoId}
-                onChange={(e) =>
-                  SetEmpleadoId(e.target.value)
-                }
-              >
-
-                <option value="">
-                  Seleccione un empleado
-                </option>
-
-                <option value="3">
-                  santiago
-                </option>
-
-                <option value="5">
-                  antony
-                </option>
-
-                <option value="11">
-                  maria
-                </option>
-
-              </select>
+              {empleados.length === 0 ? (
+                <p className="cita-servicios-estado">No hay profesionales disponibles para este servicio.</p>
+              ) : (
+                <select
+                  id="cita-empleado"
+                  value={empleadoId}
+                  onChange={(e) => SetEmpleadoId(e.target.value)}
+                >
+                  <option value="">Seleccione un empleado</option>
+                  {empleados.map((empleado) => (
+                    <option key={empleado.id} value={String(empleado.id)}>
+                      {empleado.nombre}
+                    </option>
+                  ))}
+                </select>
+              )}
 
             </div>
 
