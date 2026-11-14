@@ -13,14 +13,9 @@ const Servicio = db.define('Servicio',{
         allowNull: false
     },
 
-    descripcion:{
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-
     precio:{
         type: DataTypes.FLOAT,
-        allowNull: false
+        allowNull: true
     },
 
    image:{
