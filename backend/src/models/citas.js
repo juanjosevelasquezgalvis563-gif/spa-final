@@ -33,8 +33,18 @@ const Cita = db.define('Cita', {
         type: DataTypes.INTEGER,
     },
 
+    inicio_atencion: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+
+    fin_atencion: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+
     estado:{
-        type: DataTypes.ENUM('pendiente', 'confirmada', 'cancelada','finalizada'),
+        type: DataTypes.ENUM('pendiente', 'confirmada', 'en_curso', 'cancelada', 'finalizada'),
         allowNull: false
 
     }
