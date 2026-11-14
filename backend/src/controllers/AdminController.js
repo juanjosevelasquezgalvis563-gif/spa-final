@@ -1,7 +1,10 @@
 import Usuario from "../models/Usuario.js";
+import db from "../config/db.js";
 import Producto from "../models/productos.js";
 import Compra from "../models/compras.js";
 import Cita from "../models/citas.js";
+import Pago from "../models/pagos.js";
+import Servicio from "../models/servicios.js";
 import { adminProfileCookieOptions, authCookieOptions } from "../config/cookies.js";
 import { randomUUID } from "node:crypto";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
@@ -156,30 +159,20 @@ export async function productosCreate(req, res) {
         });
     }
 
-    const signatures = {
-        "image/jpeg": {
-            extension: ".jpg",
-            matches: (buffer) => buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff
-        },
-        "image/png": {
-            extension: ".png",
-            matches: (buffer) => buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
-        },
-        "image/webp": {
-            extension: ".webp",
-            matches: (buffer) => buffer.toString("ascii", 0, 4) === "RIFF"
-                && buffer.toString("ascii", 8, 12) === "WEBP"
-        }
-    };
-    const signature = signatures[file.mimetype];
+    const imagen = file.buffer;
+    const esJpeg = imagen[0] === 0xff && imagen[1] === 0xd8 && imagen[2] === 0xff;
+    const esPng = imagen.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+    const esWebp = imagen.toString("ascii", 0, 4) === "RIFF"
+        && imagen.toString("ascii", 8, 12) === "WEBP";
+    const extension = esJpeg ? ".jpg" : esPng ? ".png" : esWebp ? ".webp" : null;
 
-    if (!signature || !signature.matches(file.buffer)) {
+    if (!extension) {
         return res.status(400).json({
             message: "El archivo no es una imagen PNG, JPG o WEBP válida."
         });
     }
 
-    const fileName = `${randomUUID()}${signature.extension}`;
+    const fileName = `${randomUUID()}${extension}`;
     const imagePath = path.join(PRODUCT_IMAGES_DIR, fileName);
     let imageSaved = false;
 
@@ -266,6 +259,49 @@ export async function productosUpdate(req, res) {
     }
 }
 
+export async function descontarStockProducto(req, res) {
+    const cantidad = Number(req.body?.cantidad);
+    if (!Number.isInteger(cantidad) || cantidad < 1) {
+        return res.status(400).json({ message: 'Ingresa una cantidad entera mayor que cero.' });
+    }
+
+    try {
+        const resultado = await db.transaction(async (transaction) => {
+            const producto = await Producto.findByPk(req.params.id, {
+                transaction,
+                lock: transaction.LOCK.UPDATE
+            });
+
+            if (!producto) return { error: 'El producto no existe.', status: 404 };
+            if (producto.stock < cantidad) {
+                return { error: `No puedes descontar ${cantidad} unidades; solo hay ${producto.stock}.`, status: 409 };
+            }
+
+            producto.stock -= cantidad;
+            producto.estado = producto.stock > 5
+                ? 'en stock'
+                : producto.stock > 0
+                    ? 'stock bajo'
+                    : 'sin stock';
+            await producto.save({ transaction });
+
+            return { producto };
+        });
+
+        if (resultado.error) {
+            return res.status(resultado.status).json({ message: resultado.error });
+        }
+
+        return res.json({
+            message: `Se descontaron ${cantidad} unidades de ${resultado.producto.nombre}.`,
+            producto: resultado.producto
+        });
+    } catch (error) {
+        console.error('No se pudo descontar el stock del producto:', error);
+        return res.status(500).json({ message: 'No se pudo descontar el stock.' });
+    }
+}
+
 
 export async function productosDelete(req, res) {
     try {
@@ -335,7 +371,7 @@ export async function comprasAdmin(req, res) {
 
     } catch (error) {
 
-       
+
 
         return res.status(500).json({
             message: 'No se pudo realizar la compra'
@@ -362,6 +398,214 @@ export async function historialCompras(req, res) {
     } catch (error) {
         return res.status(500).json({
             message: 'No se pudo obtener el historial de compras'
+        });
+    }
+}
+
+import { Op } from 'sequelize';
+
+export async function citasFinalizadasParaPago(req, res) {
+    try {
+        if (!['administrador', 'empleado'].includes(req.user?.rol)) {
+            return res.status(403).json({
+                message: 'No tienes permiso para consultar estas citas.'
+            });
+        }
+
+        const where = {
+            estado: 'finalizada'
+        };
+
+       
+        if (req.user.rol === 'empleado') {
+            where.empleado_id = req.user.id;
+        }
+
+        const [citas, pagos] = await Promise.all([
+            Cita.findAll({
+                where,
+                attributes: [
+                    'id',
+                    'usuario_id',
+                    'empleado_id',
+                    'servicio_id',
+                    'fecha',
+                    'hora'
+                ],
+                include: [
+                    {
+                        model: Usuario,
+                        as: 'cliente',
+                        attributes: ['id', 'nombre']
+                    },
+                    {
+                        model: Usuario,
+                        as: 'empleado',
+                        attributes: ['id', 'nombre']
+                    },
+                    {
+                        model: Servicio,
+                        attributes: ['id', 'nombre', 'precio']
+                    }
+                ],
+                order: [['fecha', 'DESC']]
+            }),
+
+            Pago.findAll({
+                attributes: ['cita_id'],
+                where: {
+                    cita_id: {
+                        [Op.ne]: null
+                    }
+                },
+                raw: true
+            })
+        ]);
+
+        const citasPagadas = new Set(
+            pagos.map(pago => Number(pago.cita_id))
+        );
+
+        const citasPendientes = citas
+            .filter(cita => !citasPagadas.has(Number(cita.id)))
+            .map(cita => cita.toJSON());
+
+        return res.status(200).json(citasPendientes);
+
+    } catch (error) {
+        console.error('Error al consultar citas para pago:', error);
+
+        return res.status(500).json({
+            message: 'No se pudieron consultar las citas pendientes.'
+        });
+    }
+}
+
+
+
+export async function registrarPago(req, res) {
+    try {
+        const { cita_id, total_pago, fecha_pago } = req.body;
+
+        const citaId = Number(cita_id);
+        const totalPago = Number(total_pago);
+
+        
+        if (!citaId || !totalPago || !fecha_pago) {
+            return res.status(400).json({
+                message: 'Todos los campos son obligatorios.'
+            });
+        }
+
+        if (totalPago <= 0) {
+            return res.status(400).json({
+                message: 'El valor del pago debe ser mayor a cero.'
+            });
+        }
+
+      
+        const where = {
+            id: citaId,
+            estado: 'finalizada'
+        };
+
+       
+        if (req.user.rol === 'empleado') {
+            where.empleado_id = req.user.id;
+        }
+
+        const cita = await Cita.findOne({
+            where
+        });
+
+        if (!cita) {
+            return res.status(404).json({
+                message: 'La cita no existe, no está finalizada o no te pertenece.'
+            });
+        }
+
+       
+        const pagoExistente = await Pago.findOne({
+            where: {
+                cita_id: cita.id
+            }
+        });
+
+        if (pagoExistente) {
+            return res.status(400).json({
+                message: 'Esta cita ya tiene un pago registrado.'
+            });
+        }
+
+        
+        const nuevoPago = await Pago.create({
+            usuario_id: cita.usuario_id,
+            servicio_id: cita.servicio_id,
+            cita_id: cita.id,
+            total_pago: totalPago,
+            fecha_pago: fecha_pago,
+            estado_pago: 'pagada'
+        });
+
+        return res.status(201).json({
+            message: 'Pago registrado correctamente.',
+            pago: nuevoPago
+        });
+
+    } catch (error) {
+        console.error('Error al registrar pago:', error);
+
+        return res.status(500).json({
+            message: 'Error al registrar el pago.'
+        });
+    }
+}
+
+
+export async function historialPagos(req, res) {
+    try {
+        if (req.user?.rol !== 'administrador') {
+            return res.status(403).json({
+                message: 'No tienes permiso para consultar el historial de pagos.'
+            });
+        }
+
+        const pagos = await Pago.findAll({
+            include: [
+                {
+                    model: Cita,
+                    as: 'cita',
+                    required: false,
+                    include: [
+                        {
+                            model: Usuario,
+                            as: 'cliente',
+                            attributes: ['id', 'nombre']
+                        },
+                        {
+                            model: Usuario,
+                            as: 'empleado',
+                            attributes: ['id', 'nombre']
+                        },
+                        {
+                            model: Servicio,
+                            attributes: ['id', 'nombre', 'precio']
+                        }
+                    ]
+                }
+            ],
+            order: [
+                ['fecha_pago', 'DESC']
+            ]
+        });
+
+        return res.status(200).json(pagos);
+
+    } catch (error) {
+        console.error('Error al consultar historial de pagos:', error);
+
+        return res.status(500).json({
+            message: 'No se pudo cargar el historial de pagos.'
         });
     }
 }
