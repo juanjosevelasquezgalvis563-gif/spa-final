@@ -9,7 +9,12 @@ const imageUpload = multer({
         parts: 4
     },
     fileFilter: (req, file, callback) => {
-        callback(null, ["image/jpeg", "image/png", "image/webp"].includes(file.mimetype));
+        const extension = file.originalname?.split(".").pop()?.toLowerCase();
+        const mimePermitido = ["image/jpeg", "image/jpg", "image/pjpeg", "image/png", "image/webp"]
+            .includes(file.mimetype?.toLowerCase());
+        const extensionPermitida = ["jpg", "jpeg", "png", "webp"].includes(extension);
+
+        callback(null, mimePermitido || extensionPermitida);
     }
 });
 
