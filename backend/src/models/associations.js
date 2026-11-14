@@ -7,6 +7,7 @@ import Pedido from "./pedidos.js";
 import PedidoDetalle from "./pedidoDetalles.js";
 import PasswordReset from "./password_resets.js";
 import Resena from "./reseña.js";
+import Pago from "./pagos.js";
 
 
 Usuario.hasMany(Cita, {
@@ -79,20 +80,12 @@ Usuario.hasMany(Pedido, {
     as: "pedidos"
 });
 
-Pedido.belongsTo(Usuario, {
-    foreignKey: "usuario_id",
-    as: "cliente"
+Cita.hasOne(Pago, {
+    foreignKey: "cita_id",
+    as: "pago"
 });
 
-Pedido.hasMany(PedidoDetalle, {
-    foreignKey: "pedido_id",
-    as: "detalles"
-});
-
-PedidoDetalle.belongsTo(Pedido, {
-    foreignKey: "pedido_id"
-});
-
-PedidoDetalle.belongsTo(Producto, {
-    foreignKey: "producto_id"
+Pago.belongsTo(Cita, {
+    foreignKey: "cita_id",
+    as: "cita"
 });
