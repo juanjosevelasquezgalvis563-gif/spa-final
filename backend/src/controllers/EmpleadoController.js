@@ -3,6 +3,8 @@ import Servicio from '../models/servicios.js';
 import Usuario from '../models/Usuario.js';
 import MovimientoPuntos from '../models/MovimientoPuntos.js';
 import { Op } from "sequelize";
+import db from "../config/db.js";
+import { acreditarReservaCancelada } from "./PagoReservaController.js";
 
 export async function empleado(req, res) {
     try {
@@ -170,41 +172,35 @@ export async function cancelarCita(req, res) {
     try {
         const empleadoId = req.user.id;
         const id = req.params.id;
-        const cita = await Cita.findOne({
-            where: {
-                id: id,
-                empleado_id: empleadoId
+        const resultado = await db.transaction(async (transaction) => {
+            const cita = await Cita.findOne({
+                where: { id, empleado_id: empleadoId },
+                transaction,
+                lock: transaction.LOCK.UPDATE
+            });
 
+            if (!cita) return { error: 'Cita no encontrada', status: 404 };
+            if (cita.estado === 'finalizada' || cita.estado === 'en_curso') {
+                return {
+                    error: 'No se puede cancelar una cita en curso o finalizada',
+                    status: 400
+                };
             }
+            if (cita.estado === 'cancelada') {
+                return { error: 'La cita ya está cancelada', status: 400 };
+            }
+
+            cita.estado = 'cancelada';
+            await cita.save({ transaction });
+            await acreditarReservaCancelada(cita, transaction);
+            return { message: 'Cita cancelada; el pago se conservó como abono del cliente.' };
         });
 
-        if (!cita) {
-            return res.status(404).json({ message: 'Cita no encontrada' });
-        }
-
-        if (cita.estado === 'finalizada' || cita.estado === 'en_curso') {
-            return res.status(400).json({ message: 'No se puede cancelar una cita en curso o finalizada' });
-        }
-        if (cita.estado === 'cancelada') {
-            return res.status(400).json({ message: 'La cita ya está cancelada' });
-        }
-
-        await Cita.update(
-            {
-                estado: 'cancelada'
-            },
-            {
-                where: {
-                    id: id,
-                    empleado_id: empleadoId
-                }
-            }
-
-        );
-
-        return res.status(200).json({ message: "Cita cancelada" });
+        if (resultado.error) return res.status(resultado.status).json({ message: resultado.error });
+        return res.status(200).json({ message: resultado.message });
 
     } catch (error) {
+        console.error('Error al cancelar la cita y conservar el abono:', error);
         return res.status(500).json({ message: "No se pudo cancelar la cita" });
     }
 

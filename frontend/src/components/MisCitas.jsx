@@ -106,6 +106,7 @@ export function MisCitas() {
                                 <th>Servicio</th>
                                 <th>Fecha</th>
                                 <th>Hora</th>
+                                <th>Reserva pagada</th>
                                 <th>Estado</th>
                                 <th>Cancelar</th>
                                 <th>Reprogramar</th>
@@ -128,6 +129,12 @@ export function MisCitas() {
 
                                     <td>
                                         {clientes.hora.slice(0, 5)}
+                                    </td>
+
+                                    <td>
+                                        {clientes.reservasPago?.find((pago) => pago.estado === "aprobado")
+                                            ? `$${Number(clientes.reservasPago.find((pago) => pago.estado === "aprobado").monto_reserva).toLocaleString("es-CO")} COP`
+                                            : "No registrada"}
                                     </td>
 
                                     <td>

@@ -4,6 +4,7 @@ import Producto from "../models/productos.js";
 import Compra from "../models/compras.js";
 import Cita from "../models/citas.js";
 import Pago from "../models/pagos.js";
+import PagoReserva from "../models/PagoReserva.js";
 import Servicio from "../models/servicios.js";
 import { adminProfileCookieOptions, authCookieOptions } from "../config/cookies.js";
 import { randomUUID } from "node:crypto";
@@ -466,9 +467,35 @@ export async function citasFinalizadasParaPago(req, res) {
             pagos.map(pago => Number(pago.cita_id))
         );
 
+        const pagosReserva = citas.length
+            ? await PagoReserva.findAll({
+                attributes: ["cita_id", "monto_reserva", "monto_credito", "monto_pagado"],
+                where: {
+                    cita_id: { [Op.in]: citas.map(cita => cita.id) },
+                    estado: "aprobado"
+                },
+                raw: true
+            })
+            : [];
+        const reservaPorCita = new Map(
+            pagosReserva.map(pagoReserva => [Number(pagoReserva.cita_id), pagoReserva])
+        );
+
         const citasPendientes = citas
             .filter(cita => !citasPagadas.has(Number(cita.id)))
-            .map(cita => cita.toJSON());
+            .map(cita => {
+                const resultado = cita.toJSON();
+                const pagoReserva = reservaPorCita.get(Number(cita.id));
+                const reservaPagada = pagoReserva
+                    ? Number(pagoReserva.monto_credito) + Number(pagoReserva.monto_pagado)
+                    : 0;
+                resultado.reserva_pagada = reservaPagada;
+                resultado.saldo_pendiente = Math.max(
+                    0,
+                    Math.round(Number(resultado.Servicio?.precio || 0) - reservaPagada)
+                );
+                return resultado;
+            });
 
         return res.status(200).json(citasPendientes);
 
@@ -524,7 +551,26 @@ export async function registrarPago(req, res) {
             });
         }
 
-       
+        const [servicio, reservaPagada] = await Promise.all([
+            Servicio.findByPk(cita.servicio_id),
+            PagoReserva.findOne({
+                where: { cita_id: cita.id, estado: "aprobado" }
+            })
+        ]);
+        if (!servicio) {
+            return res.status(404).json({ message: 'No se encontró el servicio de esta cita.' });
+        }
+
+        const montoReserva = reservaPagada
+            ? Number(reservaPagada.monto_credito) + Number(reservaPagada.monto_pagado)
+            : 0;
+        const saldoPendiente = Math.max(0, Math.round(Number(servicio.precio || 0) - montoReserva));
+        if (totalPago !== saldoPendiente) {
+            return res.status(400).json({
+                message: `El saldo pendiente de esta cita es $${saldoPendiente.toLocaleString('es-CO')} COP.`
+            });
+        }
+
         const pagoExistente = await Pago.findOne({
             where: {
                 cita_id: cita.id
@@ -570,36 +616,70 @@ export async function historialPagos(req, res) {
             });
         }
 
-        const pagos = await Pago.findAll({
-            include: [
-                {
-                    model: Cita,
-                    as: 'cita',
-                    required: false,
-                    include: [
-                        {
-                            model: Usuario,
-                            as: 'cliente',
-                            attributes: ['id', 'nombre']
-                        },
-                        {
-                            model: Usuario,
-                            as: 'empleado',
-                            attributes: ['id', 'nombre']
-                        },
-                        {
-                            model: Servicio,
-                            attributes: ['id', 'nombre', 'precio']
-                        }
-                    ]
-                }
-            ],
-            order: [
-                ['fecha_pago', 'DESC']
-            ]
-        });
+        const [pagos, reservasPagadas] = await Promise.all([
+            Pago.findAll({
+                include: [
+                    {
+                        model: Cita,
+                        as: 'cita',
+                        required: false,
+                        include: [
+                            {
+                                model: Usuario,
+                                as: 'cliente',
+                                attributes: ['id', 'nombre']
+                            },
+                            {
+                                model: Usuario,
+                                as: 'empleado',
+                                attributes: ['id', 'nombre']
+                            },
+                            {
+                                model: Servicio,
+                                attributes: ['id', 'nombre', 'precio']
+                            }
+                        ]
+                    }
+                ],
+                order: [['fecha_pago', 'DESC']]
+            }),
+            PagoReserva.findAll({
+                where: {
+                    estado: { [Op.in]: ['aprobado', 'aprobado_abono'] }
+                },
+                include: [
+                    { model: Usuario, as: 'cliente', attributes: ['id', 'nombre'] },
+                    { model: Usuario, as: 'empleado', attributes: ['id', 'nombre'] },
+                    { model: Servicio, attributes: ['id', 'nombre', 'precio'] }
+                ],
+                order: [['updated_at', 'DESC']]
+            })
+        ]);
 
-        return res.status(200).json(pagos);
+        const pagosCombinados = [
+            ...pagos.map((pago) => ({
+                ...pago.toJSON(),
+                tipo_pago: 'Saldo en el salón',
+                credito_aplicado: 0
+            })),
+            ...reservasPagadas.map((reserva) => ({
+                id: `reserva-${reserva.id}`,
+                fecha_pago: reserva.updated_at,
+                total_pago: reserva.monto_pagado,
+                credito_aplicado: reserva.estado === 'aprobado' ? reserva.monto_credito : 0,
+                estado_pago: reserva.estado === 'aprobado' ? 'Reserva pagada' : 'Abono disponible',
+                tipo_pago: 'Reserva en línea (Wompi)',
+                cita: {
+                    cliente: reserva.cliente,
+                    empleado: reserva.empleado,
+                    Servicio: reserva.Servicio,
+                    fecha: reserva.fecha_reserva,
+                    hora: reserva.hora_reserva
+                }
+            }))
+        ].sort((a, b) => new Date(b.fecha_pago).getTime() - new Date(a.fecha_pago).getTime());
+
+        return res.status(200).json(pagosCombinados);
 
     } catch (error) {
         console.error('Error al consultar historial de pagos:', error);

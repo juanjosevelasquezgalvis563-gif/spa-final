@@ -25,7 +25,6 @@ export default function RegistrarPago({ rol }) {
         : "empleado";
 
     const [citas, setCitas] = useState([]);
-    const [totales, setTotales] = useState({});
     const [fechaPago, setFechaPago] = useState(fechaActual());
     const [cargando, setCargando] = useState(true);
     const [guardandoId, setGuardandoId] = useState(null);
@@ -75,22 +74,13 @@ export default function RegistrarPago({ rol }) {
         obtenerCitas();
     }, [baseRuta]);
 
-    const cambiarTotal = (citaId, valor) => {
-        setTotales((prev) => ({
-            ...prev,
-            [citaId]: valor
-        }));
-    };
-
    
     const registrar = async (cita) => {
         try {
             setMensaje("");
             setEsError(false);
 
-            const totalPago = Number(
-                totales[cita.id] ?? cita.Servicio?.precio
-            );
+            const totalPago = Number(cita.saldo_pendiente ?? cita.Servicio?.precio);
 
             if (!Number.isInteger(Number(cita.id)) || Number(cita.id) <= 0) {
                 throw new Error("El ID de la cita no es válido.");
@@ -162,8 +152,8 @@ export default function RegistrarPago({ rol }) {
                 <h2>Registrar pagos</h2>
 
                 <p>
-                    Registra los pagos correspondientes a las citas
-                    que ya fueron finalizadas.
+                    Registra el saldo pendiente de las citas finalizadas.
+                    El anticipo pagado en línea ya está descontado.
                 </p>
             </div>
 
@@ -201,8 +191,7 @@ export default function RegistrarPago({ rol }) {
                 <div className="registrar-pago-lista">
 
                     {citas.map((cita) => {
-                        const total = totales[cita.id] ??
-                            cita.Servicio?.precio ?? "";
+                        const saldoPendiente = Number(cita.saldo_pendiente ?? cita.Servicio?.precio) || 0;
 
                         return (
                             <article
@@ -267,27 +256,27 @@ export default function RegistrarPago({ rol }) {
                                         </span>
                                     </div>
 
+                                    <div>
+                                        <strong>Reserva pagada:</strong>
+                                        <span>{formatoPrecio(cita.reserva_pagada)}</span>
+                                    </div>
+
                                 </div>
 
                                 <div className="registrar-pago-total">
                                     <label htmlFor={`total-${cita.id}`}>
-                                        Total a pagar
+                                        Saldo restante
                                     </label>
 
                                     <input
                                         id={`total-${cita.id}`}
                                         type="number"
-                                        min="1"
-                                        step="1"
-                                        value={total}
-                                        onChange={(e) =>
-                                            cambiarTotal(cita.id, e.target.value)
-                                        }
-                                        placeholder="Ingrese el total"
+                                        value={saldoPendiente}
+                                        readOnly
                                     />
 
                                     <p>
-                                        {formatoPrecio(total)}
+                                        {formatoPrecio(saldoPendiente)}
                                     </p>
                                 </div>
 
@@ -299,7 +288,7 @@ export default function RegistrarPago({ rol }) {
                                 >
                                     {guardandoId === cita.id
                                         ? "Registrando..."
-                                        : "Registrar pago"}
+                                        : "Registrar saldo restante"}
                                 </button>
 
                             </article>

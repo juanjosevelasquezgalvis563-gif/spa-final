@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AnimatePresence, m, useReducedMotion } from 'motion/react';
+import { History, Package, Pencil, ShoppingCart, Trash2, TriangleAlert, UsersRound } from 'lucide-react';
 import { API_ROOT } from '../lib/api';
 import RegistrarPago from './RegistrarPago';
 import HistorialPagos from './HistorialPagos';
@@ -15,7 +15,6 @@ function urlImagenProducto(image) {
 export function Admin() {
 
     const [admin, SetAdmin] = useState(null);
-    const [mostrarBienvenida, setMostrarBienvenida] = useState(true);
     const [productos, SetProductos] = useState([]);
     const [historial, SetHistorial] = useState([]);
     const [cantidadesDescontar, SetCantidadesDescontar] = useState({});
@@ -34,7 +33,6 @@ export function Admin() {
     const [productoDescontando, SetProductoDescontando] = useState(null);
 
     const navigate = useNavigate();
-    const reduceMotion = useReducedMotion();
 
     async function obtenerAdmin() {
         try {
@@ -313,15 +311,6 @@ export function Admin() {
         return () => clearTimeout(temporizador);
     }, [message]);
 
-    useEffect(() => {
-        const temporizador = window.setTimeout(() => {
-            setMostrarBienvenida(false);
-        }, 10000);
-
-        return () => window.clearTimeout(temporizador);
-
-    }, []);
-
     function cerrarSesion() {
     fetch(`${API_ROOT}/inser/logout`, {
         method: 'POST',
@@ -337,64 +326,23 @@ export function Admin() {
             <header className="admin-topbar">
 
                 <div className="admin-topbar-text">
-                    <AnimatePresence mode="wait" initial={false}>
-                        {mostrarBienvenida ? (
-                            <m.div
-                                key="admin-greeting"
-                                className="admin-welcome-message"
-                                initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12, filter: 'blur(4px)' }}
-                                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                                exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -10, filter: 'blur(4px)' }}
-                                transition={{ duration: reduceMotion ? 0.2 : 0.45, ease: [0.22, 0.61, 0.36, 1] }}
-                            >
-                                <h1 className="admin-saludo">
-                                    Hola, {admin ? admin.nombre : 'Admin'}
-                                    <span className="admin-saludo-emoji">👋</span>
-                                </h1>
-
-                                <p className="admin-subtitulo">
-                                    Aquí tienes el resumen de tu inventario y operaciones.
-                                </p>
-                            </m.div>
-                        ) : (
-                            <m.div
-                                key="admin-workspace"
-                                className="admin-welcome-message"
-                                initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12, filter: 'blur(4px)' }}
-                                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                                exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -10, filter: 'blur(4px)' }}
-                                transition={{ duration: reduceMotion ? 0.2 : 0.45, ease: [0.22, 0.61, 0.36, 1] }}
-                            >
-                                <h1 className="admin-saludo">Tu espacio de gestión</h1>
-
-                                <p className="admin-subtitulo">
-                                    Administra inventario, perfiles y operaciones desde un solo lugar.
-                                </p>
-                            </m.div>
-                        )}
-                    </AnimatePresence>
+                    <div className="admin-welcome-message">
+                        <h1 className="admin-saludo">
+                            Hola, {admin ? admin.nombre : 'Admin'}
+                        </h1>
+                        <p className="admin-subtitulo">
+                            Aquí tienes el resumen de tu inventario y operaciones.
+                        </p>
+                    </div>
                 </div>
 
                 {admin && (
                     <div className="admin-identity">
-                        <span className="admin-avatar">♛</span>
-
+                        <span className="admin-avatar" aria-hidden="true">
+                            {admin.nombre?.trim()?.charAt(0)?.toUpperCase() || 'A'}
+                        </span>
                         <div className="admin-identity-text">
-                            <AnimatePresence initial={false}>
-                                {mostrarBienvenida && (
-                                    <m.span
-                                        key="admin-identity-name"
-                                        className="admin-nombre"
-                                        initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 6, filter: 'blur(3px)' }}
-                                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                                        exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -6, filter: 'blur(3px)' }}
-                                        transition={{ duration: reduceMotion ? 0.2 : 0.35 }}
-                                    >
-                                        {admin.nombre}
-                                    </m.span>
-                                )}
-                            </AnimatePresence>
-
+                            <span className="admin-nombre">{admin.nombre}</span>
                             <span className="admin-rol">
                                 {admin.rol}
                             </span>
@@ -414,7 +362,7 @@ export function Admin() {
 
             {message && (
                 <p className="admin-alert">
-                    <span className="admin-alert-icon">⚠️</span>
+                    <span className="admin-alert-icon"><TriangleAlert aria-hidden="true" /></span>
                     {message}
                 </p>
             )}
@@ -425,7 +373,7 @@ export function Admin() {
 
                     <div className="admin-panel-head">
                         <h2 className="admin-panel-title">
-                            <span className="admin-panel-icon">📦</span>
+                            <span className="admin-panel-icon"><Package aria-hidden="true" /></span>
                             Inventario de productos
                         </h2>
 
@@ -503,11 +451,14 @@ export function Admin() {
 
                                                     <button
                                                         className="admin-btn-editar"
+                                                        type="button"
+                                                        title={`Editar ${producto.nombre}`}
+                                                        aria-label={`Editar ${producto.nombre}`}
                                                         onClick={() =>
                                                             navigate(`/actualizarProducto/${producto.id}`)
                                                         }
                                                     >
-                                                        ✏️
+                                                        <Pencil aria-hidden="true" />
                                                     </button>
 
                                                     <button
@@ -516,7 +467,7 @@ export function Admin() {
                                                         aria-label={`Eliminar ${producto.nombre}`}
                                                         onClick={() => eliminarProducto(producto.id)}
                                                     >
-                                                        🗑️
+                                                        <Trash2 aria-hidden="true" />
                                                     </button>
 
                                                     <div className="admin-stock-ajuste">
@@ -558,7 +509,7 @@ export function Admin() {
 
                     <div className="admin-panel-head">
                         <h2 className="admin-panel-title">
-                            <span className="admin-panel-icon">🛒</span>
+                            <span className="admin-panel-icon"><ShoppingCart aria-hidden="true" /></span>
                             Realizar compra
                         </h2>
                     </div>
@@ -675,7 +626,7 @@ export function Admin() {
                 <div className="admin-panel-head admin-perfiles-head">
                     <div>
                         <h2 className="admin-panel-title">
-                            <span className="admin-panel-icon">👥</span>
+                            <span className="admin-panel-icon"><UsersRound aria-hidden="true" /></span>
                             Perfiles de usuarios
                         </h2>
                     </div>
@@ -769,7 +720,7 @@ export function Admin() {
 
                 <div className="admin-panel-head">
                     <h2 className="admin-panel-title">
-                        <span className="admin-panel-icon">🕘</span>
+                        <span className="admin-panel-icon"><History aria-hidden="true" /></span>
                         Últimas compras
                     </h2>
 

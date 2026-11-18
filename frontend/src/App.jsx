@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   AnimatePresence,
   domAnimation,
@@ -42,6 +43,30 @@ import ResetPassword from "./components/ResetPassword";
 function App() {
   const location = useLocation();
   const reduceMotion = useReducedMotion();
+  const [validationAlert, setValidationAlert] = useState(null);
+
+  useEffect(() => {
+    if (!validationAlert) return;
+
+    const timer = setTimeout(() => setValidationAlert(null), 6000);
+    return () => clearTimeout(timer);
+  }, [validationAlert]);
+
+  function handleInvalidField(event) {
+    event.preventDefault();
+
+    const form = event.target.form;
+    const field = form?.querySelector(":invalid") || event.target;
+    const label =
+      field.labels?.[0]?.textContent?.trim() ||
+      field.getAttribute("aria-label") ||
+      "Este campo";
+    const detail = field.validity?.valueMissing
+      ? "Completa este campo."
+      : "Revisa el valor ingresado.";
+
+    setValidationAlert({ id: Date.now(), text: `${label}: ${detail}` });
+  }
 
   return (
     <MotionConfig reducedMotion="user">
@@ -57,7 +82,19 @@ function App() {
               ease: [0.22, 0.61, 0.36, 1],
             }}
             style={{ minHeight: "100vh" }}
+            onInvalidCapture={handleInvalidField}
+            onInputCapture={() => setValidationAlert(null)}
           >
+            {validationAlert && (
+              <div
+                key={validationAlert.id}
+                className="app-validation-alert"
+                role="alert"
+                aria-atomic="true"
+              >
+                {validationAlert.text}
+              </div>
+            )}
             <Routes location={location}>
               <Route path="/" element={<Home />} />
               <Route path="/registro" element={<Registro />} />

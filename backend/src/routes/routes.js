@@ -20,7 +20,6 @@ import {citasPendientesEmpleado} from "../controllers/EmpleadoController.js";
 import {citasFinalizadasEmpleado} from "../controllers/EmpleadoController.js";
 import {citaRealizarEmpleado} from "../controllers/EmpleadoController.js";
 
-import { cliente} from "../controllers/ClienteController.js"
 import { servicios, empleadosDisponibles } from "../controllers/ClienteController.js"
 import { obtenerCliente} from "../controllers/ClienteController.js";
 import {cancelarSuCita} from "../controllers/ClienteController.js";
@@ -55,6 +54,12 @@ import { historialCompras } from "../controllers/AdminController.js";
 import { perfilesAdmin, activarPerfilAdmin } from "../controllers/AdminController.js";
 import { citasFinalizadasParaPago, registrarPago} from "../controllers/AdminController.js";
 import {historialPagos} from "../controllers/AdminController.js";
+import {
+    crearPagoReserva,
+    obtenerAbonosReserva,
+    obtenerEstadoPagoReserva,
+    recibirEventoWompi
+} from "../controllers/PagoReservaController.js";
 
 
 import { forgotPassword } from "../controllers/RecuperaPassword.js";
@@ -148,8 +153,10 @@ router.get('/cliente/servicios',middlewareCliente,servicios);
 router.get('/cliente/empleados', middlewareCliente, empleadosDisponibles);
 router.get('/cliente/productos', middlewareCliente, productosCatalogo);
 router.post('/cliente/pedidos/solicitar', middlewareCliente, carritoActionLimiter, solicitarCompra);
-router.post('/cliente',middlewareCliente,cliente);
+router.post('/cliente', middlewareCliente, carritoActionLimiter, crearPagoReserva);
 router.get('/cliente',middlewareCliente, obtenerCliente);
+router.get('/cliente/reserva/:referencia', middlewareCliente, obtenerEstadoPagoReserva);
+router.get('/cliente/abonos', middlewareCliente, obtenerAbonosReserva);
 router.put('/cliente/cancelar/:id',middlewareCliente,cancelarSuCita);
 router.put('/cliente/actualizar/:id',middlewareCliente,actualizarCita);
 router.get('/cliente/cantidadCitas',middlewareCliente,cantidadDeCitas);
@@ -189,6 +196,7 @@ router.get('/administrador/citasFinalizadasPago', middlewareAdmin, citasFinaliza
 router.post('/administrador/registrarPago', middlewareAdmin, registrarPago);
 router.get('/administrador/historialPagos',middlewareAdmin,historialPagos);
 
+router.post('/wompi/webhook', recibirEventoWompi);
 
 
 

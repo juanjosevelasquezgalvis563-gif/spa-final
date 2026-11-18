@@ -422,7 +422,10 @@ export function Registro() {
         )}
 
         {message && (
-          <p className="registro-message" role="status">
+          <p
+            className={`registro-message${turnstileError ? " turnstile-message-duplicate" : ""}`}
+            role="status"
+          >
             {message}
           </p>
         )}

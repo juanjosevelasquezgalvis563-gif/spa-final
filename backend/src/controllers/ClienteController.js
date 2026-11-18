@@ -2,71 +2,12 @@ import Servicio from '../models/servicios.js';
 import Cita from '../models/citas.js';
 import Usuario from '../models/Usuario.js';
 import Resena from '../models/reseña.js';
-import { Op, col, fn, where } from "sequelize";
-
-const EMPLEADO_ESPECIALIDAD = {
-    "valentina alvarez": "manicurista",
-    "melany arango": "manicurista",
-    "evelyn nino": "estilista",
-    "steven piedradita": "estilista",
-    "steven piedrahita": "estilista"
-};
-
-const SERVICIO_ESPECIALIDAD = {
-    manicurista: [
-        "uñas", "manicure", "manicura", "pedicure", "pedispa", "dipping",
-        "rubber", "builder", "gel", "soft gel", "esculpidas", "retiro",
-        "poly", "press", "nail", "nail art", "acrilicas"
-    ],
-    estilista: [
-        "corte", "cepillado", "keratina", "tinte", "peinado", "maquillaje",
-        "cabello", "color", "alisado", "estilo", "pestañas", "cejas",
-        "depilacion", "hidratacion", "lifting", "laminado", "balayage",
-        "social", "facial", "porcelanizacion", "limpieza"
-    ]
-};
-
-const normalizarTexto = (valor = "") => String(valor)
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
-
-const obtenerEspecialidadEmpleado = (empleado) => {
-    const nombre = normalizarTexto(empleado?.nombre || "");
-    return EMPLEADO_ESPECIALIDAD[nombre] || null;
-};
-
-const obtenerEspecialidadServicio = (servicio) => {
-    const nombre = normalizarTexto(servicio?.nombre || "");
-
-    if (!nombre) {
-        return null;
-    }
-
-    for (const [especialidad, palabras] of Object.entries(SERVICIO_ESPECIALIDAD)) {
-        if (palabras.some((palabra) => nombre.includes(palabra))) {
-            return especialidad;
-        }
-    }
-
-    return null;
-};
-
-const puedeRealizarServicio = (empleado, servicio) => {
-    const especialidadEmpleado = obtenerEspecialidadEmpleado(empleado);
-    const especialidadServicio = obtenerEspecialidadServicio(servicio);
-
-    if (!especialidadEmpleado) {
-        return true;
-    }
-
-    if (!especialidadServicio) {
-        return true;
-    }
-
-    return especialidadEmpleado === especialidadServicio;
-};
+import PagoReserva from '../models/PagoReserva.js';
+import db from "../config/db.js";
+import { Op } from "sequelize";
+import { puedeRealizarServicio } from "../utils/servicios.js";
+import { normalizarHoraReserva, validarFechaHoraReserva } from "../utils/fechaHora.js";
+import { acreditarReservaCancelada } from "./PagoReservaController.js";
 
 export async function servicios(req, res) {
     try {
@@ -113,110 +54,6 @@ export async function empleadosDisponibles(req, res) {
 }
 
 
-export async function cliente(req, res) {
-    try {
-        const usuarioId = req.user.id;
-        const { fecha, hora, empleado_id, servicio_id } = req.body;
-
-        if (!fecha || !hora || !empleado_id || !servicio_id) {
-            return res.status(400).json({
-                message: "Todos los campos son requeridos"
-            });
-        }
-
-        const empleado = await Usuario.findOne({
-            where: { id: empleado_id, rol: 'empleado' }
-        });
-
-        if (!empleado) {
-            return res.status(400).json({
-                message: "Selecciona un empleado válido."
-            });
-        }
-
-        const citaEnCurso = await Cita.findOne({
-            where: {
-                empleado_id,
-                estado: 'en_curso',
-                [Op.and]: where(fn('DATE', col('fecha')), fecha)
-            },
-            attributes: ['id']
-        });
-
-        if (citaEnCurso) {
-            return res.status(409).json({
-                message: "Este empleado tiene una cita en curso. Intenta agendarla unos minutos más tarde."
-            });
-        }
-
-        const servicio = await Servicio.findOne({
-            where: { id: servicio_id }
-        });
-
-        if (!servicio) {
-            return res.status(404).json({
-                message: "El servicio seleccionado no existe."
-            });
-        }
-
-        if (!puedeRealizarServicio(empleado, servicio)) {
-            return res.status(400).json({
-                message: `Este empleado no puede realizar el servicio ${servicio.nombre}.`
-            });
-        }
-
-        const horaNormalizada = hora.length === 5
-            ? `${hora}:00`
-            : hora;
-
-        // Verificar si el empleado ya tiene una cita
-        // en esa misma fecha y hora.
-        const horaExistente = await Cita.findOne({
-            where: {
-                fecha,
-                hora: horaNormalizada,
-                empleado_id,
-                estado: {
-                    [Op.in]: ["pendiente", "confirmada"]
-                }
-            }
-        });
-
-        if (horaExistente) {
-            return res.status(400).json({
-                message: "El empleado ya tiene una cita a esa hora. Por favor, elige otra hora."
-            });
-        }
-
-        await Cita.create({
-            fecha,
-            hora: horaNormalizada,
-            usuario_id: usuarioId,
-            empleado_id,
-            servicio_id,
-            estado: "pendiente"
-        });
-
-        return res.status(201).json({
-            message: "Cita creada exitosamente"
-        });
-
-    } catch (error) {
-        console.error("Error al crear la cita:", error);
-
-        if (error.name === "SequelizeUniqueConstraintError") {
-            return res.status(400).json({
-                message: "El empleado ya tiene una cita a esa hora. Por favor, elige otra hora."
-            });
-        }
-
-        return res.status(500).json({
-            message: "No se pudo crear la cita"
-        });
-    }
-}
-
-
 export async function obtenerCliente(req, res) {
     try {
 
@@ -236,6 +73,12 @@ export async function obtenerCliente(req, res) {
                 {
                     model: Servicio,
                     attributes: ["nombre"]
+                },
+                {
+                    model: PagoReserva,
+                    as: "reservasPago",
+                    attributes: ["monto_reserva", "monto_credito", "monto_pagado", "estado"],
+                    required: false
                 }
             ],
 
@@ -258,37 +101,32 @@ export async function cancelarSuCita(req, res) {
     try {
         const usuarioId = req.user.id;
         const id = req.params.id;
-        const cita = await Cita.findOne({
-            where: {
-                id: id,
-                usuario_id: usuarioId,
+        const resultado = await db.transaction(async (transaction) => {
+            const cita = await Cita.findOne({
+                where: { id, usuario_id: usuarioId },
+                transaction,
+                lock: transaction.LOCK.UPDATE
+            });
 
+            if (!cita) return { error: 'Cita no encontrada', status: 404 };
+            if (cita.estado === 'finalizada') {
+                return { error: 'No se puede cancelar una cita finalizada', status: 403 };
             }
+            if (cita.estado === 'cancelada') {
+                return { error: 'La cita ya está cancelada', status: 400 };
+            }
+
+            cita.estado = 'cancelada';
+            await cita.save({ transaction });
+            await acreditarReservaCancelada(cita, transaction);
+            return { message: 'Cita cancelada. El valor pagado se conservó como abono para una próxima reserva.' };
         });
 
-        if (!cita) {
-            return res.status(403).json({ message: 'Cita no encontrada' });
-        }
-
-        if (cita.estado === 'finalizada') {
-            return res.status(403).json({ message: 'No se puede cancelar una cita finalizada' });
-        }
-        await Cita.update(
-            {
-                estado: 'cancelada'
-
-            },
-            {
-                where: {
-                    id: id,
-                    usuario_id: usuarioId
-                }
-            }
-        );
-
-        return res.json({ message: 'Cita cancelada exitosamente' });
+        if (resultado.error) return res.status(resultado.status).json({ message: resultado.error });
+        return res.json({ message: resultado.message });
     } catch (error) {
-        return res.status(500).json({ message: "Error al cancelar su cita" });
+        console.error('Error al cancelar la cita y conservar el abono:', error);
+        return res.status(500).json({ message: "No se pudo cancelar la cita" });
     }
 
 }
@@ -299,62 +137,90 @@ export async function actualizarCita(req, res) {
         const id = req.params.id;
         const { fecha, hora, empleado_id, servicio_id } = req.body;
 
-        const cita = await Cita.findOne({
-            where: {
-                id: id,
-                usuario_id: usuarioId,
-            }
-        });
-
-        if (!cita) {
-            return res.status(403).json({ message: 'Cita no encontrada' });
+        if (
+            !validarFechaHoraReserva(fecha, hora)
+            || !empleado_id
+            || !servicio_id
+        ) {
+            return res.status(400).json({ message: 'Completa fecha, hora, empleado y servicio.' });
         }
 
-        if (cita.estado === 'finalizada') {
-            return res.status(403).json({ message: 'No se puede reprogramar una cita finalizada' });
-        }
-        if (cita.estado === 'cancelada') {
-            return res.status(403).json({ message: 'No se puede reprogramar una cita cancelada' });
-        }
-
-        const empleado = await Usuario.findOne({
-            where: { id: empleado_id, rol: 'empleado' }
-        });
-
-        if (!empleado) {
-            return res.status(400).json({ message: 'Selecciona un empleado válido.' });
-        }
-
-        const servicio = await Servicio.findOne({
-            where: { id: servicio_id }
-        });
-
-        if (!servicio) {
-            return res.status(404).json({ message: 'El servicio seleccionado no existe.' });
-        }
-
-        if (!puedeRealizarServicio(empleado, servicio)) {
-            return res.status(400).json({
-                message: `Este empleado no puede realizar el servicio ${servicio.nombre}.`
+        const resultado = await db.transaction(async (transaction) => {
+            const empleado = await Usuario.findOne({
+                where: { id: empleado_id, rol: 'empleado' },
+                transaction,
+                lock: transaction.LOCK.UPDATE
             });
-        }
+            if (!empleado) return { error: 'Selecciona un empleado válido.', status: 400 };
 
-        await Cita.update(
-            {
-                fecha,
-                hora,
-                empleado_id,
-                servicio_id,
-                estado: 'pendiente'
-            },
-            {
-                where: {
-                    id: id,
-                    usuario_id: usuarioId
-                }
+            const cita = await Cita.findOne({
+                where: { id, usuario_id: usuarioId },
+                transaction,
+                lock: transaction.LOCK.UPDATE
+            });
+            if (!cita) return { error: 'Cita no encontrada', status: 404 };
+            if (cita.estado === 'finalizada') {
+                return { error: 'No se puede reprogramar una cita finalizada', status: 403 };
             }
-        );
-        return res.status(200).json({ message: 'Cita actualizada exitosamente' });
+            if (cita.estado === 'cancelada') {
+                return { error: 'No se puede reprogramar una cita cancelada', status: 403 };
+            }
+
+            const servicio = await Servicio.findByPk(servicio_id, { transaction });
+            if (!servicio) return { error: 'El servicio seleccionado no existe.', status: 404 };
+            if (!puedeRealizarServicio(empleado, servicio)) {
+                return {
+                    error: `Este empleado no puede realizar el servicio ${servicio.nombre}.`,
+                    status: 400
+                };
+            }
+
+            const reservaPagada = await PagoReserva.findOne({
+                where: { cita_id: cita.id, estado: 'aprobado' },
+                transaction,
+                lock: transaction.LOCK.UPDATE
+            });
+            if (reservaPagada && Number(cita.servicio_id) !== Number(servicio.id)) {
+                return {
+                    error: 'Para cambiar el servicio, cancela esta cita y utiliza el abono para crear una nueva reserva.',
+                    status: 400
+                };
+            }
+
+            const horaNormalizada = normalizarHoraReserva(hora);
+            const citaEnEseHorario = await Cita.findOne({
+                where: {
+                    id: { [Op.ne]: cita.id },
+                    fecha,
+                    hora: horaNormalizada,
+                    empleado_id,
+                    estado: { [Op.in]: ['pendiente', 'confirmada', 'en_curso'] }
+                },
+                transaction,
+                lock: transaction.LOCK.UPDATE
+            });
+            if (citaEnEseHorario) {
+                return { error: 'El empleado ya tiene una cita a esa hora. Elige otro horario.', status: 409 };
+            }
+
+            cita.fecha = fecha;
+            cita.hora = horaNormalizada;
+            cita.empleado_id = empleado_id;
+            cita.servicio_id = servicio_id;
+            cita.estado = reservaPagada ? 'confirmada' : 'pendiente';
+            await cita.save({ transaction });
+            if (reservaPagada) {
+                reservaPagada.fecha_reserva = fecha;
+                reservaPagada.hora_reserva = horaNormalizada;
+                reservaPagada.empleado_id = empleado_id;
+                reservaPagada.updated_at = new Date();
+                await reservaPagada.save({ transaction });
+            }
+            return { message: 'Cita actualizada exitosamente' };
+        });
+
+        if (resultado.error) return res.status(resultado.status).json({ message: resultado.error });
+        return res.status(200).json({ message: resultado.message });
 
 
     } catch (error) {

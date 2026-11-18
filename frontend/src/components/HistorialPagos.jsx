@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { API_ROOT } from '../lib/api';
 
 function HistorialPagos() {
@@ -76,7 +76,7 @@ function HistorialPagos() {
                             Cargando historial de pagos...
                         </p>
                     ) : mensaje ? (
-                        <p className="admin-historial-vacio">
+                        <p className="admin-historial-vacio admin-historial-error" role="alert">
                             {mensaje}
                         </p>
                     ) : pagos.length === 0 ? (
@@ -93,6 +93,7 @@ function HistorialPagos() {
                                         <th>Servicio</th>
                                         <th>Fecha de cita</th>
                                         <th>Hora</th>
+                                        <th>Concepto</th>
                                         <th>Fecha de pago</th>
                                         <th>Total pagado</th>
                                         <th>Estado</th>
@@ -125,12 +126,20 @@ function HistorialPagos() {
                                                 {pago.cita?.hora || 'No disponible'}
                                             </td>
 
+                                            <td>{pago.tipo_pago || 'Saldo en el salón'}</td>
+
                                             <td>
                                                 {pago.fecha_pago?.split('T')[0] || pago.fecha_pago || 'No disponible'}
                                             </td>
 
                                             <td className="admin-historial-total">
                                                 ${Number(pago.total_pago || 0).toLocaleString('es-CO')}
+                                                {Number(pago.credito_aplicado) > 0 && (
+                                                    <small>
+                                                        <br />
+                                                        Abono aplicado: ${Number(pago.credito_aplicado).toLocaleString('es-CO')}
+                                                    </small>
+                                                )}
                                             </td>
 
                                             <td>

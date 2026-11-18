@@ -3,6 +3,18 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import logo from '../assets/image.png'; 
 import { API_ROOT } from '../lib/api';
 import { useSession } from "../context/useSession";
+import {
+  CalendarDays,
+  CalendarPlus,
+  CirclePlus,
+  Gift,
+  ListChecks,
+  MessageSquareText,
+  Award,
+  Scissors,
+  Star,
+  UserRound
+} from "lucide-react";
 
 export function Cliente() {
   const [message, SetMessage] = useState("");
@@ -13,7 +25,6 @@ export function Cliente() {
   const [realizar, SetRealizar] = useState(null);
   const [ultimas, SetUltimasCitas] = useState([]);
   const [nombreCliente, setNombreCliente] = useState("");
-  const [mostrarBienvenida, setMostrarBienvenida] = useState(true);
 
   const [fidelizacion, setFidelizacion] = useState({
     saldo_puntos: 0,
@@ -339,14 +350,6 @@ export function Cliente() {
     return () => clearTimeout(temporizador);
   }, [message]);
 
-  useEffect(() => {
-    const temporizador = window.setTimeout(() => {
-      setMostrarBienvenida(false);
-    }, 10000);
-
-    return () => window.clearTimeout(temporizador);
-  }, []);
-
   return (
     <div className="dashboard">
       <aside className="sidebar">
@@ -401,11 +404,9 @@ export function Cliente() {
       <main className="contenido">
         <div className="bienvenida">
           <p>
-            {mostrarBienvenida
-              ? nombreCliente
-                ? `¡Bienvenido, ${nombreCliente}!`
-                : "Bienvenido a tu panel de JC Alta Peluquería 👋"
-              : "Este es tu espacio para organizar tus citas y reservar tu próximo momento de bienestar."}
+            {nombreCliente
+              ? `Bienvenid@, ${nombreCliente}`
+              : "Panel de cliente"}
           </p>
         </div>
 
@@ -415,25 +416,25 @@ export function Cliente() {
 
         <div className="cards">
           <div className="card">
-            <h4>Total de citas</h4>
+            <h4><CalendarDays className="dashboard-icon" aria-hidden="true" /> Total de citas</h4>
             <h2>{cantidad}</h2>
             <span>Todas tus citas</span>
           </div>
 
           <div className="card naranja">
-            <h4>Pendientes</h4>
+            <h4><CalendarPlus className="dashboard-icon" aria-hidden="true" /> Pendientes</h4>
             <h2>{pendientes}</h2>
             <span>Por confirmar</span>
           </div>
 
           <div className="card verde">
-            <h4>Confirmadas</h4>
+            <h4><ListChecks className="dashboard-icon" aria-hidden="true" /> Confirmadas</h4>
             <h2>{confirmadas}</h2>
             <span>Próximas citas</span>
           </div>
 
           <div className="card azul">
-            <h4>Finalizadas</h4>
+            <h4><Star className="dashboard-icon" aria-hidden="true" /> Finalizadas</h4>
             <h2>{finalizadas}</h2>
             <span>Completadas</span>
           </div>
@@ -468,7 +469,7 @@ export function Cliente() {
               className="accion"
               onClick={() => navegarPerfil("/cita")}
             >
-              <span className="accion-icono" aria-hidden="true">▦</span>
+              <span className="accion-icono" aria-hidden="true"><CalendarPlus className="dashboard-icon" /></span>
               <div>
                 <h3>Agendar nueva cita</h3>
                 <p>Reserva tu próximo servicio</p>
@@ -479,7 +480,7 @@ export function Cliente() {
               className="accion"
               onClick={() => navegarPerfil("/citas")}
             >
-              <span className="accion-icono" aria-hidden="true">≡</span>
+              <span className="accion-icono" aria-hidden="true"><ListChecks className="dashboard-icon" /></span>
               <div>
                 <h3>Ver mis citas</h3>
                 <p>Consulta tu historial completo</p>
@@ -490,7 +491,7 @@ export function Cliente() {
               className="accion"
               onClick={() => navegarPerfil("/perfil")}
             >
-              <span className="accion-icono" aria-hidden="true">○</span>
+              <span className="accion-icono" aria-hidden="true"><UserRound className="dashboard-icon" /></span>
               <div>
                 <h3>Editar mi perfil</h3>
                 <p>Actualiza tus datos personales</p>
@@ -506,12 +507,12 @@ export function Cliente() {
                 PROGRAMA DE BENEFICIOS
               </span>
 
-              <h2>Velure Rewards</h2>
+              <h2>Programa de fidelización</h2>
 
               <p>Cada visita te acerca a nuevos beneficios.</p>
             </div>
 
-            <div className="fidelizacion-icono">✨</div>
+            <div className="fidelizacion-icono" aria-hidden="true"><Award className="dashboard-icon" /></div>
           </div>
 
           <div className="puntos-resumen">
@@ -523,7 +524,7 @@ export function Cliente() {
               <p>Puntos acumulados en tus servicios y reseñas</p>
             </div>
 
-            <div className="puntos-icono">★</div>
+            <div className="puntos-icono" aria-hidden="true"><Star className="dashboard-icon" /></div>
           </div>
 
           <div className="descuento-disponible">
@@ -572,7 +573,7 @@ export function Cliente() {
             <h3>¿Cómo ganar puntos?</h3>
 
             <div className="beneficio-puntos">
-              <span>✂️</span>
+              <span aria-hidden="true"><Scissors className="dashboard-icon" /></span>
 
               <div>
                 <h4>Finaliza tus servicios</h4>
@@ -583,7 +584,7 @@ export function Cliente() {
             </div>
 
             <div className="beneficio-puntos">
-              <span>⭐</span>
+              <span aria-hidden="true"><MessageSquareText className="dashboard-icon" /></span>
 
               <div>
                 <h4>Comparte tu experiencia</h4>
@@ -606,8 +607,10 @@ export function Cliente() {
                   className="movimiento-puntos"
                   key={movimiento.id}
                 >
-                  <div className="movimiento-icono">
-                    {movimiento.tipo === 'canje' ? '🎁' : '✨'}
+                  <div className="movimiento-icono" aria-hidden="true">
+                    {movimiento.tipo === 'canje'
+                      ? <Gift className="dashboard-icon" />
+                      : <CirclePlus className="dashboard-icon" />}
                   </div>
 
                   <div className="movimiento-info">
@@ -649,7 +652,7 @@ export function Cliente() {
 
           <form className="resena-crear" onSubmit={crearResena}>
             <div className="resena-form-title">
-              <span className="resena-form-icon" aria-hidden="true">✦</span>
+              <span className="resena-form-icon" aria-hidden="true"><MessageSquareText className="dashboard-icon" /></span>
               <div>
                 <h3>Nueva reseña</h3>
                 <p>Una reseña por cada cita finalizada.</p>
@@ -779,7 +782,7 @@ export function Cliente() {
                       {resena.comentario || "Sin comentario"}
                     </p>
                     <div className="resena-dirigida">
-                      <span aria-hidden="true">✂</span>
+                      <span aria-hidden="true"><Scissors className="dashboard-icon" /></span>
                       <div>
                         <strong>{resena.cita?.empleado?.nombre || "Profesional"}</strong>
                         <small>

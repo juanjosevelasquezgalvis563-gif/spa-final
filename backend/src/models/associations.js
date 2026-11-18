@@ -8,6 +8,9 @@ import PedidoDetalle from "./pedidoDetalles.js";
 import PasswordReset from "./password_resets.js";
 import Resena from "./reseña.js";
 import Pago from "./pagos.js";
+import PagoReserva from "./PagoReserva.js";
+import AbonoReserva from "./AbonoReserva.js";
+import AbonoReservaUso from "./AbonoReservaUso.js";
 
 
 Usuario.hasMany(Cita, {
@@ -88,4 +91,53 @@ Cita.hasOne(Pago, {
 Pago.belongsTo(Cita, {
     foreignKey: "cita_id",
     as: "cita"
+});
+
+Cita.hasMany(PagoReserva, {
+    foreignKey: "cita_id",
+    as: "reservasPago"
+});
+
+PagoReserva.belongsTo(Cita, {
+    foreignKey: "cita_id",
+    as: "cita"
+});
+
+PagoReserva.belongsTo(Usuario, {
+    foreignKey: "usuario_id",
+    as: "cliente"
+});
+
+PagoReserva.belongsTo(Usuario, {
+    foreignKey: "empleado_id",
+    as: "empleado"
+});
+
+PagoReserva.belongsTo(Servicio, {
+    foreignKey: "servicio_id"
+});
+
+Usuario.hasMany(AbonoReserva, {
+    foreignKey: "usuario_id",
+    as: "abonosReserva"
+});
+
+AbonoReserva.belongsTo(PagoReserva, {
+    foreignKey: "pago_reserva_id",
+    as: "pagoOrigen"
+});
+
+AbonoReserva.hasMany(AbonoReservaUso, {
+    foreignKey: "abono_id",
+    as: "usos"
+});
+
+AbonoReservaUso.belongsTo(AbonoReserva, {
+    foreignKey: "abono_id",
+    as: "abono"
+});
+
+AbonoReservaUso.belongsTo(PagoReserva, {
+    foreignKey: "pago_reserva_id",
+    as: "reserva"
 });
