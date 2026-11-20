@@ -27,6 +27,7 @@ const allowedOrigins = [
     "http://127.0.0.1:5174",
     "https://spa-final-an59.vercel.app",
     "https://spa-final-an59-git-develop-velure-spa.vercel.app",
+    "https://spa-final.onrender.com",
     frontendOrigin
 ].filter(Boolean);
 
