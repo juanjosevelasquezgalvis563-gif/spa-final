@@ -93,6 +93,7 @@ Pago.belongsTo(Cita, {
     as: "cita"
 });
 
+
 Cita.hasMany(PagoReserva, {
     foreignKey: "cita_id",
     as: "reservasPago"
