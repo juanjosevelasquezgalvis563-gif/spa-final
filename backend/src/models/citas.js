@@ -49,6 +49,7 @@ const Cita = db.define('Cita', {
 
     }
 },{
+    
     tableName: 'citas',
     timestamps: false
 
