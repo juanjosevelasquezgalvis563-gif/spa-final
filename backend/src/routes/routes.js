@@ -73,23 +73,25 @@ import { cargarImagenProducto } from "../middlewares/productImageUpload.js";
 const router = Router();
 
 
+
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     limit: 5,
-    standardHeaders: true,
+    standardHeaders: "draft-8",
     legacyHeaders: false,
 
     keyGenerator: (req) => {
-        const email = req.body?.email;
+        const email = typeof req.body?.email === "string"
+            ? req.body.email.trim().toLowerCase()
+            : "";
 
-        if (typeof email === "string" && email.trim()) {
-            return `login:${email.trim().toLowerCase()}`;
+        if (email) {
+            return `login:${email}`;
         }
 
         return `login:${ipKeyGenerator(req.ip)}`;
     },
 
-    
     skipSuccessfulRequests: true,
 
     message: {
