@@ -207,72 +207,120 @@ export async function cancelarCita(req, res) {
 }
 
 
+
 export async function finalizarCita(req, res) {
     try {
         const empleadoId = req.user.id;
         const id = req.params.id;
 
-        const cita = await Cita.findOne({
-            where: {
-                id: id,
-                empleado_id: empleadoId
+        const resultado = await db.transaction(async (transaction) => {
+
+            // Buscar y bloquear la cita para evitar procesos duplicados.
+            const cita = await Cita.findOne({
+                where: {
+                    id,
+                    empleado_id: empleadoId
+                },
+                transaction,
+                lock: transaction.LOCK.UPDATE
+            });
+
+            if (!cita) {
+                return {
+                    status: 404,
+                    message: "Cita no encontrada"
+                };
             }
+
+            if (cita.estado !== "en_curso" || !cita.inicio_atencion) {
+                return {
+                    status: 400,
+                    message: "La cita debe estar en curso antes de finalizarla"
+                };
+            }
+
+            const servicio = await Servicio.findByPk(
+                cita.servicio_id,
+                { transaction }
+            );
+
+            if (!servicio) {
+                return {
+                    status: 404,
+                    message: "Servicio no encontrado"
+                };
+            }
+
+            // Verificar que no existan puntos acreditados anteriormente.
+            const movimientoExistente = await MovimientoPuntos.findOne({
+                where: {
+                    cita_id: cita.id,
+                    tipo: "acumulacion"
+                },
+                transaction
+            });
+
+            if (movimientoExistente) {
+                return {
+                    status: 409,
+                    message: "Esta cita ya tiene puntos acreditados"
+                };
+            }
+
+            const finAtencion = new Date();
+
+            const duracionMinutos = Math.max(
+                0,
+                Math.floor(
+                    (finAtencion.getTime() -
+                    new Date(cita.inicio_atencion).getTime()) / 60000
+                )
+            );
+
+            // Un punto por cada $2.000 del servicio.
+            const puntos = Math.floor(
+                Number(servicio.precio) / 2000
+            );
+
+            if (!Number.isFinite(puntos) || puntos < 0) {
+                throw new Error("El precio del servicio no es válido");
+            }
+
+            cita.estado = "finalizada";
+            cita.fin_atencion = finAtencion;
+
+            await cita.save({ transaction });
+
+            if (puntos > 0) {
+                await MovimientoPuntos.create({
+                    usuario_id: cita.usuario_id,
+                    cita_id: cita.id,
+                    tipo: "acumulacion",
+                    puntos,
+                    descripcion:
+                        `Puntos por finalizar el servicio: ${servicio.nombre}`
+                }, { transaction });
+            }
+
+            return {
+                status: 200,
+                message: "Cita finalizada correctamente",
+                puntos_ganados: puntos,
+                duracion_minutos: duracionMinutos
+            };
         });
 
-        if (!cita) {
-            return res.status(404).json({
-                message: 'Cita no encontrada'
-            });
-        }
-
-        if (cita.estado !== 'en_curso' || !cita.inicio_atencion) {
-            return res.status(400).json({
-                message: 'La cita debe estar en curso antes de finalizarla'
-            });
-        }
-
-        const servicio = await Servicio.findByPk(cita.servicio_id);
-
-        if (!servicio) {
-            return res.status(404).json({
-                message: 'Servicio no encontrado'
-            });
-        }
-
-        const finAtencion = new Date();
-        const duracionMinutos = Math.max(
-            0,
-            Math.floor((finAtencion.getTime() - new Date(cita.inicio_atencion).getTime()) / 60000)
-        );
-        cita.estado = 'finalizada';
-        cita.fin_atencion = finAtencion;
-        await cita.save();
-
-        const puntos = Math.floor(Number(servicio.precio) / 1000);
-
-        if (puntos > 0) {
-            await MovimientoPuntos.create({
-                usuario_id: cita.usuario_id,
-                cita_id: cita.id,
-                tipo: 'acumulacion',
-                puntos: puntos,
-                descripcion: `Puntos por el servicio: ${servicio.nombre}`
-            });
-        }
-
-        return res.status(200).json({
-            message: 'Cita finalizada',
-            puntos_ganados: puntos,
-            duracion_minutos: duracionMinutos
-        });
+        return res.status(resultado.status).json(resultado);
 
     } catch (error) {
-        console.error(error);
+        console.error("Error al finalizar la cita:", error);
+
         return res.status(500).json({
-            message: 'Error al finalizar la cita'
+            message: "Error al finalizar la cita"
         });
     }
 }
+
 
 
 export async function citaRealizarEmpleado(req, res) {
