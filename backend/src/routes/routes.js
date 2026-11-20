@@ -40,11 +40,6 @@ import {admin} from "../controllers/AdminController.js";
 import {middlewareAdmin} from "../middlewares/middlewareAdmin.js";
 import { productosAdmin } from "../controllers/AdminController.js";
 import { productosCatalogo } from "../controllers/AdminController.js";
-import {
-    solicitarCompra,
-    solicitudesCompraAdmin,
-    actualizarSolicitudCompra
-} from "../controllers/PedidoController.js";
 import { productosCreate } from "../controllers/AdminController.js";
 import {productosUpdate} from "../controllers/AdminController.js";
 import { descontarStockProducto } from "../controllers/AdminController.js";
@@ -77,14 +72,31 @@ import { cargarImagenProducto } from "../middlewares/productImageUpload.js";
 
 const router = Router();
 
+
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 5,
+    limit: 5,
     standardHeaders: true,
-    message:{
-        message: "Demasiadas solicitudes. Intenta de nuevo en 15 minutos."
+    legacyHeaders: false,
+
+    keyGenerator: (req) => {
+        const email = req.body?.email;
+
+        if (typeof email === "string" && email.trim()) {
+            return `login:${email.trim().toLowerCase()}`;
+        }
+
+        return `login:${ipKeyGenerator(req.ip)}`;
+    },
+
+    
+    skipSuccessfulRequests: true,
+
+    message: {
+        message: "Has superado los 5 intentos de inicio de sesión. Intenta nuevamente en 15 minutos."
     }
-})
+});
+
 
 const captchaLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -152,7 +164,6 @@ router.post("/logout", (req, res) => {
 router.get('/cliente/servicios',middlewareCliente,servicios);
 router.get('/cliente/empleados', middlewareCliente, empleadosDisponibles);
 router.get('/cliente/productos', middlewareCliente, productosCatalogo);
-router.post('/cliente/pedidos/solicitar', middlewareCliente, carritoActionLimiter, solicitarCompra);
 router.post('/cliente', middlewareCliente, carritoActionLimiter, crearPagoReserva);
 router.get('/cliente',middlewareCliente, obtenerCliente);
 router.get('/cliente/reserva/:referencia', middlewareCliente, obtenerEstadoPagoReserva);
