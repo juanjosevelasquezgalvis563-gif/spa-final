@@ -75,6 +75,7 @@ export async function registro(req, res) {
         let tieneMinuscula = false;
         let tieneNumero = false;
         let tieneCaracterEspecial = false;
+        
 
         for (const caracter of password) {
             if (caracter >= "A" && caracter <= "Z") tieneMayuscula = true;
