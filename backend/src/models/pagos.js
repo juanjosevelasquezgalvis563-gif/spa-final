@@ -33,6 +33,7 @@ const Pago = db.define('Pago', {
         allowNull: true
     }
 }, {
+    
     tableName: 'pagos',
     timestamps: false
 });
