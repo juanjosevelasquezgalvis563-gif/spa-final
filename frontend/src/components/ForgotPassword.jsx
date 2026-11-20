@@ -20,20 +20,17 @@ export function ForgotPassword() {
     setLoading(true);
 
     try {
-      
-const response = await fetch(
-    `${API_ROOT}/inser/forgot-password`,
-    {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        credentials: "include",
-        body: JSON.stringify({
-            email: email.trim()
-        })
-    }
-);
+
+      const response = await fetch(
+        `${API_ROOT}/inser/forgot-password`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email }),
+        }
+      );
 
 
       const data = await response.json().catch(() => ({}));
