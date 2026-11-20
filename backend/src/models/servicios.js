@@ -22,6 +22,7 @@ const Servicio = db.define('Servicio',{
     type: DataTypes.STRING,
    },
 },{
+    
     tableName: 'servicios',
     timestamps: false
 });
