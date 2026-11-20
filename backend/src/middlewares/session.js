@@ -1,4 +1,6 @@
+
 import jwt from "jsonwebtoken";
+
 import {
     adminProfileCookieOptions,
     sessionCookieOptions,
@@ -8,25 +10,51 @@ import {
 
 export function obtenerSesion(req, res) {
     const token = req.cookies?.token;
-    if (!token) return null;
+
+    if (!token) {
+        return null;
+    }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(
+            token,
+            process.env.JWT_SECRET
+        );
+
         const { iat, exp, ...claims } = decoded;
+
         const tokenRenovado = jwt.sign(
             claims,
             process.env.JWT_SECRET,
-            { expiresIn: SESSION_IDLE_TIMEOUT_SECONDS }
+            {
+                expiresIn: SESSION_IDLE_TIMEOUT_SECONDS
+            }
         );
 
-        res.cookie("token", tokenRenovado, sessionCookieOptions);
-        if (decoded.rol === "administrador" && req.cookies.adminPerfil) {
-            res.cookie("adminPerfil", req.cookies.adminPerfil, adminProfileCookieOptions);
+        res.cookie(
+            "token",
+            tokenRenovado,
+            sessionCookieOptions
+        );
+
+        if (
+            decoded.rol === "administrador" &&
+            req.cookies?.adminPerfil
+        ) {
+            res.cookie(
+                "adminPerfil",
+                req.cookies.adminPerfil,
+                adminProfileCookieOptions
+            );
         }
 
         return decoded;
-    } catch {
+
+    } catch (error) {
+        console.error("Error validando sesión:", error.message);
+
         res.clearCookie("token", authCookieOptions);
+
         return null;
     }
 }
