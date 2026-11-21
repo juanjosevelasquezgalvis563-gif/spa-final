@@ -65,19 +65,18 @@ export async function crearResena(req, res) {
         });
 
         await MovimientoPuntos.create({
-            usuario_id: usuarioId,
-            resena_id: nuevaResena.id,
-            tipo: "acumulacion",
-            puntos: 20,
-            descripcion: "Puntos por publicar una reseña"
-        });
+    usuario_id: usuarioId,
+    resena_id: nuevaResena.id,
+    tipo: "acumulacion",
+    puntos: 5,
+    descripcion: "5 puntos por publicar una reseña válida"
+});
 
-        return res.status(201).json({
-            message: "Reseña registrada correctamente",
-            puntos_ganados: 20,
-            resena: nuevaResena
-        });
-
+       return res.status(201).json({
+    message: "Reseña registrada correctamente",
+    puntos_ganados: 5,
+    resena: nuevaResena
+});
     } catch (error) {
         console.error("Error al registrar reseña:", error);
 
