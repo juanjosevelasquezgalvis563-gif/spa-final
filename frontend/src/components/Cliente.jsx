@@ -1,6 +1,7 @@
+
 import { useCallback, useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import logo from '../assets/image.png'; 
+import logo from '../assets/image.png';
 import { API_ROOT } from '../lib/api';
 import { useSession } from "../context/useSession";
 import {
@@ -29,9 +30,12 @@ export function Cliente() {
   const [fidelizacion, setFidelizacion] = useState({
     saldo_puntos: 0,
     descuentoDisponible: 0,
-    descuentoMaximo: 15000,
+    descuentoMaximo: 0,
     historial: []
   });
+  const [citasParaDescuento, setCitasParaDescuento] = useState([]);
+  const [citaSeleccionadaDescuento, setCitaSeleccionadaDescuento] = useState("");
+  const [cargandoCitasDescuento, setCargandoCitasDescuento] = useState(false);
 
   const [citasParaResena, setCitasParaResena] = useState([]);
   const [citaSeleccionada, setCitaSeleccionada] = useState("");
@@ -39,6 +43,7 @@ export function Cliente() {
   const [comentario, setComentario] = useState("");
   const [resenas, setResenas] = useState([]);
   const [publicandoResena, setPublicandoResena] = useState(false);
+  const [canjeandoDescuento, setCanjeandoDescuento] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -67,6 +72,7 @@ export function Cliente() {
       const url = esPerfilAdmin
         ? `${API_ROOT}/inser/administrador/perfiles?rol=cliente`
         : `${API_ROOT}/inser/me`;
+
       const response = await fetch(url, { credentials: "include" });
       const data = await response.json();
 
@@ -87,6 +93,34 @@ export function Cliente() {
       SetMessage('No se pudo cargar el nombre del cliente');
     }
   }, [perfilId]);
+
+  async function obtenerCitasParaDescuento() {
+    try {
+      setCargandoCitasDescuento(true);
+
+      const response = await fetch(
+        `${API_ROOT}/inser/cliente/citasParaDescuento`,
+        {
+          credentials: "include"
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        SetMessage(data.message || "No se pudieron consultar las citas.");
+        return;
+      }
+
+      setCitasParaDescuento(Array.isArray(data) ? data : []);
+
+    } catch (error) {
+      console.error("Error al consultar citas para descuento:", error);
+      SetMessage("Error al consultar las citas disponibles.");
+    } finally {
+      setCargandoCitasDescuento(false);
+    }
+  }
 
   async function cantidadCitas() {
     try {
@@ -191,7 +225,7 @@ export function Cliente() {
         setFidelizacion({
           saldo_puntos: Number(data.saldo_puntos) || 0,
           descuentoDisponible: Number(data.descuentoDisponible) || 0,
-          descuentoMaximo: Number(data.descuentoMaximo) || 15000,
+          descuentoMaximo: Number(data.descuentoMaximo) || 0,
           historial: Array.isArray(data.historial)
             ? data.historial
             : []
@@ -202,6 +236,78 @@ export function Cliente() {
     } catch (error) {
       console.error(error);
       SetMessage('Error al consultar los puntos');
+    }
+  }
+
+  async function canjearDescuento() {
+
+    if (perfilId) {
+      SetMessage("No puedes canjear puntos desde la vista de administrador.");
+      return;
+    }
+
+    if (canjeandoDescuento) return;
+
+    if (!citaSeleccionadaDescuento) {
+      SetMessage("Selecciona una cita para aplicar el descuento.");
+      return;
+    }
+
+    if (!fidelizacion.descuentoDisponible) {
+      SetMessage("Todavía no tienes un descuento disponible.");
+      return;
+    }
+
+    const confirmado = window.confirm(
+      `¿Deseas aplicar el descuento del ${fidelizacion.descuentoDisponible}% a esta cita? Se descontarán los puntos correspondientes.`
+    );
+
+    if (!confirmado) return;
+
+    setCanjeandoDescuento(true);
+
+    try {
+
+      const response = await fetch(
+        `${API_ROOT}/inser/cliente/fidelizacion/canjear`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            cita_id: Number(citaSeleccionadaDescuento),
+            porcentaje: fidelizacion.descuentoDisponible
+          })
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        SetMessage(data.message || "No se pudo aplicar el descuento.");
+        return;
+      }
+
+      SetMessage(data.message || "Descuento aplicado correctamente.");
+
+      // Limpiar la selección.
+      setCitaSeleccionadaDescuento("");
+
+      // Actualizar puntos disponibles.
+      await obtenerFidelizacion();
+
+      // Actualizar citas que todavía permiten descuentos.
+      await obtenerCitasParaDescuento();
+
+    } catch (error) {
+
+      console.error("Error al canjear descuento:", error);
+      SetMessage("Error al intentar aplicar el descuento.");
+
+    } finally {
+      setCanjeandoDescuento(false);
     }
   }
 
@@ -306,7 +412,7 @@ export function Cliente() {
 
       if (response.ok) {
         SetMessage(
-          `${data.message}. Ganaste ${data.puntos_ganados ?? 20} puntos.`
+          `${data.message}. Ganaste ${data.puntos_ganados ?? 5} puntos.`
         );
 
         setCitaSeleccionada("");
@@ -337,6 +443,7 @@ export function Cliente() {
     ultimasCitas();
     obtenerFidelizacion();
     obtenerResenas();
+    obtenerCitasParaDescuento();
     prepararCitasParaResena();
   }, [obtenerNombreCliente]);
 
@@ -354,49 +461,24 @@ export function Cliente() {
     <div className="dashboard">
       <aside className="sidebar">
         <h2 className="logo">
-  <img src={logo} alt="Logo JC Alta Peluquería" /></h2>
+          <img src={logo} alt="Logo JC Alta Peluquería" />
+        </h2>
 
-        <button onClick={() => navegarPerfil("/citas")}>
-          Mis citas
-        </button>
-
-        <button onClick={() => navegarPerfil("/cita")}>
-          Agendar cita
-        </button>
-
-        <button onClick={() => navegarPerfil("/cliente/productos")}>
-          Productos
-        </button>
-
-        <button onClick={() => navegarPerfil("/perfil")}>
-          Actualizar datos
-        </button>
-
-        <button onClick={() => navigate("/")}>
-          Ir a la página principal
-        </button>
+        <button onClick={() => navegarPerfil("/citas")}>Mis citas</button>
+        <button onClick={() => navegarPerfil("/cita")}>Agendar cita</button>
+        <button onClick={() => navegarPerfil("/cliente/productos")}>Productos</button>
+        <button onClick={() => navegarPerfil("/perfil")}>Actualizar datos</button>
+        <button onClick={() => navigate("/")}>Ir a la página principal</button>
 
         <button onClick={cerrarSesion}>
           {perfilId ? "Volver al panel administrador" : "Cerrar sesión"}
         </button>
 
-        <button
-          onClick={() =>
-            document.getElementById('fidelizacion')?.scrollIntoView({
-              behavior: 'smooth'
-            })
-          }
-        >
+        <button onClick={() => document.getElementById("fidelizacion")?.scrollIntoView({ behavior: "smooth" })}>
           Mis puntos
         </button>
 
-        <button
-          onClick={() =>
-            document.getElementById('resenas')?.scrollIntoView({
-              behavior: 'smooth'
-            })
-          }
-        >
+        <button onClick={() => document.getElementById("resenas")?.scrollIntoView({ behavior: "smooth" })}>
           Calificar servicio
         </button>
       </aside>
@@ -416,25 +498,25 @@ export function Cliente() {
 
         <div className="cards">
           <div className="card">
-            <h4><CalendarDays className="dashboard-icon" aria-hidden="true" /> Total de citas</h4>
+            <h4><CalendarDays className="dashboard-icon" /> Total de citas</h4>
             <h2>{cantidad}</h2>
             <span>Todas tus citas</span>
           </div>
 
           <div className="card naranja">
-            <h4><CalendarPlus className="dashboard-icon" aria-hidden="true" /> Pendientes</h4>
+            <h4><CalendarPlus className="dashboard-icon" /> Pendientes</h4>
             <h2>{pendientes}</h2>
             <span>Por confirmar</span>
           </div>
 
           <div className="card verde">
-            <h4><ListChecks className="dashboard-icon" aria-hidden="true" /> Confirmadas</h4>
+            <h4><ListChecks className="dashboard-icon" /> Confirmadas</h4>
             <h2>{confirmadas}</h2>
             <span>Próximas citas</span>
           </div>
 
           <div className="card azul">
-            <h4><Star className="dashboard-icon" aria-hidden="true" /> Finalizadas</h4>
+            <h4><Star className="dashboard-icon" /> Finalizadas</h4>
             <h2>{finalizadas}</h2>
             <span>Completadas</span>
           </div>
@@ -458,40 +540,29 @@ export function Cliente() {
               <p>{realizar?.empleado?.nombre || "No asignado"}</p>
 
               <h3>Estado</h3>
-              <span className="estado">
-                {realizar?.estado || "Sin cita"}
-              </span>
+              <span className="estado">{realizar?.estado || "Sin cita"}</span>
             </div>
           </div>
 
           <div className="acciones">
-            <button
-              className="accion"
-              onClick={() => navegarPerfil("/cita")}
-            >
-              <span className="accion-icono" aria-hidden="true"><CalendarPlus className="dashboard-icon" /></span>
+            <button className="accion" onClick={() => navegarPerfil("/cita")}>
+              <span className="accion-icono"><CalendarPlus className="dashboard-icon" /></span>
               <div>
                 <h3>Agendar nueva cita</h3>
                 <p>Reserva tu próximo servicio</p>
               </div>
             </button>
 
-            <button
-              className="accion"
-              onClick={() => navegarPerfil("/citas")}
-            >
-              <span className="accion-icono" aria-hidden="true"><ListChecks className="dashboard-icon" /></span>
+            <button className="accion" onClick={() => navegarPerfil("/citas")}>
+              <span className="accion-icono"><ListChecks className="dashboard-icon" /></span>
               <div>
                 <h3>Ver mis citas</h3>
                 <p>Consulta tu historial completo</p>
               </div>
             </button>
 
-            <button
-              className="accion"
-              onClick={() => navegarPerfil("/perfil")}
-            >
-              <span className="accion-icono" aria-hidden="true"><UserRound className="dashboard-icon" /></span>
+            <button className="accion" onClick={() => navegarPerfil("/perfil")}>
+              <span className="accion-icono"><UserRound className="dashboard-icon" /></span>
               <div>
                 <h3>Editar mi perfil</h3>
                 <p>Actualiza tus datos personales</p>
@@ -500,33 +571,33 @@ export function Cliente() {
           </div>
         </div>
 
+        {/* FIDELIZACIÓN */}
         <section className="fidelizacion" id="fidelizacion">
           <div className="fidelizacion-cabecera">
             <div>
-              <span className="fidelizacion-etiqueta">
-                PROGRAMA DE BENEFICIOS
-              </span>
-
+              <span className="fidelizacion-etiqueta">PROGRAMA DE BENEFICIOS</span>
               <h2>Programa de fidelización</h2>
-
               <p>Cada visita te acerca a nuevos beneficios.</p>
             </div>
 
-            <div className="fidelizacion-icono" aria-hidden="true"><Award className="dashboard-icon" /></div>
+            <div className="fidelizacion-icono">
+              <Award className="dashboard-icon" />
+            </div>
           </div>
 
           <div className="puntos-resumen">
             <div>
               <span>Mis puntos disponibles</span>
-
               <h2>{fidelizacion.saldo_puntos}</h2>
-
               <p>Puntos acumulados en tus servicios y reseñas</p>
             </div>
 
-            <div className="puntos-icono" aria-hidden="true"><Star className="dashboard-icon" /></div>
+            <div className="puntos-icono">
+              <Star className="dashboard-icon" />
+            </div>
           </div>
 
+          {/* DESCUENTOS */}
           <div className="descuento-disponible">
             <h3>Mi descuento disponible</h3>
 
@@ -534,65 +605,110 @@ export function Cliente() {
 
             {fidelizacion.descuentoDisponible === 0 ? (
               <p>
-                Acumula 100 puntos para desbloquear tu primer descuento.
+                Acumula 300 puntos para desbloquear tu primer descuento.
               </p>
             ) : (
               <p>
-                Tienes disponible un descuento del{' '}
+                Tienes disponible un descuento del{" "}
                 {fidelizacion.descuentoDisponible}% en servicios.
                 El ahorro máximo es de $
-                {fidelizacion.descuentoMaximo.toLocaleString('es-CO')} COP
-                por cita.
+                {fidelizacion.descuentoMaximo.toLocaleString("es-CO")} COP.
               </p>
             )}
 
             <div className="niveles-descuento">
               <div>
-                <strong>100 puntos</strong>
-                <span>5% de descuento</span>
+                <strong>300 puntos</strong>
+                <span>5% de descuento · máximo $6.000</span>
               </div>
 
               <div>
-                <strong>200 puntos</strong>
-                <span>10% de descuento</span>
+                <strong>600 puntos</strong>
+                <span>10% de descuento · máximo $12.000</span>
               </div>
 
               <div>
-                <strong>400 puntos</strong>
-                <span>15% de descuento</span>
+                <strong>900 puntos</strong>
+                <span>15% de descuento · máximo $18.000</span>
               </div>
             </div>
 
-            <p>
-              El descuento se muestra como beneficio disponible.
-              El canje debe coordinarse con el salón al reservar el servicio.
-            </p>
+            {fidelizacion.descuentoDisponible > 0 && (
+              <>
+                <label htmlFor="cita-descuento">
+                  Selecciona la cita donde deseas aplicar tu descuento:
+                </label>
+
+                <select
+                  id="cita-descuento"
+                  value={citaSeleccionadaDescuento}
+                  onChange={(e) => setCitaSeleccionadaDescuento(e.target.value)}
+                  disabled={canjeandoDescuento || Boolean(perfilId) || cargandoCitasDescuento}
+                >
+                  <option value="">Seleccionar una cita</option>
+
+                  {citasParaDescuento.map((cita) => (
+                    <option key={cita.id} value={cita.id}>
+                      {cita.Servicio?.nombre || "Servicio"} -{" "}
+                      {cita.fecha?.split("T")[0]} -{" "}
+                      {cita.hora?.slice(0, 5)}
+                    </option>
+                  ))}
+                </select>
+
+                {cargandoCitasDescuento && <p>Cargando citas disponibles...</p>}
+
+                {!cargandoCitasDescuento && citasParaDescuento.length === 0 && (
+                  <p>
+                    No tienes citas pendientes o confirmadas disponibles
+                    para aplicar descuentos.
+                  </p>
+                )}
+
+                <button
+                  type="button"
+                  className="resena-publicar"
+                  onClick={canjearDescuento}
+                  disabled={
+                    canjeandoDescuento ||
+                    Boolean(perfilId) ||
+                    !citaSeleccionadaDescuento ||
+                    citasParaDescuento.length === 0
+                  }
+                >
+                  {canjeandoDescuento
+                    ? "Canjeando..."
+                    : `Aplicar descuento del ${fidelizacion.descuentoDisponible}%`}
+                </button>
+              </>
+            )}
           </div>
 
+          {/* CÓMO GANAR PUNTOS */}
           <div className="como-ganar-puntos">
             <h3>¿Cómo ganar puntos?</h3>
 
             <div className="beneficio-puntos">
-              <span aria-hidden="true"><Scissors className="dashboard-icon" /></span>
-
+              <span><Scissors className="dashboard-icon" /></span>
               <div>
                 <h4>Finaliza tus servicios</h4>
                 <p>
-                  Acumula puntos según las reglas de fidelización del negocio.
+                  Gana 1 punto por cada $2.000 COP del valor del servicio.
+                  Los puntos se acreditan cuando el empleado finaliza la cita.
                 </p>
               </div>
             </div>
 
             <div className="beneficio-puntos">
-              <span aria-hidden="true"><MessageSquareText className="dashboard-icon" /></span>
-
+              <span><MessageSquareText className="dashboard-icon" /></span>
               <div>
                 <h4>Comparte tu experiencia</h4>
-                <p>Gana 20 puntos al publicar una reseña válida.</p>
+                <p>Gana 5 puntos al publicar una reseña válida.</p>
               </div>
             </div>
           </div>
 
+          {/* HISTORIAL DE PUNTOS */}
           <div className="historial-puntos">
             <h3>Historial de puntos</h3>
 
@@ -603,38 +719,28 @@ export function Cliente() {
               </p>
             ) : (
               fidelizacion.historial.map((movimiento) => (
-                <div
-                  className="movimiento-puntos"
-                  key={movimiento.id}
-                >
-                  <div className="movimiento-icono" aria-hidden="true">
-                    {movimiento.tipo === 'canje'
+                <div className="movimiento-puntos" key={movimiento.id}>
+                  <div className="movimiento-icono">
+                    {movimiento.tipo === "canje"
                       ? <Gift className="dashboard-icon" />
                       : <CirclePlus className="dashboard-icon" />}
                   </div>
 
                   <div className="movimiento-info">
-                    <h4>
-                      {movimiento.descripcion || 'Movimiento de puntos'}
-                    </h4>
-
+                    <h4>{movimiento.descripcion || "Movimiento de puntos"}</h4>
                     <span>
                       {movimiento.fecha_creacion
-                        ? new Date(
-                            movimiento.fecha_creacion
-                          ).toLocaleDateString('es-CO')
-                        : ''}
+                        ? new Date(movimiento.fecha_creacion).toLocaleDateString("es-CO")
+                        : ""}
                     </span>
                   </div>
 
-                  <strong
-                    className={
-                      movimiento.tipo === 'canje'
-                        ? 'puntos-restados'
-                        : 'puntos-ganados'
-                    }
-                  >
-                    {movimiento.tipo === 'canje' ? '-' : '+'}
+                  <strong className={
+                    movimiento.tipo === "canje"
+                      ? "puntos-restados"
+                      : "puntos-ganados"
+                  }>
+                    {movimiento.tipo === "canje" ? "-" : "+"}
                     {movimiento.puntos}
                   </strong>
                 </div>
@@ -643,6 +749,7 @@ export function Cliente() {
           </div>
         </section>
 
+        {/* RESEÑAS */}
         <section className="formulario-resena" id="resenas">
           <div className="resena-encabezado">
             <span className="resena-etiqueta">TU EXPERIENCIA CUENTA</span>
@@ -652,7 +759,9 @@ export function Cliente() {
 
           <form className="resena-crear" onSubmit={crearResena}>
             <div className="resena-form-title">
-              <span className="resena-form-icon" aria-hidden="true"><MessageSquareText className="dashboard-icon" /></span>
+              <span className="resena-form-icon">
+                <MessageSquareText className="dashboard-icon" />
+              </span>
               <div>
                 <h3>Nueva reseña</h3>
                 <p>Una reseña por cada cita finalizada.</p>
@@ -661,18 +770,19 @@ export function Cliente() {
 
             {citasParaResena.length === 0 ? (
               <p className="resena-vacia">
-                No tienes citas pendientes por calificar. Cuando finalices un
-                servicio, podrás dejar aquí tu opinión.
+                No tienes citas pendientes por calificar.
               </p>
             ) : (
               <>
                 <label htmlFor="cita-resena">Elige el servicio</label>
+
                 <select
                   id="cita-resena"
                   value={citaSeleccionada}
                   onChange={(e) => setCitaSeleccionada(e.target.value)}
                 >
                   <option value="">Seleccionar una cita finalizada</option>
+
                   {citasParaResena.map((cita) => (
                     <option key={cita.id} value={cita.id}>
                       {cita.Servicio?.nombre || "Servicio"} ·{" "}
@@ -682,44 +792,22 @@ export function Cliente() {
                   ))}
                 </select>
 
-                {citaSeleccionada && (() => {
-                  const cita = citasParaResena.find(
-                    (item) => Number(item.id) === Number(citaSeleccionada)
-                  );
-
-                  return cita ? (
-                    <div className="resena-cita-seleccionada">
-                      <span className="resena-cita-icono" aria-hidden="true">✓</span>
-                      <div>
-                        <strong>{cita.Servicio?.nombre || "Servicio"}</strong>
-                        <span>
-                          Atendido por {cita.empleado?.nombre || "profesional no asignado"}
-                        </span>
-                        <small>
-                          {cita.fecha
-                            ? new Date(cita.fecha).toLocaleDateString("es-CO")
-                            : ""}
-                        </small>
-                      </div>
-                    </div>
-                  ) : null;
-                })()}
-
                 <fieldset className="resena-calificacion">
                   <legend>¿Cómo calificarías la atención?</legend>
-                  <div className="estrellas-resena" role="group" aria-label="Calificación">
+
+                  <div className="estrellas-resena" role="group">
                     {[1, 2, 3, 4, 5].map((estrella) => (
                       <button
                         key={estrella}
                         type="button"
                         className={estrella <= calificacion ? "seleccionada" : ""}
                         onClick={() => setCalificacion(estrella)}
-                        aria-label={`${estrella} ${estrella === 1 ? "estrella" : "estrellas"}`}
                         aria-pressed={calificacion === estrella}
                       >
                         {estrella <= calificacion ? "★" : "☆"}
                       </button>
                     ))}
+
                     <span>
                       {calificacion > 0
                         ? `${calificacion} de 5`
@@ -729,6 +817,7 @@ export function Cliente() {
                 </fieldset>
 
                 <label htmlFor="comentario-resena">Tu comentario (opcional)</label>
+
                 <textarea
                   id="comentario-resena"
                   value={comentario}
@@ -736,7 +825,10 @@ export function Cliente() {
                   maxLength={500}
                   placeholder="¿Qué fue lo que más te gustó?"
                 />
-                <span className="resena-caracteres">{comentario.length}/500</span>
+
+                <span className="resena-caracteres">
+                  {comentario.length}/500
+                </span>
 
                 <button
                   className="resena-publicar"
@@ -745,17 +837,22 @@ export function Cliente() {
                 >
                   {publicandoResena ? "Publicando..." : "Publicar reseña"}
                 </button>
-                <p className="resena-puntos">Al publicar una reseña válida ganas 20 puntos.</p>
+
+                <p className="resena-puntos">
+                  Al publicar una reseña válida ganas 5 puntos.
+                </p>
               </>
             )}
           </form>
 
+          {/* RESEÑAS PUBLICADAS */}
           <div className="resenas-publicadas">
             <div className="resenas-publicadas-cabecera">
               <div>
                 <span className="resena-etiqueta">TU HISTORIAL</span>
                 <h3>Mis reseñas</h3>
               </div>
+
               <span className="resenas-conteo">{resenas.length}</span>
             </div>
 
@@ -768,23 +865,28 @@ export function Cliente() {
                 {resenas.map((resena) => (
                   <article className="resena-publicada" key={resena.id}>
                     <div className="resena-publicada-top">
-                      <span className="resena-estrellas-lectura" aria-label={`${resena.calificacion} de 5 estrellas`}>
+                      <span className="resena-estrellas-lectura">
                         {"★".repeat(resena.calificacion)}
                         <span>{"☆".repeat(5 - resena.calificacion)}</span>
                       </span>
+
                       <time>
                         {resena.fecha_creacion
                           ? new Date(resena.fecha_creacion).toLocaleDateString("es-CO")
                           : ""}
                       </time>
                     </div>
+
                     <p className="resena-publicada-comentario">
                       {resena.comentario || "Sin comentario"}
                     </p>
+
                     <div className="resena-dirigida">
-                      <span aria-hidden="true"><Scissors className="dashboard-icon" /></span>
+                      <span><Scissors className="dashboard-icon" /></span>
                       <div>
-                        <strong>{resena.cita?.empleado?.nombre || "Profesional"}</strong>
+                        <strong>
+                          {resena.cita?.empleado?.nombre || "Profesional"}
+                        </strong>
                         <small>
                           {resena.cita?.Servicio?.nombre || "Servicio"}
                         </small>
