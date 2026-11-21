@@ -66,6 +66,7 @@
 
 html {
     scroll-behavior: smooth;
+    text-size-adjust: 100%;
     -webkit-text-size-adjust: 100%;
 }
 
@@ -5448,9 +5449,6 @@ button:hover {
 
 /* Flecha personalizada negra para los selects (Servicio, Empleado, etc.) */
 .cita-campo select {
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
     background-repeat: no-repeat;
     background-position: right 20px center;
@@ -5484,9 +5482,7 @@ button:hover {
     -webkit-appearance: none;
     margin: 0;
 }
-.cita-campo input[type="number"] {
-    -moz-appearance: textfield;
-}
+
 
 /* RESPONSIVE DESIGN */
 
@@ -5603,7 +5599,10 @@ button:hover {
         0 20px 40px -15px rgba(0, 0, 0, 0.7),
         0 0 0 1px rgba(255, 255, 255, 0.03);
     padding: 40px;
-    backdrop-filter: blur(12px);
+    .mi-elemento {
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
     transition: transform 0.4s var(--transition-smooth), 
                 box-shadow 0.4s var(--transition-smooth),
                 border-color 0.4s var(--transition-smooth);
@@ -18209,7 +18208,10 @@ PROFESIONALES
   color: #fff;
   font-size: 11px;
   font-weight: 700;
-  backdrop-filter: blur(8px);
+  .mi-elemento {
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
 }
 
 .catalogo-producto-estado.agotado {
@@ -18403,10 +18405,13 @@ PROFESIONALES
   border-radius: 16px;
   background: linear-gradient(145deg, rgba(255, 255, 255, .14), rgba(255, 255, 255, .045));
   box-shadow: 0 28px 60px rgba(0, 0, 0, .34), inset 0 1px rgba(255, 255, 255, .13);
-  backdrop-filter: blur(12px);
-  transform: rotateY(-8deg) rotateX(3deg);
+  .mi-elemento {
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}transform: rotateY(-8deg) rotateX(3deg);
   transition: transform .35s ease;
 }
+
 
 .landing-admin-access:hover .landing-admin-preview {
   transform: rotateY(0) rotateX(0) translateY(-4px);
@@ -19525,8 +19530,8 @@ PROFESIONALES
               0 0 0 46px rgba(42, 49, 61, .018);
   content: "";
 }
-.empleado-dashboard .empleado-quick-card > :not(::before) {
-  position: relative;
+.empleado-dashboard .empleado-quick-card > * {
+    position: relative;
 }
 .empleado-dashboard .empleado-quick-card .empleado-heading-mark,
 .empleado-dashboard .empleado-quick-card .empleado-quick-icon {
