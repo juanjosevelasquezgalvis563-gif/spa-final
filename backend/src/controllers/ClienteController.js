@@ -410,3 +410,38 @@ export async function obtenerCitasParaResena(req, res) {
     });
   }
 }
+
+
+
+export async function citasParaDescuento(req, res) {
+    try {
+        const usuarioId = req.user.id;
+
+        const citas = await Cita.findAll({
+            where: {
+                usuario_id: usuarioId,
+                estado: ["pendiente", "confirmada"],
+                descuento_porcentaje: 0
+            },
+            include: [
+                {
+                    model: Servicio,
+                    attributes: ["id", "nombre", "precio"]
+                }
+            ],
+            order: [
+                ["fecha", "ASC"],
+                ["hora", "ASC"]
+            ]
+        });
+
+        return res.status(200).json(citas);
+
+    } catch (error) {
+        console.error("Error consultando citas para descuento:", error);
+
+        return res.status(500).json({
+            message: "No se pudieron consultar las citas."
+        });
+    }
+}
