@@ -215,7 +215,6 @@ export async function finalizarCita(req, res) {
 
         const resultado = await db.transaction(async (transaction) => {
 
-            // Buscar y bloquear la cita para evitar procesos duplicados.
             const cita = await Cita.findOne({
                 where: {
                     id,
@@ -228,14 +227,17 @@ export async function finalizarCita(req, res) {
             if (!cita) {
                 return {
                     status: 404,
-                    message: "Cita no encontrada"
+                    message: "Cita no encontrada."
                 };
             }
 
-            if (cita.estado !== "en_curso" || !cita.inicio_atencion) {
+            if (
+                cita.estado !== "en_curso" ||
+                !cita.inicio_atencion
+            ) {
                 return {
                     status: 400,
-                    message: "La cita debe estar en curso antes de finalizarla"
+                    message: "La cita debe estar en curso antes de finalizarla."
                 };
             }
 
@@ -247,11 +249,11 @@ export async function finalizarCita(req, res) {
             if (!servicio) {
                 return {
                     status: 404,
-                    message: "Servicio no encontrado"
+                    message: "Servicio no encontrado."
                 };
             }
 
-            // Verificar que no existan puntos acreditados anteriormente.
+            // Evitar acreditar puntos dos veces.
             const movimientoExistente = await MovimientoPuntos.findOne({
                 where: {
                     cita_id: cita.id,
@@ -263,7 +265,7 @@ export async function finalizarCita(req, res) {
             if (movimientoExistente) {
                 return {
                     status: 409,
-                    message: "Esta cita ya tiene puntos acreditados"
+                    message: "Esta cita ya tiene puntos acreditados."
                 };
             }
 
@@ -272,24 +274,42 @@ export async function finalizarCita(req, res) {
             const duracionMinutos = Math.max(
                 0,
                 Math.floor(
-                    (finAtencion.getTime() -
-                    new Date(cita.inicio_atencion).getTime()) / 60000
+                    (
+                        finAtencion.getTime() -
+                        new Date(cita.inicio_atencion).getTime()
+                    ) / 60000
                 )
             );
 
-            // Un punto por cada $2.000 del servicio.
-            const puntos = Math.floor(
-                Number(servicio.precio) / 2000
+            const precioOriginal = Math.round(
+                Number(servicio.precio)
             );
 
-            if (!Number.isFinite(puntos) || puntos < 0) {
-                throw new Error("El precio del servicio no es válido");
+            if (
+                !Number.isFinite(precioOriginal) ||
+                precioOriginal <= 0
+            ) {
+                return {
+                    status: 400,
+                    message: "El precio del servicio no es válido."
+                };
             }
+
+            // Inicializar los precios de la cita.
+            cita.precio_original = precioOriginal;
+            cita.descuento_porcentaje = 0;
+            cita.descuento_valor = 0;
+            cita.precio_final = precioOriginal;
 
             cita.estado = "finalizada";
             cita.fin_atencion = finAtencion;
 
             await cita.save({ transaction });
+
+            // Un punto por cada $2.000 del servicio.
+            const puntos = Math.floor(
+                precioOriginal / 2000
+            );
 
             if (puntos > 0) {
                 await MovimientoPuntos.create({
@@ -304,9 +324,11 @@ export async function finalizarCita(req, res) {
 
             return {
                 status: 200,
-                message: "Cita finalizada correctamente",
+                message: "Cita finalizada correctamente.",
                 puntos_ganados: puntos,
-                duracion_minutos: duracionMinutos
+                duracion_minutos: duracionMinutos,
+                precio_original: precioOriginal,
+                precio_final: precioOriginal
             };
         });
 
@@ -316,12 +338,10 @@ export async function finalizarCita(req, res) {
         console.error("Error al finalizar la cita:", error);
 
         return res.status(500).json({
-            message: "Error al finalizar la cita"
+            message: "Error al finalizar la cita."
         });
     }
 }
-
-
 
 
 export async function citaRealizarEmpleado(req, res) {
