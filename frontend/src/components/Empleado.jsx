@@ -346,6 +346,8 @@ export function Empleado() {
                             Abrir gestión de citas <span aria-hidden="true">→</span>
                         </button>
                     </aside>
+
+                    
                 </section>
 
                 <section className="pc-agenda-card">
