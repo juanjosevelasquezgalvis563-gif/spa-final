@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { API_ROOT } from "../lib/api";
 
 function fechaActual() {
@@ -19,7 +19,18 @@ function formatoPrecio(valor) {
     }).format(Number(valor) || 0);
 }
 
+async function leerRespuesta(respuesta) {
+    const texto = await respuesta.text();
+
+    try {
+        return texto ? JSON.parse(texto) : {};
+    } catch {
+        throw new Error("El servidor devolvió una respuesta no válida.");
+    }
+}
+
 export default function RegistrarPago({ rol }) {
+
     const baseRuta = rol === "administrador"
         ? "administrador"
         : "empleado";
@@ -31,8 +42,8 @@ export default function RegistrarPago({ rol }) {
     const [mensaje, setMensaje] = useState("");
     const [esError, setEsError] = useState(false);
 
-    
-    const obtenerCitas = async () => {
+    // Consultar citas finalizadas que todavía no tienen pago.
+    const obtenerCitas = useCallback(async () => {
         try {
             setCargando(true);
             setMensaje("");
@@ -46,7 +57,7 @@ export default function RegistrarPago({ rol }) {
                 }
             );
 
-            const data = await respuesta.json();
+            const data = await leerRespuesta(respuesta);
 
             if (!respuesta.ok) {
                 throw new Error(
@@ -55,39 +66,37 @@ export default function RegistrarPago({ rol }) {
             }
 
             if (!Array.isArray(data)) {
-                throw new Error("La respuesta del servidor no es válida.");
+                throw new Error("La respuesta no contiene una lista de citas.");
             }
 
             setCitas(data);
 
         } catch (error) {
-            console.error("Error al obtener citas:", error);
+            console.error("Error al consultar citas:", error);
             setMensaje(error.message);
             setEsError(true);
             setCitas([]);
+
         } finally {
             setCargando(false);
         }
-    };
+    }, [baseRuta]);
 
     useEffect(() => {
         obtenerCitas();
-    }, [baseRuta]);
+    }, [obtenerCitas]);
 
-   
+    // Registrar el pago de una cita.
     const registrar = async (cita) => {
+
+        if (guardandoId !== null) return;
+
         try {
             setMensaje("");
             setEsError(false);
 
-            const totalPago = Number(cita.saldo_pendiente ?? cita.Servicio?.precio);
-
             if (!Number.isInteger(Number(cita.id)) || Number(cita.id) <= 0) {
                 throw new Error("El ID de la cita no es válido.");
-            }
-
-            if (!Number.isFinite(totalPago) || totalPago <= 0) {
-                throw new Error("El valor del pago no es válido.");
             }
 
             if (!fechaPago) {
@@ -104,15 +113,16 @@ export default function RegistrarPago({ rol }) {
                     headers: {
                         "Content-Type": "application/json"
                     },
+                    // El backend calcula el total utilizando
+                    // precio_final y el descuento guardado en la cita.
                     body: JSON.stringify({
                         cita_id: Number(cita.id),
-                        total_pago: totalPago,
                         fecha_pago: fechaPago
                     })
                 }
             );
 
-            const data = await respuesta.json();
+            const data = await leerRespuesta(respuesta);
 
             if (!respuesta.ok) {
                 throw new Error(
@@ -120,16 +130,24 @@ export default function RegistrarPago({ rol }) {
                 );
             }
 
-            setMensaje("Pago registrado correctamente.");
+            const detalle = data.detalle || {};
+
+            setMensaje(
+                `${data.message} Total pagado: ${formatoPrecio(
+                    detalle.total_pagado
+                )}`
+            );
+
             setEsError(false);
 
-            // Recargar las citas para retirar la que ya fue pagada.
+            // Actualizar la lista para retirar la cita que ya fue pagada.
             await obtenerCitas();
 
         } catch (error) {
             console.error("Error al registrar pago:", error);
             setMensaje(error.message);
             setEsError(true);
+
         } finally {
             setGuardandoId(null);
         }
@@ -152,8 +170,9 @@ export default function RegistrarPago({ rol }) {
                 <h2>Registrar pagos</h2>
 
                 <p>
-                    Registra el saldo pendiente de las citas finalizadas.
-                    El anticipo pagado en línea ya está descontado.
+                    Registra los pagos de las citas finalizadas.
+                    Se respetará el descuento aplicado al cliente
+                    y el backend calculará el valor definitivo.
                 </p>
             </div>
 
@@ -162,18 +181,19 @@ export default function RegistrarPago({ rol }) {
                     className={`registrar-pago-mensaje ${
                         esError ? "error" : "exito"
                     }`}
+                    role="status"
                 >
                     {mensaje}
                 </div>
             )}
 
             <div className="registrar-pago-fecha">
-                <label htmlFor="fechaPago">
+                <label htmlFor={`fechaPago-${baseRuta}`}>
                     Fecha del pago
                 </label>
 
                 <input
-                    id="fechaPago"
+                    id={`fechaPago-${baseRuta}`}
                     type="date"
                     value={fechaPago}
                     onChange={(e) => setFechaPago(e.target.value)}
@@ -182,23 +202,46 @@ export default function RegistrarPago({ rol }) {
             </div>
 
             {citas.length === 0 ? (
+
                 <div className="registrar-pago-vacio">
                     <p>
                         No hay citas finalizadas pendientes por pagar.
                     </p>
                 </div>
+
             ) : (
+
                 <div className="registrar-pago-lista">
 
                     {citas.map((cita) => {
-                        const saldoPendiente = Number(cita.saldo_pendiente ?? cita.Servicio?.precio) || 0;
+
+                        const precioOriginal = Number(
+                            cita.precio_original ??
+                            cita.Servicio?.precio ??
+                            0
+                        );
+
+                        const descuentoPorcentaje = Number(
+                            cita.descuento_porcentaje || 0
+                        );
+
+                        const descuentoValor = Number(
+                            cita.descuento_valor || 0
+                        );
+
+                        const precioFinal = Number(
+                            cita.precio_final ??
+                            Math.max(0, precioOriginal - descuentoValor)
+                        );
 
                         return (
                             <article
                                 className="registrar-pago-card"
                                 key={cita.id}
                             >
+
                                 <div className="registrar-pago-card-header">
+
                                     <h3>
                                         {cita.Servicio?.nombre || "Servicio"}
                                     </h3>
@@ -206,6 +249,7 @@ export default function RegistrarPago({ rol }) {
                                     <span className="registrar-pago-estado">
                                         Finalizada
                                     </span>
+
                                 </div>
 
                                 <div className="registrar-pago-info">
@@ -249,46 +293,63 @@ export default function RegistrarPago({ rol }) {
                                         </span>
                                     </div>
 
-                                    <div>
-                                        <strong>Precio del servicio:</strong>
-                                        <span>
-                                            {formatoPrecio(cita.Servicio?.precio)}
-                                        </span>
-                                    </div>
-
-                                    <div>
-                                        <strong>Reserva pagada:</strong>
-                                        <span>{formatoPrecio(cita.reserva_pagada)}</span>
-                                    </div>
-
                                 </div>
 
-                                <div className="registrar-pago-total">
-                                    <label htmlFor={`total-${cita.id}`}>
-                                        Saldo restante
-                                    </label>
+                                <div className="registrar-pago-desglose">
 
-                                    <input
-                                        id={`total-${cita.id}`}
-                                        type="number"
-                                        value={saldoPendiente}
-                                        readOnly
-                                    />
+                                    <h4>Desglose del pago</h4>
 
-                                    <p>
-                                        {formatoPrecio(saldoPendiente)}
-                                    </p>
+                                    <div>
+                                        <span>Precio original:</span>
+                                        <strong>
+                                            {formatoPrecio(precioOriginal)}
+                                        </strong>
+                                    </div>
+
+                                    {descuentoPorcentaje > 0 && (
+                                        <div className="registrar-pago-descuento">
+
+                                            <span>
+                                                Descuento aplicado ({descuentoPorcentaje}%):
+                                            </span>
+
+                                            <strong>
+                                                - {formatoPrecio(descuentoValor)}
+                                            </strong>
+
+                                        </div>
+                                    )}
+
+                                    <div className="registrar-pago-precio-final">
+                                        <span>Precio final:</span>
+
+                                        <strong>
+                                            {formatoPrecio(precioFinal)}
+                                        </strong>
+                                    </div>
+
+                                    <div className="registrar-pago-saldo">
+                                        <span>Total a registrar:</span>
+
+                                        <strong>
+                                            {formatoPrecio(precioFinal)}
+                                        </strong>
+                                    </div>
+
                                 </div>
 
                                 <button
                                     type="button"
                                     className="registrar-pago-boton"
                                     onClick={() => registrar(cita)}
-                                    disabled={guardandoId !== null}
+                                    disabled={
+                                        guardandoId !== null ||
+                                        precioFinal <= 0
+                                    }
                                 >
                                     {guardandoId === cita.id
                                         ? "Registrando..."
-                                        : "Registrar saldo restante"}
+                                        : "Registrar pago"}
                                 </button>
 
                             </article>
