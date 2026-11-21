@@ -1,1 +1,3 @@
-export const API_ROOT = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/+$/, "");
+export const API_ROOT = (
+    import.meta.env.VITE_API_URL || "https://spa-final.onrender.com"
+).replace(/\/+$/, "");
