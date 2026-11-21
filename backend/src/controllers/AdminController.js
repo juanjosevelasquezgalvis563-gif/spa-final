@@ -11,6 +11,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { PRODUCT_IMAGES_DIR } from "../config/productImages.js";
+import { Op } from 'sequelize';
 
 const ROLES_PERFIL_ADMIN = ['empleado', 'cliente'];
 
@@ -403,107 +404,107 @@ export async function historialCompras(req, res) {
     }
 }
 
-import { Op } from 'sequelize';
+
+
 
 export async function citasFinalizadasParaPago(req, res) {
     try {
-        if (!['administrador', 'empleado'].includes(req.user?.rol)) {
+        if (!["administrador", "empleado"].includes(req.user?.rol)) {
             return res.status(403).json({
-                message: 'No tienes permiso para consultar estas citas.'
+                message: "No tienes permiso para consultar estas citas."
             });
         }
 
         const where = {
-            estado: 'finalizada'
+            estado: "finalizada"
         };
 
-       
-        if (req.user.rol === 'empleado') {
+        if (req.user.rol === "empleado") {
             where.empleado_id = req.user.id;
         }
 
-        const [citas, pagos] = await Promise.all([
-            Cita.findAll({
-                where,
-                attributes: [
-                    'id',
-                    'usuario_id',
-                    'empleado_id',
-                    'servicio_id',
-                    'fecha',
-                    'hora'
-                ],
-                include: [
-                    {
-                        model: Usuario,
-                        as: 'cliente',
-                        attributes: ['id', 'nombre']
-                    },
-                    {
-                        model: Usuario,
-                        as: 'empleado',
-                        attributes: ['id', 'nombre']
-                    },
-                    {
-                        model: Servicio,
-                        attributes: ['id', 'nombre', 'precio']
-                    }
-                ],
-                order: [['fecha', 'DESC']]
-            }),
-
-            Pago.findAll({
-                attributes: ['cita_id'],
-                where: {
-                    cita_id: {
-                        [Op.ne]: null
-                    }
+        const citas = await Cita.findAll({
+            where,
+            attributes: [
+                "id",
+                "usuario_id",
+                "empleado_id",
+                "servicio_id",
+                "fecha",
+                "hora",
+                "precio_original",
+                "descuento_porcentaje",
+                "descuento_valor",
+                "precio_final"
+            ],
+            include: [
+                {
+                    model: Usuario,
+                    as: "cliente",
+                    attributes: ["id", "nombre"]
                 },
-                raw: true
-            })
-        ]);
+                {
+                    model: Usuario,
+                    as: "empleado",
+                    attributes: ["id", "nombre"]
+                },
+                {
+                    model: Servicio,
+                    attributes: ["id", "nombre", "precio"]
+                }
+            ],
+            order: [["fecha", "DESC"]]
+        });
+
+        // Consultar únicamente pagos realizados en el salón.
+        const pagos = await Pago.findAll({
+            attributes: ["cita_id"],
+            where: {
+                cita_id: {
+                    [Op.ne]: null
+                }
+            },
+            raw: true
+        });
 
         const citasPagadas = new Set(
             pagos.map(pago => Number(pago.cita_id))
-        );
-
-        const pagosReserva = citas.length
-            ? await PagoReserva.findAll({
-                attributes: ["cita_id", "monto_reserva", "monto_credito", "monto_pagado"],
-                where: {
-                    cita_id: { [Op.in]: citas.map(cita => cita.id) },
-                    estado: "aprobado"
-                },
-                raw: true
-            })
-            : [];
-        const reservaPorCita = new Map(
-            pagosReserva.map(pagoReserva => [Number(pagoReserva.cita_id), pagoReserva])
         );
 
         const citasPendientes = citas
             .filter(cita => !citasPagadas.has(Number(cita.id)))
             .map(cita => {
                 const resultado = cita.toJSON();
-                const pagoReserva = reservaPorCita.get(Number(cita.id));
-                const reservaPagada = pagoReserva
-                    ? Number(pagoReserva.monto_credito) + Number(pagoReserva.monto_pagado)
-                    : 0;
-                resultado.reserva_pagada = reservaPagada;
-                resultado.saldo_pendiente = Math.max(
-                    0,
-                    Math.round(Number(resultado.Servicio?.precio || 0) - reservaPagada)
-                );
-                return resultado;
+
+                const precioOriginal = Number(cita.precio_original) > 0
+                    ? Number(cita.precio_original)
+                    : Number(cita.Servicio?.precio || 0);
+
+                const descuento = Number(cita.descuento_valor || 0);
+
+                const precioFinal = Number(cita.precio_final) > 0
+                    ? Number(cita.precio_final)
+                    : Math.max(0, precioOriginal - descuento);
+
+                return {
+                    ...resultado,
+                    precio_original: precioOriginal,
+                    descuento_porcentaje: Number(
+                        cita.descuento_porcentaje || 0
+                    ),
+                    descuento_valor: descuento,
+                    precio_final: precioFinal,
+                    saldo_pendiente: precioFinal
+                };
             });
 
         return res.status(200).json(citasPendientes);
 
     } catch (error) {
-        console.error('Error al consultar citas para pago:', error);
+        console.error("Error al consultar citas para pago:", error);
 
         return res.status(500).json({
-            message: 'No se pudieron consultar las citas pendientes.'
+            message: "No se pudieron consultar las citas pendientes."
         });
     }
 }
@@ -512,100 +513,150 @@ export async function citasFinalizadasParaPago(req, res) {
 
 export async function registrarPago(req, res) {
     try {
-        const { cita_id, total_pago, fecha_pago } = req.body;
-
-        const citaId = Number(cita_id);
-        const totalPago = Number(total_pago);
-
-        
-        if (!citaId || !totalPago || !fecha_pago) {
-            return res.status(400).json({
-                message: 'Todos los campos son obligatorios.'
+        if (!["administrador", "empleado"].includes(req.user?.rol)) {
+            return res.status(403).json({
+                message: "No tienes permiso para registrar pagos."
             });
         }
 
-        if (totalPago <= 0) {
+        const citaId = Number(req.body.cita_id);
+        const fechaPago = req.body.fecha_pago;
+
+        if (
+            !Number.isInteger(citaId) ||
+            citaId <= 0 ||
+            !fechaPago ||
+            !Number.isFinite(Date.parse(fechaPago))
+        ) {
             return res.status(400).json({
-                message: 'El valor del pago debe ser mayor a cero.'
+                message: "La cita y una fecha de pago válida son obligatorias."
             });
         }
 
-      
-        const where = {
-            id: citaId,
-            estado: 'finalizada'
-        };
+        const resultado = await db.transaction(async (transaction) => {
 
-       
-        if (req.user.rol === 'empleado') {
-            where.empleado_id = req.user.id;
-        }
+            const where = {
+                id: citaId,
+                estado: "finalizada"
+            };
 
-        const cita = await Cita.findOne({
-            where
+            if (req.user.rol === "empleado") {
+                where.empleado_id = req.user.id;
+            }
+
+            const cita = await Cita.findOne({
+                where,
+                transaction,
+                lock: transaction.LOCK.UPDATE
+            });
+
+            if (!cita) {
+                return {
+                    error: "La cita no existe, no está finalizada o no te pertenece.",
+                    status: 404
+                };
+            }
+
+            const pagoExistente = await Pago.findOne({
+                where: {
+                    cita_id: citaId
+                },
+                transaction
+            });
+
+            if (pagoExistente) {
+                return {
+                    error: "Esta cita ya tiene un pago registrado.",
+                    status: 409
+                };
+            }
+
+            const servicio = await Servicio.findByPk(
+                cita.servicio_id,
+                { transaction }
+            );
+
+            if (!servicio) {
+                return {
+                    error: "No se encontró el servicio.",
+                    status: 404
+                };
+            }
+
+            const precioOriginal = Number(cita.precio_original) > 0
+                ? Number(cita.precio_original)
+                : Math.round(Number(servicio.precio));
+
+            const descuento = Number(cita.descuento_valor || 0);
+
+            const precioFinal = Number(cita.precio_final) > 0
+                ? Number(cita.precio_final)
+                : Math.max(0, precioOriginal - descuento);
+
+            if (
+                !Number.isFinite(precioFinal) ||
+                precioFinal <= 0 ||
+                descuento < 0 ||
+                descuento > precioOriginal
+            ) {
+                return {
+                    error: "Los valores del precio de la cita no son válidos.",
+                    status: 400
+                };
+            }
+
+            // Completar precios de citas antiguas.
+            cita.precio_original = precioOriginal;
+            cita.precio_final = precioFinal;
+
+            await cita.save({ transaction });
+
+            const nuevoPago = await Pago.create({
+                usuario_id: cita.usuario_id,
+                servicio_id: cita.servicio_id,
+                cita_id: cita.id,
+                total_pago: precioFinal,
+                fecha_pago: new Date(fechaPago),
+                estado_pago: "pagada"
+            }, { transaction });
+
+            return {
+                pago: nuevoPago,
+                precio_original: precioOriginal,
+                descuento_porcentaje: Number(
+                    cita.descuento_porcentaje || 0
+                ),
+                descuento_aplicado: descuento,
+                total_pagado: precioFinal
+            };
         });
 
-        if (!cita) {
-            return res.status(404).json({
-                message: 'La cita no existe, no está finalizada o no te pertenece.'
+        if (resultado.error) {
+            return res.status(resultado.status).json({
+                message: resultado.error
             });
         }
 
-        const [servicio, reservaPagada] = await Promise.all([
-            Servicio.findByPk(cita.servicio_id),
-            PagoReserva.findOne({
-                where: { cita_id: cita.id, estado: "aprobado" }
-            })
-        ]);
-        if (!servicio) {
-            return res.status(404).json({ message: 'No se encontró el servicio de esta cita.' });
-        }
-
-        const montoReserva = reservaPagada
-            ? Number(reservaPagada.monto_credito) + Number(reservaPagada.monto_pagado)
-            : 0;
-        const saldoPendiente = Math.max(0, Math.round(Number(servicio.precio || 0) - montoReserva));
-        if (totalPago !== saldoPendiente) {
-            return res.status(400).json({
-                message: `El saldo pendiente de esta cita es $${saldoPendiente.toLocaleString('es-CO')} COP.`
-            });
-        }
-
-        const pagoExistente = await Pago.findOne({
-            where: {
-                cita_id: cita.id
+        return res.status(201).json({
+            message: "Pago registrado correctamente.",
+            pago: resultado.pago,
+            detalle: {
+                precio_original: resultado.precio_original,
+                descuento_porcentaje: resultado.descuento_porcentaje,
+                descuento_aplicado: resultado.descuento_aplicado,
+                total_pagado: resultado.total_pagado
             }
         });
 
-        if (pagoExistente) {
-            return res.status(400).json({
-                message: 'Esta cita ya tiene un pago registrado.'
-            });
-        }
-
-        
-        const nuevoPago = await Pago.create({
-            usuario_id: cita.usuario_id,
-            servicio_id: cita.servicio_id,
-            cita_id: cita.id,
-            total_pago: totalPago,
-            fecha_pago: fecha_pago,
-            estado_pago: 'pagada'
-        });
-
-        return res.status(201).json({
-            message: 'Pago registrado correctamente.',
-            pago: nuevoPago
-        });
-
     } catch (error) {
-        console.error('Error al registrar pago:', error);
+        console.error("Error al registrar pago:", error);
 
         return res.status(500).json({
-            message: 'Error al registrar el pago.'
+            message: "Error al registrar el pago."
         });
     }
 }
+
 
 
 export async function historialPagos(req, res) {
