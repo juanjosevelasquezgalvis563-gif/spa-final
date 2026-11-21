@@ -33,8 +33,10 @@ import { ultimasCitas } from "../controllers/ClienteController.js";
 import { middlewareCliente } from "../middlewares/middlewareCliente.js";
 import { crearResena } from "../controllers/ReseñaController.js";
 import { obtenerResenas } from "../controllers/ReseñaController.js";
-import { obtenerFidelizacion } from "../controllers/FidelizacionController.js";
+import { obtenerFidelizacion,canjearDescuento } from "../controllers/FidelizacionController.js";
 import { obtenerCitasParaResena } from "../controllers/ClienteController.js";
+import { citasParaDescuento } from "../controllers/ClienteController.js";
+
 
 import {admin} from "../controllers/AdminController.js";
 import {middlewareAdmin} from "../middlewares/middlewareAdmin.js";
@@ -182,6 +184,25 @@ router.post("/cliente/resenas", middlewareCliente, crearResena);
 router.get("/cliente/resenas",middlewareCliente, obtenerResenas);
 router.get("/cliente/fidelizacion", middlewareCliente, obtenerFidelizacion);
 router.get("/cliente/citasParaResena",middlewareCliente,obtenerCitasParaResena);
+
+router.get(
+    "/cliente/fidelizacion",
+    middlewareCliente,
+    obtenerFidelizacion
+);
+
+router.post(
+    "/cliente/fidelizacion/canjear",
+    middlewareCliente,
+    canjearDescuento
+);
+
+router.get(
+    "/cliente/citasParaDescuento",
+    middlewareCliente,
+    citasParaDescuento
+);
+
 
 router.get('/empleado',middlewareEmpleado,empleado);
 router.put('/empleado/comfirmar/:id',middlewareEmpleado,comfirmarCita);
