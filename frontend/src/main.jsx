@@ -8,7 +8,7 @@ import { SessionProvider } from "./context/SessionContext";
 
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <GoogleOAuthProvider clientId="464029038011-jbual8epthrk0p25ogacv1ocd5au9ejp.apps.googleusercontent.com">
+  <GoogleOAuthProvider clientId="464029038011-sjgk6pp7jiocest4nkbgi1ocbig4p0c3.apps.googleusercontent.com">
     <BrowserRouter>
       <SessionProvider>
         <App />
