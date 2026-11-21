@@ -597,6 +597,8 @@ export function Admin() {
                 required
             />
 
+            
+
             <span className="compra-ayuda">Ingresa el precio de compra.</span>
         </div>
 
