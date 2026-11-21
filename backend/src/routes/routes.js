@@ -215,13 +215,15 @@ router.post('/wompi/webhook', recibirEventoWompi);
 
 
 
+
 router.post(
-    '/forgot-password',
+    "/forgot-password",
     forgotPasswordEmailLimiter,
     forgotPasswordIpLimiter,
     forgotPassword
 );
-router.post('/reset-password', resetPassword);
+
+router.post("/reset-password", resetPassword);
 
 
 
