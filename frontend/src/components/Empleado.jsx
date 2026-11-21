@@ -327,16 +327,16 @@ export function Empleado() {
 
                         <button
                             type="button"
-                            className="empleado-text-link"
+                            className="pc-text-link"
                             onClick={() => abrirGestionCitas("pendientes")}
                         >
                             Ver agenda completa <span aria-hidden="true">→</span>
                         </button>
                     </article>
 
-                    <aside className="empleado-quick-card">
-                        <span className="empleado-section-kicker">ACCESO RÁPIDO</span>
-                        <div className="empleado-quick-icon" aria-hidden="true"><CalendarCheck2 className="dashboard-icon" /></div>
+                    <aside className="pc-quick-card">
+                        <span className="pc-section-kicker">ACCESO RÁPIDO</span>
+                        <div className="pc-quick-icon" aria-hidden="true"><CalendarCheck2 /></div>
                         <h3>Gestiona tu agenda</h3>
                         <p>Confirma citas, consulta los servicios y mantén cada turno actualizado.</p>
                         <button
@@ -348,39 +348,39 @@ export function Empleado() {
                     </aside>
                 </section>
 
-                <section className="empleado-agenda-card">
-                    <div className="empleado-section-heading">
+                <section className="pc-agenda-card">
+                    <div className="pc-section-heading">
                         <div>
-                            <span className="empleado-section-kicker">VISTA DEL DÍA</span>
+                            <span className="pc-section-kicker">VISTA DEL DÍA</span>
                             <h3>Agenda de hoy</h3>
                         </div>
-                        <span className="empleado-agenda-count">
+                        <span className="pc-agenda-count">
                             {cargando ? "…" : `${resumen?.agendaHoy.length || 0} ${resumen?.agendaHoy.length === 1 ? "turno" : "turnos"}`}
                         </span>
                     </div>
 
                     {cargando ? (
-                        <div className="empleado-agenda-empty">Cargando los turnos de hoy…</div>
+                        <div className="pc-agenda-empty">Cargando los turnos de hoy…</div>
                     ) : message && !resumen ? (
-                        <div className="empleado-agenda-empty">No se pudo cargar la agenda del día.</div>
+                        <div className="pc-agenda-empty">No se pudo cargar la agenda del día.</div>
                     ) : resumen?.agendaHoy.length ? (
-                        <div className="empleado-agenda-list">
+                        <div className="pc-agenda-list">
                             {resumen.agendaHoy.map((cita) => (
-                                <article className="empleado-agenda-row" key={cita.id}>
-                                    <time className="empleado-agenda-time">{formatearHora(cita.hora)}</time>
-                                    <span className="empleado-agenda-rule" aria-hidden="true" />
-                                    <div className="empleado-agenda-client">
+                                <article className="pc-agenda-row" key={cita.id}>
+                                    <time className="pc-agenda-time">{formatearHora(cita.hora)}</time>
+                                    <span className="pc-agenda-rule" aria-hidden="true" />
+                                    <div className="pc-agenda-client">
                                         <strong>{cita.cliente?.nombre || "Cliente"}</strong>
                                         <span>{cita.Servicio?.nombre || "Servicio por confirmar"}</span>
                                     </div>
-                                    <span className={`empleado-agenda-status ${cita.estado?.toLowerCase() || ""}`}>
+                                    <span className={`pc-agenda-status ${cita.estado?.toLowerCase() || ""}`}>
                                         {cita.estado || "Programada"}
                                     </span>
                                 </article>
                             ))}
                         </div>
                     ) : (
-                        <div className="empleado-agenda-empty">
+                        <div className="pc-agenda-empty">
                             <strong>Tu agenda está despejada por ahora.</strong>
                             <span>Cuando tengas citas para hoy, aparecerán aquí.</span>
                         </div>

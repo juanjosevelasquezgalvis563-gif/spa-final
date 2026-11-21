@@ -1,21 +1,81 @@
-
-import { useCallback, useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import logo from '../assets/image.png';
-import { API_ROOT } from '../lib/api';
+import { useCallback, useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import logo from "../assets/image.png";
+import { API_ROOT } from "../lib/api";
 import { useSession } from "../context/useSession";
 import {
+  ArrowUpRight,
+  Award,
   CalendarDays,
   CalendarPlus,
+  CircleCheck,
   CirclePlus,
+  Clock3,
   Gift,
   ListChecks,
   MessageSquareText,
-  Award,
   Scissors,
   Star,
-  UserRound
+  UserRound,
 } from "lucide-react";
+
+const MESES = [
+  "enero", "febrero", "marzo", "abril", "mayo", "junio",
+  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+];
+
+const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+
+const NIVELES_FIDELIDAD = [
+  { puntos: 100, descuento: 5 },
+  { puntos: 200, descuento: 10 },
+  { puntos: 400, descuento: 15 },
+];
+
+const ETIQUETAS_ESTADO = {
+  pendiente: "Pendiente",
+  confirmada: "Confirmada",
+  en_curso: "En curso",
+  finalizada: "Finalizada",
+  cancelada: "Cancelada",
+};
+
+function partesFecha(valor) {
+  if (!valor) return null;
+  const texto = String(valor).slice(0, 10);
+  const fecha = new Date(`${texto}T12:00:00`);
+  if (Number.isNaN(fecha.getTime())) return null;
+  return {
+    dia: String(fecha.getDate()).padStart(2, "0"),
+    mes: MESES[fecha.getMonth()],
+    semana: DIAS[fecha.getDay()],
+    legible: fecha.toLocaleDateString("es-CO", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    }),
+  };
+}
+
+function fechaCorta(valor) {
+  const partes = partesFecha(valor);
+  if (!partes) return "Sin fecha";
+  return `${partes.dia} ${partes.mes.slice(0, 3)} ${partes.legible.slice(-4)}`;
+}
+
+function etiquetaEstado(estado) {
+  return ETIQUETAS_ESTADO[estado] || "Sin cita";
+}
+
+function inicialesDe(nombre) {
+  const partes = String(nombre || "").trim().split(/\s+/).filter(Boolean);
+  if (!partes.length) return "JC";
+  return (partes[0][0] + (partes[1]?.[0] || "")).toUpperCase();
+}
+
+function nivelSiguiente(saldo) {
+  return NIVELES_FIDELIDAD.find((nivel) => nivel.puntos > saldo) || null;
+}
 
 export function Cliente() {
   const [message, SetMessage] = useState("");
@@ -26,12 +86,13 @@ export function Cliente() {
   const [realizar, SetRealizar] = useState(null);
   const [ultimas, SetUltimasCitas] = useState([]);
   const [nombreCliente, setNombreCliente] = useState("");
+  const [seccionActiva, setSeccionActiva] = useState("resumen");
 
   const [fidelizacion, setFidelizacion] = useState({
     saldo_puntos: 0,
     descuentoDisponible: 0,
-    descuentoMaximo: 0,
-    historial: []
+    descuentoMaximo: 15000,
+    historial: [],
   });
   const [citasParaDescuento, setCitasParaDescuento] = useState([]);
   const [citaSeleccionadaDescuento, setCitaSeleccionadaDescuento] = useState("");
@@ -49,8 +110,17 @@ export function Cliente() {
   const location = useLocation();
   const { logout } = useSession();
   const perfilId = new URLSearchParams(location.search).get("perfilId");
-  const perfilPath = (path) => perfilId ? `${path}?perfilId=${encodeURIComponent(perfilId)}` : path;
+  const perfilPath = (path) => (perfilId ? `${path}?perfilId=${encodeURIComponent(perfilId)}` : path);
   const navegarPerfil = (path) => navigate(perfilPath(path));
+
+  const irASeccion = (id) => {
+    setSeccionActiva(id);
+    if (id === "resumen") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   async function cerrarSesion() {
     if (perfilId) {
@@ -77,7 +147,7 @@ export function Cliente() {
       const data = await response.json();
 
       if (!response.ok) {
-        SetMessage(data.message || 'No se pudo cargar el nombre del cliente');
+        SetMessage(data.message || "No se pudo cargar el nombre del cliente");
         return;
       }
 
@@ -90,7 +160,7 @@ export function Cliente() {
       }
     } catch (error) {
       console.error(error);
-      SetMessage('No se pudo cargar el nombre del cliente');
+      SetMessage("No se pudo cargar el nombre del cliente");
     }
   }, [perfilId]);
 
@@ -133,7 +203,7 @@ export function Cliente() {
       if (response.ok) SetCantidad(data);
       else SetMessage(data.message);
     } catch {
-      SetMessage('Error de conexion con el servidor');
+      SetMessage("Error de conexión con el servidor");
     }
   }
 
@@ -148,7 +218,7 @@ export function Cliente() {
       if (response.ok) SetPendientes(data);
       else SetMessage(data.message);
     } catch {
-      SetMessage('Error de conexion con el servidor');
+      SetMessage("Error de conexión con el servidor");
     }
   }
 
@@ -163,7 +233,7 @@ export function Cliente() {
       if (response.ok) SetConfirmadas(data);
       else SetMessage(data.message);
     } catch {
-      SetMessage('Error de conexion con el servidor');
+      SetMessage("Error de conexión con el servidor");
     }
   }
 
@@ -178,7 +248,7 @@ export function Cliente() {
       if (response.ok) SetFinalizadas(data);
       else SetMessage(data.message);
     } catch {
-      SetMessage('Error de conexion con el servidor');
+      SetMessage("Error de conexión con el servidor");
     }
   }
 
@@ -193,7 +263,7 @@ export function Cliente() {
       if (response.ok) SetRealizar(data);
       else SetMessage(data.message);
     } catch {
-      SetMessage('Error de conexion con el servidor');
+      SetMessage("Error de conexión con el servidor");
     }
   }
 
@@ -205,10 +275,10 @@ export function Cliente() {
       );
       const data = await response.json();
 
-      if (response.ok) SetUltimasCitas(data);
+      if (response.ok) SetUltimasCitas(Array.isArray(data) ? data : []);
       else SetMessage(data.message);
     } catch {
-      SetMessage('Error de conexion con el servidor');
+      SetMessage("Error de conexión con el servidor");
     }
   }
 
@@ -225,89 +295,15 @@ export function Cliente() {
         setFidelizacion({
           saldo_puntos: Number(data.saldo_puntos) || 0,
           descuentoDisponible: Number(data.descuentoDisponible) || 0,
-          descuentoMaximo: Number(data.descuentoMaximo) || 0,
-          historial: Array.isArray(data.historial)
-            ? data.historial
-            : []
+          descuentoMaximo: Number(data.descuentoMaximo) || 15000,
+          historial: Array.isArray(data.historial) ? data.historial : [],
         });
       } else {
-        SetMessage(data.message || 'No se pudo consultar la fidelización');
+        SetMessage(data.message || "No se pudo consultar la fidelización");
       }
     } catch (error) {
       console.error(error);
-      SetMessage('Error al consultar los puntos');
-    }
-  }
-
-  async function canjearDescuento() {
-
-    if (perfilId) {
-      SetMessage("No puedes canjear puntos desde la vista de administrador.");
-      return;
-    }
-
-    if (canjeandoDescuento) return;
-
-    if (!citaSeleccionadaDescuento) {
-      SetMessage("Selecciona una cita para aplicar el descuento.");
-      return;
-    }
-
-    if (!fidelizacion.descuentoDisponible) {
-      SetMessage("Todavía no tienes un descuento disponible.");
-      return;
-    }
-
-    const confirmado = window.confirm(
-      `¿Deseas aplicar el descuento del ${fidelizacion.descuentoDisponible}% a esta cita? Se descontarán los puntos correspondientes.`
-    );
-
-    if (!confirmado) return;
-
-    setCanjeandoDescuento(true);
-
-    try {
-
-      const response = await fetch(
-        `${API_ROOT}/inser/cliente/fidelizacion/canjear`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            cita_id: Number(citaSeleccionadaDescuento),
-            porcentaje: fidelizacion.descuentoDisponible
-          })
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        SetMessage(data.message || "No se pudo aplicar el descuento.");
-        return;
-      }
-
-      SetMessage(data.message || "Descuento aplicado correctamente.");
-
-      // Limpiar la selección.
-      setCitaSeleccionadaDescuento("");
-
-      // Actualizar puntos disponibles.
-      await obtenerFidelizacion();
-
-      // Actualizar citas que todavía permiten descuentos.
-      await obtenerCitasParaDescuento();
-
-    } catch (error) {
-
-      console.error("Error al canjear descuento:", error);
-      SetMessage("Error al intentar aplicar el descuento.");
-
-    } finally {
-      setCanjeandoDescuento(false);
+      SetMessage("Error al consultar los puntos");
     }
   }
 
@@ -327,11 +323,10 @@ export function Cliente() {
       }
     } catch (error) {
       console.error(error);
-      SetMessage('Error al consultar las reseñas');
+      SetMessage("Error al consultar las reseñas");
     }
   }
-
-  async function prepararCitasParaResena() {
+async function prepararCitasParaResena() {
     try {
       const response = await fetch(
         `${API_ROOT}/inser/cliente/citasParaResena`,
@@ -361,16 +356,14 @@ export function Cliente() {
 
       const resenasRegistradas = dataResenas.resenas || [];
 
-      const citasSinResena = citas.filter((cita) =>
-        !resenasRegistradas.some(
-          (resena) => Number(resena.cita_id) === Number(cita.id)
-        )
+      const citasSinResena = citas.filter(
+        (cita) => !resenasRegistradas.some((resena) => Number(resena.cita_id) === Number(cita.id))
       );
 
       setCitasParaResena(citasSinResena);
     } catch (error) {
       console.error(error);
-      SetMessage('Error al consultar las citas para calificar');
+      SetMessage("Error al consultar las citas para calificar");
     }
   }
 
@@ -380,40 +373,33 @@ export function Cliente() {
     if (publicandoResena) return;
 
     if (!citaSeleccionada) {
-      SetMessage('Selecciona una cita para calificar');
+      SetMessage("Selecciona una cita para calificar");
       return;
     }
 
     if (calificacion === 0) {
-      SetMessage('Selecciona una calificación');
+      SetMessage("Selecciona una calificación");
       return;
     }
 
     setPublicandoResena(true);
 
     try {
-      const response = await fetch(
-        `${API_ROOT}/inser/cliente/resenas`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            cita_id: Number(citaSeleccionada),
-            calificacion,
-            comentario
-          })
-        }
-      );
+      const response = await fetch(`${API_ROOT}/inser/cliente/resenas`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          cita_id: Number(citaSeleccionada),
+          calificacion,
+          comentario,
+        }),
+      });
 
       const data = await response.json();
 
       if (response.ok) {
-        SetMessage(
-          `${data.message}. Ganaste ${data.puntos_ganados ?? 5} puntos.`
-        );
+        SetMessage(`${data.message}. Ganaste ${data.puntos_ganados ?? 20} puntos.`);
 
         setCitaSeleccionada("");
         setCalificacion(0);
@@ -427,7 +413,7 @@ export function Cliente() {
       }
     } catch (error) {
       console.error(error);
-      SetMessage('Error al publicar la reseña');
+      SetMessage("Error al publicar la reseña");
     } finally {
       setPublicandoResena(false);
     }
@@ -457,358 +443,628 @@ export function Cliente() {
     return () => clearTimeout(temporizador);
   }, [message]);
 
+  const saldoPuntos = Number(fidelizacion.saldo_puntos) || 0;
+  const proximoNivel = nivelSiguiente(saldoPuntos);
+  const progresoPuntos = proximoNivel
+    ? Math.min(100, Math.round((saldoPuntos / proximoNivel.puntos) * 100))
+    : 100;
+  const faltanPuntos = proximoNivel ? proximoNivel.puntos - saldoPuntos : 0;
+  const proximaFecha = partesFecha(realizar?.fecha);
+  const citaSeleccionadaInfo = citasParaResena.find(
+    (item) => Number(item.id) === Number(citaSeleccionada)
+  );
+  const ultimasCitasVisibles = ultimas.slice(0, 4);
+
   return (
-    <div className="dashboard">
-      <aside className="sidebar">
-        <h2 className="logo">
-          <img src={logo} alt="Logo JC Alta Peluquería" />
-        </h2>
-
-        <button onClick={() => navegarPerfil("/citas")}>Mis citas</button>
-        <button onClick={() => navegarPerfil("/cita")}>Agendar cita</button>
-        <button onClick={() => navegarPerfil("/cliente/productos")}>Productos</button>
-        <button onClick={() => navegarPerfil("/perfil")}>Actualizar datos</button>
-        <button onClick={() => navigate("/")}>Ir a la página principal</button>
-
-        <button onClick={cerrarSesion}>
-          {perfilId ? "Volver al panel administrador" : "Cerrar sesión"}
-        </button>
-
-        <button onClick={() => document.getElementById("fidelizacion")?.scrollIntoView({ behavior: "smooth" })}>
-          Mis puntos
-        </button>
-
-        <button onClick={() => document.getElementById("resenas")?.scrollIntoView({ behavior: "smooth" })}>
-          Calificar servicio
-        </button>
-      </aside>
-
-      <main className="contenido">
-        <div className="bienvenida">
-          <p>
-            {nombreCliente
-              ? `Bienvenid@, ${nombreCliente}`
-              : "Panel de cliente"}
-          </p>
+    <div className="dashboard panel-cliente">
+      <aside className="pc-rail">
+        <div className="pc-rail-brand">
+          <span className="pc-rail-logo">
+            <img src={logo} alt="JC Alta Peluquería" />
+          </span>
+          <div className="pc-rail-brand-text">
+            <strong>JC Alta Peluquería</strong>
+            <span>Panel de cliente</span>
+          </div>
         </div>
 
+        <nav className="pc-nav" aria-label="Secciones del panel">
+          <span className="pc-nav-label">Mi cuenta</span>
+
+          <button
+            type="button"
+            className={`pc-nav-item ${seccionActiva === "resumen" ? "is-active" : ""}`}
+            onClick={() => irASeccion("resumen")}
+          >
+            <CalendarDays aria-hidden="true" />
+            <span>Resumen</span>
+          </button>
+
+          <button
+            type="button"
+            className="pc-nav-item"
+            onClick={() => navegarPerfil("/citas")}
+          >
+            <ListChecks aria-hidden="true" />
+            <span>Mis citas</span>
+          </button>
+
+          <button
+            type="button"
+            className="pc-nav-item"
+            onClick={() => navegarPerfil("/cita")}
+          >
+            <CalendarPlus aria-hidden="true" />
+            <span>Agendar cita</span>
+          </button>
+
+          <button
+            type="button"
+            className="pc-nav-item"
+            onClick={() => navegarPerfil("/cliente/productos")}
+          >
+            <Gift aria-hidden="true" />
+            <span>Productos</span>
+          </button>
+
+          <button
+            type="button"
+            className={`pc-nav-item ${seccionActiva === "fidelizacion" ? "is-active" : ""}`}
+            onClick={() => irASeccion("fidelizacion")}
+          >
+            <Award aria-hidden="true" />
+            <span>Mis puntos</span>
+          </button>
+
+          <button
+            type="button"
+            className={`pc-nav-item ${seccionActiva === "resenas" ? "is-active" : ""}`}
+            onClick={() => irASeccion("resenas")}
+          >
+            <MessageSquareText aria-hidden="true" />
+            <span>Mis reseñas</span>
+          </button>
+
+          <button
+            type="button"
+            className="pc-nav-item"
+            onClick={() => navegarPerfil("/perfil")}
+          >
+            <UserRound aria-hidden="true" />
+            <span>Mis datos</span>
+          </button>
+        </nav>
+
+        <div className="pc-rail-foot">
+          <div className="pc-user">
+            <span className="pc-user-avatar" aria-hidden="true">
+              {inicialesDe(nombreCliente)}
+            </span>
+            <div className="pc-user-info">
+              <strong title={nombreCliente}>{nombreCliente || "Cliente"}</strong>
+              <span>Cliente</span>
+            </div>
+          </div>
+
+          <button type="button" className="pc-rail-link" onClick={() => navigate("/")}>
+            Página principal
+            <ArrowUpRight aria-hidden="true" />
+          </button>
+
+          <button type="button" className="pc-rail-link" onClick={cerrarSesion}>
+            {perfilId ? "Volver al panel administrador" : "Cerrar sesión"}
+          </button>
+        </div>
+      </aside>
+<div className="pc-main">
         {message && (
-          <p className="cliente-message">{message}</p>
+          <p className="cliente-message" role="status">
+            {message}
+          </p>
         )}
 
-        <div className="cards">
-          <div className="card">
-            <h4><CalendarDays className="dashboard-icon" /> Total de citas</h4>
-            <h2>{cantidad}</h2>
-            <span>Todas tus citas</span>
+        <header className="pc-topbar">
+          <div>
+            <span className="pc-eyebrow">Mi panel</span>
+            <h1>
+              {nombreCliente ? `Hola, ${nombreCliente}` : "Panel de cliente"}
+            </h1>
+            <p className="pc-topbar-sub">
+              Aquí tienes el resumen de tus citas, tus puntos y tus reseñas en
+              JC Alta Peluquería.
+            </p>
           </div>
 
-          <div className="card naranja">
-            <h4><CalendarPlus className="dashboard-icon" /> Pendientes</h4>
-            <h2>{pendientes}</h2>
-            <span>Por confirmar</span>
-          </div>
-
-          <div className="card verde">
-            <h4><ListChecks className="dashboard-icon" /> Confirmadas</h4>
-            <h2>{confirmadas}</h2>
-            <span>Próximas citas</span>
-          </div>
-
-          <div className="card azul">
-            <h4><Star className="dashboard-icon" /> Finalizadas</h4>
-            <h2>{finalizadas}</h2>
-            <span>Completadas</span>
-          </div>
-        </div>
-
-        <div className="panel-superior">
-          <div className="citas-realizar">
-            <h4>Próxima cita</h4>
-
-            <div className="cita-info">
-              <h3>Fecha</h3>
-              <p>{realizar?.fecha?.split("T")[0] || "Sin cita"}</p>
-
-              <h3>Hora</h3>
-              <p>{realizar?.hora?.slice(0, 5) || "--:--"}</p>
-
-              <h3>Servicio</h3>
-              <p>{realizar?.Servicio?.nombre || "No disponible"}</p>
-
-              <h3>Empleado</h3>
-              <p>{realizar?.empleado?.nombre || "No asignado"}</p>
-
-              <h3>Estado</h3>
-              <span className="estado">{realizar?.estado || "Sin cita"}</span>
-            </div>
-          </div>
-
-          <div className="acciones">
-            <button className="accion" onClick={() => navegarPerfil("/cita")}>
-              <span className="accion-icono"><CalendarPlus className="dashboard-icon" /></span>
-              <div>
-                <h3>Agendar nueva cita</h3>
-                <p>Reserva tu próximo servicio</p>
-              </div>
-            </button>
-
-            <button className="accion" onClick={() => navegarPerfil("/citas")}>
-              <span className="accion-icono"><ListChecks className="dashboard-icon" /></span>
-              <div>
-                <h3>Ver mis citas</h3>
-                <p>Consulta tu historial completo</p>
-              </div>
-            </button>
-
-            <button className="accion" onClick={() => navegarPerfil("/perfil")}>
-              <span className="accion-icono"><UserRound className="dashboard-icon" /></span>
-              <div>
-                <h3>Editar mi perfil</h3>
-                <p>Actualiza tus datos personales</p>
-              </div>
+          <div className="pc-topbar-actions">
+            <span className="pc-date">
+              <Clock3 aria-hidden="true" />
+              {new Date().toLocaleDateString("es-CO", {
+                weekday: "long",
+                day: "2-digit",
+                month: "long",
+              })}
+            </span>
+            <button
+              type="button"
+              className="pc-btn is-gold"
+              onClick={() => navegarPerfil("/cita")}
+            >
+              <CalendarPlus aria-hidden="true" />
+              Agendar cita
             </button>
           </div>
-        </div>
+        </header>
 
-        {/* FIDELIZACIÓN */}
-        <section className="fidelizacion" id="fidelizacion">
-          <div className="fidelizacion-cabecera">
-            <div>
-              <span className="fidelizacion-etiqueta">PROGRAMA DE BENEFICIOS</span>
-              <h2>Programa de fidelización</h2>
-              <p>Cada visita te acerca a nuevos beneficios.</p>
-            </div>
+        <section className="pc-next" aria-labelledby="pc-next-title">
+          {realizar ? (
+            <>
+              <div className="pc-next-body">
+                <span className="pc-eyebrow">Tu próxima cita</span>
+                <h2 className="pc-next-title" id="pc-next-title">
+                  {realizar?.Servicio?.nombre || "Servicio por confirmar"}
+                </h2>
 
-            <div className="fidelizacion-icono">
-              <Award className="dashboard-icon" />
-            </div>
-          </div>
+                <ul className="pc-next-meta">
+                  <li>
+                    <UserRound aria-hidden="true" />
+                    {realizar?.empleado?.nombre || "Profesional por asignar"}
+                  </li>
+                  <li>
+                    <CalendarDays aria-hidden="true" />
+                    {proximaFecha?.legible || "Fecha por confirmar"}
+                  </li>
+                  <li>
+                    <span className={`pc-status is-${realizar?.estado || "pendiente"}`}>
+                      {etiquetaEstado(realizar?.estado)}
+                    </span>
+                  </li>
+                </ul>
 
-          <div className="puntos-resumen">
-            <div>
-              <span>Mis puntos disponibles</span>
-              <h2>{fidelizacion.saldo_puntos}</h2>
-              <p>Puntos acumulados en tus servicios y reseñas</p>
-            </div>
-
-            <div className="puntos-icono">
-              <Star className="dashboard-icon" />
-            </div>
-          </div>
-
-          {/* DESCUENTOS */}
-          <div className="descuento-disponible">
-            <h3>Mi descuento disponible</h3>
-
-            <h2>{fidelizacion.descuentoDisponible}%</h2>
-
-            {fidelizacion.descuentoDisponible === 0 ? (
-              <p>
-                Acumula 300 puntos para desbloquear tu primer descuento.
-              </p>
-            ) : (
-              <p>
-                Tienes disponible un descuento del{" "}
-                {fidelizacion.descuentoDisponible}% en servicios.
-                El ahorro máximo es de $
-                {fidelizacion.descuentoMaximo.toLocaleString("es-CO")} COP.
-              </p>
-            )}
-
-            <div className="niveles-descuento">
-              <div>
-                <strong>300 puntos</strong>
-                <span>5% de descuento · máximo $6.000</span>
+                <div className="pc-next-actions">
+                  <button
+                    type="button"
+                    className="pc-btn is-gold"
+                    onClick={() => navegarPerfil("/citas")}
+                  >
+                    <ListChecks aria-hidden="true" />
+                    Ver mis citas
+                  </button>
+                  <button
+                    type="button"
+                    className="pc-btn"
+                    onClick={() => navegarPerfil("/cita")}
+                  >
+                    <CalendarPlus aria-hidden="true" />
+                    Agendar otra
+                  </button>
+                </div>
               </div>
 
-              <div>
-                <strong>600 puntos</strong>
-                <span>10% de descuento · máximo $12.000</span>
+              <div className="pc-next-date">
+                <span className="pc-next-weekday">
+                  {proximaFecha?.semana || "Sin día"}
+                </span>
+                <span className="pc-next-day">{proximaFecha?.dia || "--"}</span>
+                <span className="pc-next-month">{proximaFecha?.mes || "---"}</span>
+                <span className="pc-next-time">
+                  {realizar?.hora?.slice(0, 5) || "--:--"}
+                </span>
               </div>
-
+            </>
+          ) : (
+            <div className="pc-next-empty">
               <div>
-                <strong>900 puntos</strong>
-                <span>15% de descuento · máximo $18.000</span>
-              </div>
-            </div>
-
-            {fidelizacion.descuentoDisponible > 0 && (
-              <>
-                <label htmlFor="cita-descuento">
-                  Selecciona la cita donde deseas aplicar tu descuento:
-                </label>
-
-                <select
-                  id="cita-descuento"
-                  value={citaSeleccionadaDescuento}
-                  onChange={(e) => setCitaSeleccionadaDescuento(e.target.value)}
-                  disabled={canjeandoDescuento || Boolean(perfilId) || cargandoCitasDescuento}
-                >
-                  <option value="">Seleccionar una cita</option>
-
-                  {citasParaDescuento.map((cita) => (
-                    <option key={cita.id} value={cita.id}>
-                      {cita.Servicio?.nombre || "Servicio"} -{" "}
-                      {cita.fecha?.split("T")[0]} -{" "}
-                      {cita.hora?.slice(0, 5)}
-                    </option>
-                  ))}
-                </select>
-
-                {cargandoCitasDescuento && <p>Cargando citas disponibles...</p>}
-
-                {!cargandoCitasDescuento && citasParaDescuento.length === 0 && (
-                  <p>
-                    No tienes citas pendientes o confirmadas disponibles
-                    para aplicar descuentos.
-                  </p>
-                )}
-
-                <button
-                  type="button"
-                  className="resena-publicar"
-                  onClick={canjearDescuento}
-                  disabled={
-                    canjeandoDescuento ||
-                    Boolean(perfilId) ||
-                    !citaSeleccionadaDescuento ||
-                    citasParaDescuento.length === 0
-                  }
-                >
-                  {canjeandoDescuento
-                    ? "Canjeando..."
-                    : `Aplicar descuento del ${fidelizacion.descuentoDisponible}%`}
-                </button>
-              </>
-            )}
-          </div>
-
-          {/* CÓMO GANAR PUNTOS */}
-          <div className="como-ganar-puntos">
-            <h3>¿Cómo ganar puntos?</h3>
-
-            <div className="beneficio-puntos">
-              <span><Scissors className="dashboard-icon" /></span>
-              <div>
-                <h4>Finaliza tus servicios</h4>
+                <span className="pc-eyebrow">Tu próxima cita</span>
+                <h2 className="pc-next-title" id="pc-next-title">
+                  Aún no tienes una cita agendada
+                </h2>
                 <p>
-                  Gana 1 punto por cada $2.000 COP del valor del servicio.
-                  Los puntos se acreditan cuando el empleado finaliza la cita.
+                  Reserva tu próximo servicio y asegura tu horario con el
+                  profesional que prefieras.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="pc-btn is-gold"
+                onClick={() => navegarPerfil("/cita")}
+              >
+                <CalendarPlus aria-hidden="true" />
+                Agendar ahora
+              </button>
+            </div>
+          )}
+        </section>
+
+        <div className="pc-stats">
+          <article className="pc-stat">
+            <div className="pc-stat-top">
+              <span className="pc-stat-icon" aria-hidden="true">
+                <CalendarDays />
+              </span>
+            </div>
+            <div>
+              <p className="pc-stat-value">{cantidad ?? 0}</p>
+              <p className="pc-stat-label">Total de citas</p>
+            </div>
+            <span className="pc-stat-hint">Todas tus citas registradas</span>
+          </article>
+
+          <article className="pc-stat is-gold">
+            <div className="pc-stat-top">
+              <span className="pc-stat-icon" aria-hidden="true">
+                <Clock3 />
+              </span>
+            </div>
+            <div>
+              <p className="pc-stat-value">{pendientes ?? 0}</p>
+              <p className="pc-stat-label">Pendientes</p>
+            </div>
+            <span className="pc-stat-hint">Esperando confirmación</span>
+          </article>
+
+          <article className="pc-stat is-green">
+            <div className="pc-stat-top">
+              <span className="pc-stat-icon" aria-hidden="true">
+                <CircleCheck />
+              </span>
+            </div>
+            <div>
+              <p className="pc-stat-value">{confirmadas ?? 0}</p>
+              <p className="pc-stat-label">Confirmadas</p>
+            </div>
+            <span className="pc-stat-hint">Tus próximas visitas</span>
+          </article>
+
+          <article className="pc-stat is-plum">
+            <div className="pc-stat-top">
+              <span className="pc-stat-icon" aria-hidden="true">
+                <Star />
+              </span>
+            </div>
+            <div>
+              <p className="pc-stat-value">{finalizadas ?? 0}</p>
+              <p className="pc-stat-label">Finalizadas</p>
+            </div>
+            <span className="pc-stat-hint">Servicios completados</span>
+          </article>
+        </div>
+<div className="pc-grid">
+          <section className="pc-card" id="fidelizacion" aria-labelledby="pc-puntos-title">
+            <div className="pc-card-head">
+              <div>
+                <span className="pc-eyebrow">Programa de beneficios</span>
+                <h2 className="pc-card-title" id="pc-puntos-title">
+                  Programa de fidelización
+                </h2>
+              </div>
+              <span className="pc-points-badge" aria-hidden="true">
+                <Award />
+              </span>
+            </div>
+
+            <div className="pc-points">
+              <div>
+                <span className="pc-points-label">Puntos disponibles</span>
+                <p className="pc-points-value">
+                  {saldoPuntos}
+                  <small>puntos</small>
+                </p>
+              </div>
+              <div>
+                <span className="pc-points-label">Descuento actual</span>
+                <p className="pc-points-value">
+                  {fidelizacion.descuentoDisponible}
+                  <small>%</small>
                 </p>
               </div>
             </div>
 
-            <div className="beneficio-puntos">
-              <span><MessageSquareText className="dashboard-icon" /></span>
-              <div>
-                <h4>Comparte tu experiencia</h4>
-                <p>Gana 5 puntos al publicar una reseña válida.</p>
+            <div className="pc-progress">
+              <div className="pc-progress-head">
+                <span>
+                  {proximoNivel ? (
+                    <>
+                      Te faltan <strong>{faltanPuntos} puntos</strong> para el{" "}
+                      {proximoNivel.descuento}% de descuento
+                    </>
+                  ) : (
+                    <>
+                      ¡Nivel máximo alcanzado! Disfrutas del{" "}
+                      <strong>{fidelizacion.descuentoDisponible}%</strong>
+                    </>
+                  )}
+                </span>
+                <span>{progresoPuntos}%</span>
+              </div>
+              <div
+                className="pc-progress-track"
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={progresoPuntos}
+                aria-label="Progreso del programa de fidelización"
+              >
+                <span
+                  className="pc-progress-fill"
+                  style={{ width: `${progresoPuntos}%` }}
+                />
               </div>
             </div>
-          </div>
 
-          {/* HISTORIAL DE PUNTOS */}
-          <div className="historial-puntos">
-            <h3>Historial de puntos</h3>
+            <ul className="pc-tiers">
+              {NIVELES_FIDELIDAD.map((nivel) => (
+                <li
+                  key={nivel.puntos}
+                  className={`pc-tier ${saldoPuntos >= nivel.puntos ? "is-reached" : ""}`}
+                >
+                  <strong>{nivel.puntos} pts</strong>
+                  <span>{nivel.descuento}% de descuento</span>
+                </li>
+              ))}
+            </ul>
+
+            <p className="pc-note">
+              El descuento se muestra como beneficio disponible. El ahorro
+              máximo es de ${fidelizacion.descuentoMaximo.toLocaleString("es-CO")}{" "}
+              COP por cita y el canje se coordina con el salón al reservar.
+            </p>
+
+            <ul className="pc-earn">
+              <li>
+                <span className="pc-earn-icon" aria-hidden="true">
+                  <Scissors />
+                </span>
+                <div className="pc-earn-text">
+                  <strong>Finaliza tus servicios</strong>
+                  <span>
+                    Acumula puntos según el valor del servicio que disfrutes.
+                  </span>
+                </div>
+              </li>
+              <li>
+                <span className="pc-earn-icon" aria-hidden="true">
+                  <MessageSquareText />
+                </span>
+                <div className="pc-earn-text">
+                  <strong>Comparte tu experiencia</strong>
+                  <span>Gana 20 puntos al publicar una reseña válida.</span>
+                </div>
+              </li>
+            </ul>
+          </section>
+
+          <section className="pc-card" aria-labelledby="pc-historial-title">
+            <div className="pc-card-head">
+              <div>
+                <span className="pc-eyebrow">Movimientos</span>
+                <h2 className="pc-card-title" id="pc-historial-title">
+                  Historial de puntos
+                </h2>
+              </div>
+              <span className="pc-chip">
+                {fidelizacion.historial.length} registros
+              </span>
+            </div>
 
             {fidelizacion.historial.length === 0 ? (
-              <p className="sin-puntos">
-                Todavía no tienes movimientos de puntos.
-                ¡Completa las acciones del programa para comenzar!
+              <p className="pc-empty">
+                Todavía no tienes movimientos de puntos. Completa un servicio o
+                deja una reseña para empezar a acumular.
               </p>
             ) : (
-              fidelizacion.historial.map((movimiento) => (
-                <div className="movimiento-puntos" key={movimiento.id}>
-                  <div className="movimiento-icono">
-                    {movimiento.tipo === "canje"
-                      ? <Gift className="dashboard-icon" />
-                      : <CirclePlus className="dashboard-icon" />}
-                  </div>
-
-                  <div className="movimiento-info">
-                    <h4>{movimiento.descripcion || "Movimiento de puntos"}</h4>
-                    <span>
-                      {movimiento.fecha_creacion
-                        ? new Date(movimiento.fecha_creacion).toLocaleDateString("es-CO")
-                        : ""}
+              <ul className="pc-list">
+                {fidelizacion.historial.slice(0, 6).map((movimiento) => (
+                  <li className="pc-list-item" key={movimiento.id}>
+                    <span className="pc-list-icon" aria-hidden="true">
+                      {movimiento.tipo === "canje" ? <Gift /> : <CirclePlus />}
                     </span>
-                  </div>
-
-                  <strong className={
-                    movimiento.tipo === "canje"
-                      ? "puntos-restados"
-                      : "puntos-ganados"
-                  }>
-                    {movimiento.tipo === "canje" ? "-" : "+"}
-                    {movimiento.puntos}
-                  </strong>
-                </div>
-              ))
+                    <div className="pc-list-body">
+                      <strong>
+                        {movimiento.descripcion || "Movimiento de puntos"}
+                      </strong>
+                      <span>
+                        {movimiento.fecha_creacion
+                          ? new Date(movimiento.fecha_creacion).toLocaleDateString("es-CO")
+                          : "Sin fecha"}
+                      </span>
+                    </div>
+                    <span
+                      className={`pc-delta ${movimiento.tipo === "canje" ? "is-minus" : "is-plus"}`}
+                    >
+                      {movimiento.tipo === "canje" ? "−" : "+"}
+                      {movimiento.puntos}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             )}
-          </div>
-        </section>
-
-        {/* RESEÑAS */}
-        <section className="formulario-resena" id="resenas">
-          <div className="resena-encabezado">
-            <span className="resena-etiqueta">TU EXPERIENCIA CUENTA</span>
-            <h2>Cuéntanos cómo te fue</h2>
-            <p>Califica el servicio y comparte tu opinión con nuestro equipo.</p>
-          </div>
-
-          <form className="resena-crear" onSubmit={crearResena}>
-            <div className="resena-form-title">
-              <span className="resena-form-icon">
-                <MessageSquareText className="dashboard-icon" />
-              </span>
+          </section>
+        </div>
+<div className="pc-grid">
+          <section className="pc-card" aria-labelledby="pc-citas-title">
+            <div className="pc-card-head">
               <div>
-                <h3>Nueva reseña</h3>
-                <p>Una reseña por cada cita finalizada.</p>
+                <span className="pc-eyebrow">Historial</span>
+                <h2 className="pc-card-title" id="pc-citas-title">
+                  Mis citas recientes
+                </h2>
               </div>
+              <button
+                type="button"
+                className="pc-btn is-ghost"
+                onClick={() => navegarPerfil("/citas")}
+              >
+                Ver todas
+              </button>
+            </div>
+
+            {ultimasCitasVisibles.length === 0 ? (
+              <p className="pc-empty">
+                Cuando agendes tu primera cita aparecerá aquí con su estado y
+                profesional asignado.
+              </p>
+            ) : (
+              <ul className="pc-list">
+                {ultimasCitasVisibles.map((cita) => (
+                  <li className="pc-list-item" key={cita.id}>
+                    <span className="pc-list-icon" aria-hidden="true">
+                      <CalendarDays />
+                    </span>
+                    <div className="pc-list-body">
+                      <strong>{cita?.Servicio?.nombre || "Servicio"}</strong>
+                      <span>
+                        {fechaCorta(cita?.fecha)} ·{" "}
+                        {cita?.hora?.slice(0, 5) || "--:--"} ·{" "}
+                        {cita?.empleado?.nombre || "Sin asignar"}
+                      </span>
+                    </div>
+                    <span className="pc-chip">{etiquetaEstado(cita?.estado)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="pc-card" aria-labelledby="pc-accesos-title">
+            <div className="pc-card-head">
+              <div>
+                <span className="pc-eyebrow">Atajos</span>
+                <h2 className="pc-card-title" id="pc-accesos-title">
+                  Accesos rápidos
+                </h2>
+              </div>
+            </div>
+
+            <div className="pc-form">
+              <button
+                type="button"
+                className="pc-action"
+                onClick={() => navegarPerfil("/cita")}
+              >
+                <span className="pc-action-icon" aria-hidden="true">
+                  <CalendarPlus />
+                </span>
+                <span className="pc-action-text">
+                  <strong>Agendar nueva cita</strong>
+                  <span>Reserva tu próximo servicio</span>
+                </span>
+              </button>
+
+              <button
+                type="button"
+                className="pc-action"
+                onClick={() => navegarPerfil("/citas")}
+              >
+                <span className="pc-action-icon" aria-hidden="true">
+                  <ListChecks />
+                </span>
+                <span className="pc-action-text">
+                  <strong>Ver mis citas</strong>
+                  <span>Consulta y reprograma tus reservas</span>
+                </span>
+              </button>
+
+              <button
+                type="button"
+                className="pc-action"
+                onClick={() => navegarPerfil("/cliente/productos")}
+              >
+                <span className="pc-action-icon" aria-hidden="true">
+                  <Gift />
+                </span>
+                <span className="pc-action-text">
+                  <strong>Catálogo de productos</strong>
+                  <span>Descubre el cuidado disponible en el salón</span>
+                </span>
+              </button>
+
+              <button
+                type="button"
+                className="pc-action"
+                onClick={() => navegarPerfil("/perfil")}
+              >
+                <span className="pc-action-icon" aria-hidden="true">
+                  <UserRound />
+                </span>
+                <span className="pc-action-text">
+                  <strong>Actualizar mis datos</strong>
+                  <span>Mantén tu información al día</span>
+                </span>
+              </button>
+            </div>
+          </section>
+        </div>
+<div className="pc-reviews" id="resenas">
+          <section className="pc-card" aria-labelledby="pc-nueva-resena-title">
+            <div className="pc-card-head">
+              <div>
+                <span className="pc-eyebrow">Tu experiencia cuenta</span>
+                <h2 className="pc-card-title" id="pc-nueva-resena-title">
+                  Cuéntanos cómo te fue
+                </h2>
+              </div>
+              <span className="pc-points-badge" aria-hidden="true">
+                <MessageSquareText />
+              </span>
             </div>
 
             {citasParaResena.length === 0 ? (
-              <p className="resena-vacia">
-                No tienes citas pendientes por calificar.
+              <p className="pc-empty">
+                No tienes citas pendientes por calificar. Cuando finalices un
+                servicio podrás dejar aquí tu opinión y ganar 20 puntos.
               </p>
             ) : (
-              <>
-                <label htmlFor="cita-resena">Elige el servicio</label>
+              <form className="pc-form" onSubmit={crearResena}>
+                <div className="pc-field">
+                  <label htmlFor="cita-resena">Elige el servicio</label>
+                  <select
+                    id="cita-resena"
+                    value={citaSeleccionada}
+                    onChange={(event) => setCitaSeleccionada(event.target.value)}
+                  >
+                    <option value="">Seleccionar una cita finalizada</option>
+                    {citasParaResena.map((cita) => (
+                      <option key={cita.id} value={cita.id}>
+                        {cita.Servicio?.nombre || "Servicio"} ·{" "}
+                        {cita.empleado?.nombre || "Profesional no asignado"} ·{" "}
+                        {fechaCorta(cita.fecha)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                <select
-                  id="cita-resena"
-                  value={citaSeleccionada}
-                  onChange={(e) => setCitaSeleccionada(e.target.value)}
-                >
-                  <option value="">Seleccionar una cita finalizada</option>
+                {citaSeleccionadaInfo && (
+                  <div className="pc-selected">
+                    <CircleCheck aria-hidden="true" />
+                    <div>
+                      <strong>
+                        {citaSeleccionadaInfo.Servicio?.nombre || "Servicio"}
+                      </strong>
+                      <span>
+                        Atendido por{" "}
+                        {citaSeleccionadaInfo.empleado?.nombre ||
+                          "profesional no asignado"}
+                      </span>
+                      <small>{fechaCorta(citaSeleccionadaInfo.fecha)}</small>
+                    </div>
+                  </div>
+                )}
 
-                  {citasParaResena.map((cita) => (
-                    <option key={cita.id} value={cita.id}>
-                      {cita.Servicio?.nombre || "Servicio"} ·{" "}
-                      {cita.empleado?.nombre || "Profesional no asignado"} ·{" "}
-                      {cita.fecha?.split("T")[0]}
-                    </option>
-                  ))}
-                </select>
-
-                <fieldset className="resena-calificacion">
+                <fieldset className="pc-stars">
                   <legend>¿Cómo calificarías la atención?</legend>
-
-                  <div className="estrellas-resena" role="group">
+                  <div className="pc-stars-row" role="group" aria-label="Calificación">
                     {[1, 2, 3, 4, 5].map((estrella) => (
                       <button
                         key={estrella}
                         type="button"
-                        className={estrella <= calificacion ? "seleccionada" : ""}
+                        className={estrella <= calificacion ? "is-on" : ""}
                         onClick={() => setCalificacion(estrella)}
                         aria-pressed={calificacion === estrella}
                       >
                         {estrella <= calificacion ? "★" : "☆"}
                       </button>
                     ))}
-
-                    <span>
+                    <span className="pc-stars-value">
                       {calificacion > 0
                         ? `${calificacion} de 5`
                         : "Selecciona una calificación"}
@@ -816,58 +1072,60 @@ export function Cliente() {
                   </div>
                 </fieldset>
 
-                <label htmlFor="comentario-resena">Tu comentario (opcional)</label>
-
-                <textarea
-                  id="comentario-resena"
-                  value={comentario}
-                  onChange={(e) => setComentario(e.target.value)}
-                  maxLength={500}
-                  placeholder="¿Qué fue lo que más te gustó?"
-                />
-
-                <span className="resena-caracteres">
-                  {comentario.length}/500
-                </span>
+                <div className="pc-field">
+                  <label htmlFor="comentario-resena">Tu comentario (opcional)</label>
+                  <textarea
+                    id="comentario-resena"
+                    value={comentario}
+                    onChange={(event) => setComentario(event.target.value)}
+                    maxLength={500}
+                    placeholder="¿Qué fue lo que más te gustó?"
+                  />
+                  <span className="pc-counter">{comentario.length}/500</span>
+                </div>
 
                 <button
-                  className="resena-publicar"
                   type="submit"
+                  className="pc-submit"
                   disabled={!citaSeleccionada || calificacion === 0 || publicandoResena}
                 >
-                  {publicandoResena ? "Publicando..." : "Publicar reseña"}
+                  <MessageSquareText aria-hidden="true" />
+                  {publicandoResena ? "Publicando…" : "Publicar reseña"}
                 </button>
 
-                <p className="resena-puntos">
-                  Al publicar una reseña válida ganas 5 puntos.
+                <p className="pc-hint">
+                  Al publicar una reseña válida ganas 20 puntos.
                 </p>
-              </>
+              </form>
             )}
-          </form>
+          </section>
 
-          {/* RESEÑAS PUBLICADAS */}
-          <div className="resenas-publicadas">
-            <div className="resenas-publicadas-cabecera">
+          <section className="pc-card" aria-labelledby="pc-mis-resenas-title">
+            <div className="pc-card-head">
               <div>
-                <span className="resena-etiqueta">TU HISTORIAL</span>
-                <h3>Mis reseñas</h3>
+                <span className="pc-eyebrow">Tu historial</span>
+                <h2 className="pc-card-title" id="pc-mis-resenas-title">
+                  Mis reseñas
+                </h2>
               </div>
-
-              <span className="resenas-conteo">{resenas.length}</span>
+              <span className="pc-chip">{resenas.length} publicadas</span>
             </div>
 
             {resenas.length === 0 ? (
-              <p className="resenas-sin-publicar">
+              <p className="pc-empty">
                 Tus reseñas publicadas aparecerán aquí.
               </p>
             ) : (
-              <div className="resenas-lista">
+              <ul className="pc-review-list">
                 {resenas.map((resena) => (
-                  <article className="resena-publicada" key={resena.id}>
-                    <div className="resena-publicada-top">
-                      <span className="resena-estrellas-lectura">
+                  <li className="pc-review" key={resena.id}>
+                    <div className="pc-review-top">
+                      <span
+                        className="pc-review-stars"
+                        aria-label={`${resena.calificacion} de 5 estrellas`}
+                      >
                         {"★".repeat(resena.calificacion)}
-                        <span>{"☆".repeat(5 - resena.calificacion)}</span>
+                        <i>{"★".repeat(Math.max(0, 5 - resena.calificacion))}</i>
                       </span>
 
                       <time>
@@ -877,28 +1135,20 @@ export function Cliente() {
                       </time>
                     </div>
 
-                    <p className="resena-publicada-comentario">
-                      {resena.comentario || "Sin comentario"}
-                    </p>
+                    <p>{resena.comentario || "Sin comentario"}</p>
 
-                    <div className="resena-dirigida">
-                      <span><Scissors className="dashboard-icon" /></span>
-                      <div>
-                        <strong>
-                          {resena.cita?.empleado?.nombre || "Profesional"}
-                        </strong>
-                        <small>
-                          {resena.cita?.Servicio?.nombre || "Servicio"}
-                        </small>
-                      </div>
+                    <div className="pc-review-by">
+                      <Scissors aria-hidden="true" />
+                      <strong>{resena.cita?.empleado?.nombre || "Profesional"}</strong>
+                      <span>· {resena.cita?.Servicio?.nombre || "Servicio"}</span>
                     </div>
-                  </article>
+                  </li>
                 ))}
-              </div>
+              </ul>
             )}
-          </div>
-        </section>
-      </main>
+          </section>
+        </div>
+      </div>
     </div>
   );
 }

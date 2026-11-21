@@ -38,6 +38,168 @@
 /* =====================================
    REGLAS GENERALES
 ===================================== */
+/* =====================================
+   DISEÑO UNIFICADO: CLASES PC
+   Estilos consistentes para todos los paneles (cliente, admin, empleado)
+   ===================================== */
+
+/* Tarjetas y contenedores */
+.pc-card {
+  overflow: hidden;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(62, 43, 29, 0.04);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.pc-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow);
+}
+
+/* Encabezado de tarjeta */
+.pc-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pc-card-head > div:first-child {
+  flex: 1;
+}
+
+/* Título de tarjeta */
+.pc-card-title {
+  font-family: var(--heading);
+  color: var(--text-h);
+  font-weight: 500;
+  line-height: 1.2;
+  margin: 0;
+}
+
+/* Chip/Etiqueta pequeña */
+.pc-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  background: var(--accent-bg);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+/* Estrellas de calificación */
+.pc-stars-value {
+  color: #f59e0b;
+  font-weight: 500;
+}
+
+/* Estrellas de revisión (★ repetidas) */
+.pc-review-stars {
+  display: inline-block;
+  color: #e5e7eb;
+}
+
+.pc-review-stars span {
+  color: #f59e0b;
+}
+
+/* Campos de formulario */
+.pc-field {
+  margin-bottom: 20px;
+}
+
+.pc-field label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+.pc-field .pc-counter {
+  margin-top: 4px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* Botón de envío */
+.pc-submit {
+  width: 100%;
+  min-height: 48px;
+  padding: 13px 25px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: var(--accent);
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.pc-submit:hover {
+  background: var(--accent-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+/* Indicaciones y pistas */
+.pc-hint {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* Estado vacío */
+.pc-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+}
+
+/* Lista de revisiones */
+.pc-review-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.pc-review {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.pc-review:last-child {
+  border-bottom: none;
+}
+
+.pc-review-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.pc-review-stars {
+  flex: 1;
+}
+
+.pc-review-by {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* Contador de comentarios */
+.pc-counter {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
 
 * {
   box-sizing: border-box;

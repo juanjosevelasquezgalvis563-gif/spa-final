@@ -2,6 +2,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { History, Package, Pencil, ShoppingCart, Trash2, TriangleAlert, UsersRound } from 'lucide-react';
+
+const adminQuickIcon = 'Package';
+const adminSectionKicker = 'ACCESO RÁPIDO';
 import { API_ROOT } from '../lib/api';
 import RegistrarPago from './RegistrarPago';
 import HistorialPagos from './HistorialPagos';
@@ -506,112 +509,114 @@ export function Admin() {
                 </section>
 
                 <section className="admin-panel admin-panel-compra">
+    <div className="compra-encabezado">
+        <div className="compra-encabezado-icono">
+            <ShoppingCart size={25} aria-hidden="true" />
+        </div>
 
-                    <div className="admin-panel-head">
-                        <h2 className="admin-panel-title">
-                            <span className="admin-panel-icon"><ShoppingCart aria-hidden="true" /></span>
-                            Realizar compra
-                        </h2>
-                    </div>
+        <div>
+            <span className="compra-etiqueta">GESTIÓN DE INVENTARIO</span>
+            <h2>Realizar compra</h2>
+            <p>Registra el ingreso de nuevos productos a tu inventario.</p>
+        </div>
+    </div>
 
-                    <div>
-                        <form className="admin-form" onSubmit={handleSubmit}>
+    <form className="admin-form compra-formulario" onSubmit={handleSubmit}>
+        <div className="compra-campo compra-campo-completo">
+            <label className="admin-label" htmlFor="producto">
+                Producto
+            </label>
 
-                            <label className="admin-label" htmlFor="producto">
-                                Producto
-                            </label>
+            <select
+                id="producto"
+                className="admin-input"
+                value={productoId}
+                onChange={(e) => SetProductoId(e.target.value)}
+                required
+            >
+                <option value="">Seleccione un producto</option>
 
-                            <select
-                                id="producto"
-                                className="admin-input"
-                                value={productoId}
-                                onChange={(e) => SetProductoId(e.target.value)}
-                                required
-                            >
-                                <option value="">
-                                    Seleccione un producto
-                                </option>
+                {productos.map((producto) => (
+                    <option key={producto.id} value={producto.id}>
+                        {producto.nombre}
+                    </option>
+                ))}
+            </select>
+            <span className="compra-ayuda">
+                Selecciona el producto que deseas ingresar al inventario.
+            </span>
+        </div>
 
-                                {productos.map((producto) => (
-                                    <option
-                                        key={producto.id}
-                                        value={producto.id}
-                                    >
-                                        {producto.nombre}
-                                    </option>
-                                ))}
-                            </select>
+        <div className="compra-campo compra-campo-completo">
+            <label className="admin-label" htmlFor="fecha-compra">
+                Fecha de compra
+            </label>
 
-                            <label className="admin-label" htmlFor="fecha-compra">
-                                Fecha de compra
-                            </label>
+            <input
+                id="fecha-compra"
+                className="admin-input"
+                type="date"
+                value={fecha}
+                onChange={(e) => SetFecha(e.target.value)}
+                required
+            />
+        </div>
 
-                            <input
-                                id="fecha-compra"
-                                className="admin-input"
-                                type="date"
-                                value={fecha}
-                                onChange={(e) => SetFecha(e.target.value)}
-                                required
-                            />
+        <div className="compra-campo">
+            <label className="admin-label" htmlFor="cantidad-compra">
+                Cantidad
+            </label>
 
-                            <div className="admin-form-fila">
+            <input
+                id="cantidad-compra"
+                className="admin-input"
+                type="number"
+                placeholder="Ej. 10"
+                value={cantidad}
+                onChange={(e) => SetCantidad(e.target.value)}
+                min="1"
+                required
+            />
 
-                                <div className="admin-form-col">
-                                    <label className="admin-label" htmlFor="cantidad-compra">
-                                        Cantidad
-                                    </label>
+            <span className="compra-ayuda">Mínimo 1 unidad.</span>
+        </div>
 
-                                    <input
-                                        id="cantidad-compra"
-                                        className="admin-input"
-                                        type="number"
-                                        placeholder="Cantidad"
-                                        value={cantidad}
-                                        onChange={(e) => SetCantidad(e.target.value)}
-                                        min="1"
-                                        required
-                                    />
+        <div className="compra-campo">
+            <label className="admin-label" htmlFor="precio-compra">
+                Precio de compra
+            </label>
 
-                                    <span className="admin-help">
-                                        Mínimo 1
-                                    </span>
-                                </div>
+            <input
+                id="precio-compra"
+                className="admin-input"
+                type="number"
+                placeholder="Ej. 15000"
+                value={precio_compra}
+                onChange={(e) => SetPrecioCompra(e.target.value)}
+                min="0"
+                required
+            />
 
-                                <div className="admin-form-col">
-                                    <label className="admin-label" htmlFor="precio-compra">
-                                        Precio de compra
-                                    </label>
+            <span className="compra-ayuda">Ingresa el precio de compra.</span>
+        </div>
 
-                                    <input
-                                        id="precio-compra"
-                                        className="admin-input"
-                                        type="number"
-                                        placeholder="Precio de compra"
-                                        value={precio_compra}
-                                        onChange={(e) => SetPrecioCompra(e.target.value)}
-                                        min="0"
-                                        required
-                                    />
+        <div className="compra-nota compra-campo-completo">
+            <Package size={19} aria-hidden="true" />
+            <span>
+                Verifica los datos antes de registrar la compra. El inventario
+                se actualizará después de guardar el registro.
+            </span>
+        </div>
 
-                                    <span className="admin-help">
-                                        Mínimo 0
-                                    </span>
-                                </div>
-
-                            </div>
-
-                            <button
-                                className="admin-btn-comprar"
-                                type="submit"
-                            >
-                                Registrar compra
-                            </button>
-
-                        </form>
-                    </div>
-
-                </section>
+        <button
+            className="admin-btn-comprar compra-boton"
+            type="submit"
+        >
+            <ShoppingCart size={19} aria-hidden="true" />
+            Registrar compra
+        </button>
+    </form>
+</section>
 
             </div>
 
@@ -718,15 +723,15 @@ export function Admin() {
             {/* Historial de compras */}
             <section className="admin-historial">
 
-                <div className="admin-panel-head">
-                    <h2 className="admin-panel-title">
-                        <span className="admin-panel-icon"><History aria-hidden="true" /></span>
+                <div className="pc-card-head">
+                    <h2 className="pc-card-title">
+                        <span><History aria-hidden="true" /></span>
                         Últimas compras
                     </h2>
 
                     <button
                         type="button"
-                        className="admin-historial-toggle"
+                        className="pc-submit"
                         aria-expanded={historialVisible}
                         aria-controls="admin-historial-detalle"
                         onClick={alternarHistorial}
@@ -741,23 +746,23 @@ export function Admin() {
 
                 {historialVisible && (
                     cargandoHistorial ? (
-                        <p className="admin-historial-vacio" role="status">
+                        <p className="pc-empty" role="status">
                             Cargando compras...
                         </p>
                     ) : historial.length === 0 ? (
-                        <p className="admin-historial-vacio">
+                        <p className="pc-empty">
                             Todavía no hay compras registradas.
                         </p>
                     ) : (
-                        <div className="admin-historial-tabla-wrap">
+                        <div className="pc-card">
 
-                            <table className="admin-historial-tabla">
+                            <table className="pc-table">
 
                                 <thead>
                                     <tr>
                                         <th>Fecha</th>
                                         <th>Producto</th>
-                                        <th className="admin-historial-cantidad">Cantidad</th>
+                                        <th className="pc-cantidad">Cantidad</th>
                                         <th>Precio de compra</th>
                                         <th>Total</th>
                                     </tr>
@@ -767,25 +772,25 @@ export function Admin() {
                                     {historial.map((histo) => (
                                         <tr
                                             key={histo.id}
-                                            className="admin-historial-fila"
+                                            className="pc-fila"
                                         >
-                                            <td className="admin-historial-fecha">
+                                            <td className="pc-fecha">
                                                 {histo.fecha?.split("T")[0]}
                                             </td>
 
-                                            <td className="admin-historial-producto">
+                                            <td className="pc-producto">
                                                 {histo?.Producto?.nombre}
                                             </td>
 
-                                            <td className="admin-historial-cantidad">
+                                            <td className="pc-cantidad">
                                                 {histo.cantidad}
                                             </td>
 
-                                            <td className="admin-historial-precio">
+                                            <td className="pc-precio">
                                                 {histo.precio_compra}
                                             </td>
 
-                                            <td className="admin-historial-total">
+                                            <td className="pc-total">
                                                 {histo.total}
                                             </td>
                                         </tr>
