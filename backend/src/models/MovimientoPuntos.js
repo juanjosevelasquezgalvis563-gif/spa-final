@@ -13,11 +13,10 @@ const MovimientoPuntos = db.define("MovimientoPuntos", {
         allowNull: false
     },
 
-    cita_id: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        unique: true
-    },
+   cita_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+},
 
     resena_id: {
         type: DataTypes.INTEGER,
