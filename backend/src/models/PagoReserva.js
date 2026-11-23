@@ -31,6 +31,29 @@ const PagoReserva = db.define("PagoReserva", {
         type: DataTypes.TIME,
         allowNull: false
     },
+    // Precio del servicio al momento de reservar (sin descuento).
+    precio_original: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+    },
+    // Descuento de fidelización elegido al reservar.
+    descuento_porcentaje: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+    },
+    descuento_valor: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+    },
+    // Puntos que se descuentan cuando la reserva se aprueba.
+    puntos_canje: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+    },
     monto_reserva: {
         type: DataTypes.INTEGER,
         allowNull: false
