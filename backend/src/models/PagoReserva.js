@@ -108,4 +108,5 @@ const PagoReserva = db.define("PagoReserva", {
     timestamps: false
 });
 
+
 export default PagoReserva;
