@@ -13,6 +13,7 @@ import { puedeRealizarServicio } from "../utils/servicios.js";
 import { normalizarHoraReserva, validarFechaHoraReserva } from "../utils/fechaHora.js";
 import { NIVELES_DESCUENTO, calcularSaldo } from "./FidelizacionController.js";
 
+
 const DURACION_RESERVA_MINUTOS = 30;
 const MONEDA = "COP";
 const ESTADOS_OCUPAN_HORARIO = ["pendiente", "confirmada", "en_curso"];
