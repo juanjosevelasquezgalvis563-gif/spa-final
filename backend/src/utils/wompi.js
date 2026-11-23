@@ -12,6 +12,7 @@ function obtenerPropiedad(objeto, ruta) {
         }
         return valor[segmento];
     }, objeto);
+    
 }
 
 export function verificarFirmaEventoWompi(evento, secreto) {
