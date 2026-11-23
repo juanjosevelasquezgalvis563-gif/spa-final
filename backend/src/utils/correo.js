@@ -123,6 +123,7 @@ export async function enviarCorreoCitaConfirmada({
     const htmlFilasPago = filasPago
         .map((fila) => `<li style="margin:4px 0;">${escaparHtml(fila)}</li>`)
         .join("");
+        
 
     try {
         await config.transporter.sendMail({
