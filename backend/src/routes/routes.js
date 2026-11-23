@@ -1,4 +1,5 @@
 import {Router} from "express";
+import reportesRoutes from "./reportes.js";
 import {
     registro,
 } from "../controllers/RegistroController.js";
@@ -57,6 +58,7 @@ import {
     obtenerEstadoPagoReserva,
     recibirEventoWompi
 } from "../controllers/PagoReservaController.js";
+
 
 
 import { forgotPassword } from "../controllers/RecuperaPassword.js";
@@ -229,6 +231,7 @@ router.get('/administrador/historialCompras',middlewareAdmin,historialCompras);
 router.get('/administrador/citasFinalizadasPago', middlewareAdmin, citasFinalizadasParaPago);
 router.post('/administrador/registrarPago', middlewareAdmin, registrarPago);
 router.get('/administrador/historialPagos',middlewareAdmin,historialPagos);
+router.use('/administrador/reportes', middlewareAdmin, reportesRoutes);
 
 router.post('/wompi/webhook', recibirEventoWompi);
 
