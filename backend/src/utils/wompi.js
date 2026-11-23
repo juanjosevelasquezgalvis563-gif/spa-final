@@ -23,6 +23,7 @@ export function verificarFirmaEventoWompi(evento, secreto) {
         typeof firmaRecibida !== "string"
         || !/^[a-f\d]{64}$/i.test(firmaRecibida)
         || !Array.isArray(propiedades)
+        || propiedades.length === 0
         || !Number.isInteger(timestamp)
         || typeof secreto !== "string"
         || !secreto
@@ -31,16 +32,23 @@ export function verificarFirmaEventoWompi(evento, secreto) {
     }
 
     const valores = [];
+
     for (const propiedad of propiedades) {
         if (typeof propiedad !== "string") return false;
+
         const valor = obtenerPropiedad(evento.data, propiedad);
-        if (valor === undefined || valor === null) return false;
+
+        if (valor === undefined || valor === null) {
+            return false;
+        }
+
         valores.push(String(valor));
     }
 
     const firmaEsperada = createHash("sha256")
         .update(`${valores.join("")}${timestamp}${secreto}`)
         .digest();
+
     const firmaActual = Buffer.from(firmaRecibida, "hex");
 
     return firmaActual.length === firmaEsperada.length
