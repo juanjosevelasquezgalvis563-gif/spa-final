@@ -12,7 +12,7 @@ export async function middlewareEmpleado(req, res, next) {
     }
 
     try {
-        // Administrador que seleccionó un perfil de empleado.
+        
         if (decoded.rol === "administrador") {
             if (!req.cookies.adminPerfil) {
                 return res.status(403).json({
@@ -60,7 +60,7 @@ export async function middlewareEmpleado(req, res, next) {
             return next();
         }
 
-        // Empleado autenticado normalmente.
+      
         if (decoded.rol === "empleado") {
             req.user = decoded;
             return next();
