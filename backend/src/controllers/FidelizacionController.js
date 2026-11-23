@@ -12,6 +12,7 @@ export const NIVELES_DESCUENTO = {
         puntos: 300,
         porcentaje: 5,
         descuentoMaximo: 6000
+        
     },
     10: {
         puntos: 600,
