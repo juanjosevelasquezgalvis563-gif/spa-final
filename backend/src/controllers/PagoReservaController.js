@@ -27,7 +27,7 @@ const ESTADOS_TERMINALES = [
 const NIVELES_DE_MAYOR_A_MENOR = [15, 10, 5];
 
 function pagosSimulados() {
-    // Solo funciona fuera de producción, para no aprobar pagos falsos por error
+    
     return process.env.PAGOS_SIMULADOS === "true" && process.env.NODE_ENV !== "production";
 }
 
@@ -37,8 +37,7 @@ function obtenerPrecioPesos(servicio) {
     return Math.round(precio);
 }
 
-// La reserva es el 20 % del precio que realmente va a pagar el cliente
-// (es decir, el precio con el descuento ya aplicado).
+
 function obtenerMontoReserva(precioConDescuento) {
     return Math.round(precioConDescuento * 0.2);
 }
@@ -158,12 +157,7 @@ async function crearAbonoPorCancelacion(cita, transaction) {
     await restaurarAbonos(pagoReserva, transaction);
 }
 
-/**
- * Crea la cita de una reserva ya pagada.
- *  - La cita queda en estado "pendiente": el empleado debe confirmarla.
- *  - Guarda el precio original y el descuento de fidelización.
- *  - Descuenta los puntos del cliente (movimiento "canje").
- */
+
 async function crearCitaDesdeReserva(pagoReserva, transaction) {
     let precioOriginal = Number(pagoReserva.precio_original);
 
@@ -177,7 +171,7 @@ async function crearCitaDesdeReserva(pagoReserva, transaction) {
     let puntosCanje = 0;
 
     if (Number(pagoReserva.puntos_canje) > 0) {
-        // Se bloquea al usuario para que dos reservas no gasten los mismos puntos.
+       
         await Usuario.findByPk(pagoReserva.usuario_id, {
             transaction,
             lock: transaction.LOCK.UPDATE
@@ -228,7 +222,7 @@ async function crearCitaDesdeReserva(pagoReserva, transaction) {
 export async function crearPagoReserva(req, res) {
     const simulado = pagosSimulados();
 
-    // En modo simulado no se necesitan las llaves de Wompi
+    
     if (!simulado) {
         if (
             !process.env.WOMPI_PUBLIC_KEY
@@ -290,7 +284,7 @@ export async function crearPagoReserva(req, res) {
                 return { error: "El servicio no tiene un precio válido para calcular la reserva.", status: 400 };
             }
 
-            // ---------- Descuento por puntos (opcional) ----------
+          
             let descuentoPorcentaje = 0;
             let descuentoValor = 0;
             let puntosCanje = 0;
@@ -303,7 +297,7 @@ export async function crearPagoReserva(req, res) {
 
                 const { saldo } = await calcularSaldo(usuarioId, transaction);
 
-                // Puntos ya comprometidos en otras reservas pendientes de pago.
+               
                 const puntosComprometidos = Number(await PagoReserva.sum("puntos_canje", {
                     where: {
                         usuario_id: usuarioId,
@@ -398,7 +392,7 @@ export async function crearPagoReserva(req, res) {
                 monto_credito: creditoAplicado,
                 monto_pagado: montoReserva - creditoAplicado,
                 referencia: `JC${randomUUID().replace(/-/g, "").toUpperCase()}`,
-                // En modo simulado la reserva se aprueba al instante
+                
                 estado: (simulado || creditoAplicado === montoReserva) ? "aprobado" : "pendiente",
                 expira_en: expiraEn,
                 created_at: ahora,
@@ -419,7 +413,7 @@ export async function crearPagoReserva(req, res) {
             }
 
             if (pagoReserva.estado === "aprobado") {
-                // La cita queda "pendiente" hasta que el empleado la confirme.
+               
                 await crearCitaDesdeReserva(pagoReserva, transaction);
                 await pagoReserva.save({ transaction });
             }
@@ -578,7 +572,7 @@ export async function recibirEventoWompi(req, res) {
             console.log("PAGO ENCONTRADO:", pagoReserva.id);
             console.log("ESTADO ACTUAL:", pagoReserva.estado);
 
-            // Comprobar monto y moneda.
+            
             const montoEsperado =
                 (Number(pagoReserva.monto_reserva)
                     - Number(pagoReserva.monto_credito)) * 100;
@@ -592,11 +586,11 @@ export async function recibirEventoWompi(req, res) {
                 );
             }
 
-            // Guardar identificador de la transacción.
+            
             pagoReserva.transaction_id = transaccionWompi.id || null;
             pagoReserva.updated_at = new Date();
 
-            // Si Wompi todavía no confirma el pago, no hacer nada más.
+           
             if (transaccionWompi.status === "PENDING") {
                 await pagoReserva.save({ transaction });
                 return;
@@ -619,7 +613,7 @@ export async function recibirEventoWompi(req, res) {
                 return;
             }
 
-            // Ignorar estados que no sean aprobación.
+        
             if (transaccionWompi.status !== "APPROVED") {
                 console.log(
                     "Estado Wompi no procesable:",
@@ -628,7 +622,6 @@ export async function recibirEventoWompi(req, res) {
                 return;
             }
 
-            // Evitar procesar dos veces un pago ya aprobado.
             if (
                 pagoReserva.estado === "aprobado"
                 || pagoReserva.estado === "aprobado_abono"
@@ -654,7 +647,7 @@ export async function recibirEventoWompi(req, res) {
                 return;
             }
 
-            // Verificar que el empleado todavía exista.
+           
             const empleado = await Usuario.findOne({
                 where: {
                     id: pagoReserva.empleado_id,
@@ -675,7 +668,7 @@ export async function recibirEventoWompi(req, res) {
                 return;
             }
 
-            // Comprobar que el horario siga libre.
+          
             const citaOcupada = await Cita.findOne({
                 where: {
                     empleado_id: pagoReserva.empleado_id,
@@ -713,7 +706,7 @@ export async function recibirEventoWompi(req, res) {
                 return;
             }
 
-            // Crear cita y aprobar pago en la misma transacción.
+            
             const cita = await crearCitaDesdeReserva(
                 pagoReserva,
                 transaction
