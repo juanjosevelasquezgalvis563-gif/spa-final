@@ -157,7 +157,7 @@ export async function comfirmarCita(req, res) {
         cita.estado = 'confirmada';
         await cita.save();
 
-        // Correo al cliente: nunca debe impedir que la cita quede confirmada.
+      
         const reservaPagada = (cita.reservasPago || []).find(
             (reserva) => reserva.estado === 'aprobado'
         );
@@ -264,9 +264,7 @@ export async function cancelarCita(req, res) {
 
 export async function finalizarCita(req, res) {
     try {
-        // Determinar el ID del empleado real.
-        // Si es administrador con perfil de empleado activo, usar ese ID.
-        // Si es empleado normal, usar req.user.id directamente.
+       
         const empleadoId = req.user.empleadoActivoId || req.user.id;
         const citaId = Number(req.params.id);
 
@@ -313,7 +311,7 @@ export async function finalizarCita(req, res) {
                 };
             }
 
-            // Evitar acreditar puntos dos veces.
+            
             const movimientoExistente = await MovimientoPuntos.findOne({
                 where: {
                     cita_id: cita.id,
@@ -346,8 +344,7 @@ export async function finalizarCita(req, res) {
                 )
             );
 
-            // Se respeta el precio original y el descuento que la cita ya tenía
-            // (aplicado al reservar).
+        
             const precioOriginal = Number(cita.precio_original) > 0
                 ? Math.round(Number(cita.precio_original))
                 : Math.round(Number(servicio.precio) || 0);
