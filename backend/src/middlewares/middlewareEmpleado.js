@@ -78,3 +78,4 @@ export async function middlewareEmpleado(req, res, next) {
         });
     }
 }
+
