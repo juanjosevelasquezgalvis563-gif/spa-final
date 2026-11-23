@@ -12,6 +12,7 @@
  */
 export function desglosarPrecioCita(cita, servicio, reservaPagada) {
     const precioServicio = Math.round(Number(servicio?.precio) || 0);
+    
 
     const precioOriginal = Number(cita?.precio_original) > 0
         ? Math.round(Number(cita.precio_original))
