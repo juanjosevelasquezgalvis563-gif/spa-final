@@ -6,7 +6,7 @@ import PagoReserva from '../models/PagoReserva.js';
 import { Op } from "sequelize";
 import db from "../config/db.js";
 import { acreditarReservaCancelada } from "./PagoReservaController.js";
-import { enviarCorreoCitaConfirmada } from "../utils/correo.js";
+import {enviarCorreoCitaConfirmada} from "../utils/correo.js";
 import { desglosarPrecioCita } from "../utils/precioCita.js";
 
 
