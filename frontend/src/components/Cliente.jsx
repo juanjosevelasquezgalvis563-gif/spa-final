@@ -27,9 +27,9 @@ const MESES = [
 const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
 
 const NIVELES_FIDELIDAD = [
-  { puntos: 100, descuento: 5 },
-  { puntos: 200, descuento: 10 },
-  { puntos: 400, descuento: 15 },
+  { puntos: 300, descuento: 5 },
+  { puntos: 600, descuento: 10 },
+  { puntos: 900, descuento: 15 },
 ];
 
 const ETIQUETAS_ESTADO = {
@@ -399,7 +399,7 @@ async function prepararCitasParaResena() {
       const data = await response.json();
 
       if (response.ok) {
-        SetMessage(`${data.message}. Ganaste ${data.puntos_ganados ?? 20} puntos.`);
+        SetMessage(`${data.message}. Ganaste ${data.puntos_ganados ?? 5} puntos.`);
 
         setCitaSeleccionada("");
         setCalificacion(0);
@@ -804,9 +804,10 @@ async function prepararCitasParaResena() {
             </ul>
 
             <p className="pc-note">
-              El descuento se muestra como beneficio disponible. El ahorro
-              máximo es de ${fidelizacion.descuentoMaximo.toLocaleString("es-CO")}{" "}
-              COP por cita y el canje se coordina con el salón al reservar.
+              El descuento se aplica al reservar tu cita. Ahorro máximo por nivel:{" "}
+              <strong>5% = $6.000 COP</strong>,{" "}
+              <strong>10% = $12.000 COP</strong> y{" "}
+              <strong>15% = $18.000 COP</strong>. El canje se coordina con el salón al reservar.
             </p>
 
             <ul className="pc-earn">
@@ -827,7 +828,7 @@ async function prepararCitasParaResena() {
                 </span>
                 <div className="pc-earn-text">
                   <strong>Comparte tu experiencia</strong>
-                  <span>Gana 20 puntos al publicar una reseña válida.</span>
+                  <span>Gana 5 puntos al publicar una reseña válida.</span>
                 </div>
               </li>
             </ul>
@@ -1011,7 +1012,7 @@ async function prepararCitasParaResena() {
             {citasParaResena.length === 0 ? (
               <p className="pc-empty">
                 No tienes citas pendientes por calificar. Cuando finalices un
-                servicio podrás dejar aquí tu opinión y ganar 20 puntos.
+                servicio podrás dejar aquí tu opinión y ganar 5 puntos.
               </p>
             ) : (
               <form className="pc-form" onSubmit={crearResena}>
@@ -1094,7 +1095,7 @@ async function prepararCitasParaResena() {
                 </button>
 
                 <p className="pc-hint">
-                  Al publicar una reseña válida ganas 20 puntos.
+                  Al publicar una reseña válida ganas 5 puntos.
                 </p>
               </form>
             )}
