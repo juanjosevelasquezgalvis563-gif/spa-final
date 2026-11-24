@@ -417,6 +417,7 @@ export function Empleado() {
                                     </span>
                                 </article>
                             ))}
+                            
                         </div>
                     ) : (
                         <div className="empleado-agenda-empty">
