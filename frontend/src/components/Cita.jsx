@@ -665,6 +665,7 @@ async function obtenerEmpleados(servicioActual) {
                         {empleado.nombre}
                       </option>
                     ))}
+                    
                   </select>
                 )}
               </div>
