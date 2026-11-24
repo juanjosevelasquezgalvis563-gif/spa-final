@@ -11,8 +11,12 @@ const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY;
  * @returns {Promise<boolean>} Verdadero si el token es válido, falso en caso contrario.
  */
 async function validarTurnstile(token) {
-    if (!TURNSTILE_SECRET_KEY || !token) {
-        console.warn('Turnstile: Clave secreta no configurada o token no recibido.');
+    if (!TURNSTILE_SECRET_KEY) {
+        console.error('Turnstile: TURNSTILE_SECRET_KEY no configurada en las variables de entorno.');
+        return false;
+    }
+    if (!token) {
+        console.warn('Turnstile: No se recibió token de verificación.');
         return false;
     }
     try {
@@ -27,7 +31,7 @@ async function validarTurnstile(token) {
         }
         return Boolean(data.success);
     } catch (error) {
-        console.error('Turnstile: Error al validar Turnstile:', error);
+        console.error('Turnstile: Error de red al validar con Cloudflare:', error.message);
         return false;
     }
 }
@@ -36,6 +40,14 @@ async function validarTurnstile(token) {
 export async function registro(req, res) {
     try {
         const { nombre, telefono, email, password, turnstileToken } = req.body ?? {};
+
+        console.log("[Registro] Petición recibida:", {
+          nombre: !!nombre,
+          telefono: !!telefono,
+          email: !!email,
+          password: !!password,
+          turnstileToken: turnstileToken ? turnstileToken.substring(0, 30) + "..." : "FALTA",
+        });
 
        
         const turnstileOk = await validarTurnstile(turnstileToken);
