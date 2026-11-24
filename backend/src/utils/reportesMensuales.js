@@ -254,6 +254,7 @@ export async function generarDatosReporte(anio, mes) {
             reservas_wompi: reservas,
             total: ingresosTotal
         },
+        
         compras,
         balance: {
             ingresos: ingresosTotal,
