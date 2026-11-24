@@ -599,6 +599,7 @@ export async function recibirEventoWompi(req, res) {
     }
 
     const transaccionWompi = req.body?.data?.transaction;
+    
 
     if (
         req.body?.event !== "transaction.updated"
