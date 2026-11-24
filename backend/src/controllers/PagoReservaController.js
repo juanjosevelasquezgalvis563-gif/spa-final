@@ -51,6 +51,7 @@ function obtenerUrlCheckout(pagoReserva) {
         throw new Error("Falta configurar WOMPI_PUBLIC_KEY, WOMPI_INTEGRITY_SECRET o FRONTEND_URL.");
     }
 
+    
     const amountInCents = (pagoReserva.monto_reserva - pagoReserva.monto_credito) * 100;
     const expirationTime = new Date(pagoReserva.expira_en).toISOString();
     const signature = generarFirmaCheckout(
