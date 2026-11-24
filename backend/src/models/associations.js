@@ -3,14 +3,11 @@ import Cita from "./citas.js";
 import Servicio from "./servicios.js";
 import Producto from "./productos.js";
 import Compra from "./compras.js";
-import Pedido from "./pedidos.js";
-import PedidoDetalle from "./pedidoDetalles.js";
 import PasswordReset from "./password_resets.js";
 import Resena from "./reseña.js";
 import Pago from "./pagos.js";
 import PagoReserva from "./PagoReserva.js";
-import AbonoReserva from "./AbonoReserva.js";
-import AbonoReservaUso from "./AbonoReservaUso.js";
+
 
 
 Usuario.hasMany(Cita, {
@@ -78,10 +75,6 @@ Compra.belongsTo(Producto,{
     foreignKey:'producto_id'
 });
 
-Usuario.hasMany(Pedido, {
-    foreignKey: "usuario_id",
-    as: "pedidos"
-});
 
 Cita.hasMany(Pago, {
     foreignKey: "cita_id",
@@ -118,27 +111,7 @@ PagoReserva.belongsTo(Servicio, {
     foreignKey: "servicio_id"
 });
 
-Usuario.hasMany(AbonoReserva, {
-    foreignKey: "usuario_id",
-    as: "abonosReserva"
-});
 
-AbonoReserva.belongsTo(PagoReserva, {
-    foreignKey: "pago_reserva_id",
-    as: "pagoOrigen"
-});
 
-AbonoReserva.hasMany(AbonoReservaUso, {
-    foreignKey: "abono_id",
-    as: "usos"
-});
 
-AbonoReservaUso.belongsTo(AbonoReserva, {
-    foreignKey: "abono_id",
-    as: "abono"
-});
 
-AbonoReservaUso.belongsTo(PagoReserva, {
-    foreignKey: "pago_reserva_id",
-    as: "reserva"
-});
