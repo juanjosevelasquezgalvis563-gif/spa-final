@@ -1,9 +1,9 @@
 
 const EMPLEADO_ESPECIALIDAD = {
-    "melany arango": "manicurista",
-    "valentina alvarez": "manicurista",
-    "steven piedradita": "estilista",
-    "evelyn nino": "estilista",
+    "Melany arango": "manicurista",
+    "Juliana correa": "manicurista",
+    "Steven piedradita": "estilista",
+    "Evelyn nino": "estilista",
 };
 
 const SERVICIO_ESPECIALIDAD = {
