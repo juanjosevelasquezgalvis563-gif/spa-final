@@ -83,9 +83,9 @@ Usuario.hasMany(Pedido, {
     as: "pedidos"
 });
 
-Cita.hasOne(Pago, {
+Cita.hasMany(Pago, {
     foreignKey: "cita_id",
-    as: "pago"
+    as: "pagos"
 });
 
 Pago.belongsTo(Cita, {
