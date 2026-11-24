@@ -6,6 +6,7 @@ import AbonoReservaUso from "../models/AbonoReservaUso.js";
 import Cita from "../models/citas.js";
 import MovimientoPuntos from "../models/MovimientoPuntos.js";
 import PagoReserva from "../models/PagoReserva.js";
+import Pago from "../models/pagos.js";
 import Servicio from "../models/servicios.js";
 import Usuario from "../models/Usuario.js";
 import { generarFirmaCheckout, verificarFirmaEventoWompi } from "../utils/wompi.js";
@@ -220,6 +221,39 @@ async function crearCitaDesdeReserva(pagoReserva, transaction) {
     return cita;
 }
 
+async function registrarPagoOnlineCita(pagoReserva, cita, transaction, fechaPago) {
+    const montoRegistrado = Number(pagoReserva.monto_pagado) || 0;
+    const montoOnline = montoRegistrado > 0
+        ? montoRegistrado
+        : Math.max(0, (Number(pagoReserva.monto_reserva) || 0) - (Number(pagoReserva.monto_credito) || 0));
+    if (montoOnline <= 0) return null;
+
+    const pagoExistente = await Pago.findOne({
+        where: { cita_id: cita.id, medio_pago: "online" },
+        transaction,
+        lock: transaction.LOCK.UPDATE
+    });
+    const montoLocalExistente = Number(pagoExistente?.monto_local) || 0;
+    const datosPago = {
+        usuario_id: pagoReserva.usuario_id,
+        servicio_id: pagoReserva.servicio_id,
+        cita_id: cita.id,
+        total_pago: montoOnline + montoLocalExistente,
+        monto_online: montoOnline,
+        monto_local: montoLocalExistente,
+        medio_pago: "online",
+        fecha_pago: fechaPago,
+        estado_pago: "pagada"
+    };
+
+    if (pagoExistente) {
+        await pagoExistente.update(datosPago, { transaction });
+        return pagoExistente;
+    }
+
+    return Pago.create(datosPago, { transaction });
+}
+
 export async function crearPagoReserva(req, res) {
     const simulado = pagosSimulados();
 
@@ -250,6 +284,7 @@ export async function crearPagoReserva(req, res) {
     const empleadoId = Number(req.body?.empleado_id);
     const servicioId = Number(req.body?.servicio_id);
     const aplicarDescuento = req.body?.aplicar_descuento === true;
+    const tipoPago = req.body?.tipo_pago === "completo" ? "completo" : "reserva";
 
     if (!validarFechaHoraReserva(fecha, horaSolicitada) || !Number.isInteger(empleadoId)
         || empleadoId < 1 || !Number.isInteger(servicioId) || servicioId < 1) {
@@ -327,7 +362,9 @@ export async function crearPagoReserva(req, res) {
             }
 
             const precioConDescuento = precioPesos - descuentoValor;
-            const montoReserva = obtenerMontoReserva(precioConDescuento);
+            const montoReserva = tipoPago === "completo"
+                ? precioConDescuento
+                : obtenerMontoReserva(precioConDescuento);
             if (!montoReserva) {
                 return { error: "El servicio no tiene un precio válido para calcular la reserva.", status: 400 };
             }
@@ -361,7 +398,7 @@ export async function crearPagoReserva(req, res) {
                 return { error: "Este horario está reservado mientras se completa otro pago. Elige otro horario.", status: 409 };
             }
 
-            const abonos = await AbonoReserva.findAll({
+            const abonos = tipoPago === "completo" ? [] : await AbonoReserva.findAll({
                 where: {
                     usuario_id: usuarioId,
                     saldo: { [Op.gt]: 0 }
@@ -414,8 +451,8 @@ export async function crearPagoReserva(req, res) {
             }
 
             if (pagoReserva.estado === "aprobado") {
-               
-                await crearCitaDesdeReserva(pagoReserva, transaction);
+                const cita = await crearCitaDesdeReserva(pagoReserva, transaction);
+                await registrarPagoOnlineCita(pagoReserva, cita, transaction, ahora);
                 await pagoReserva.save({ transaction });
             }
 
@@ -437,6 +474,14 @@ export async function crearPagoReserva(req, res) {
                 monto_reserva: pagoReserva.monto_reserva,
                 monto_credito: pagoReserva.monto_credito,
                 monto_pagado: pagoReserva.monto_pagado,
+                monto_online: pagoReserva.monto_pagado,
+                saldo_pendiente: Math.max(0,
+                    Number(pagoReserva.precio_original)
+                    - Number(pagoReserva.descuento_valor)
+                    - Number(pagoReserva.monto_pagado)
+                    - Number(pagoReserva.monto_credito)
+                ),
+                tipo_pago: tipoPago,
                 descuento_porcentaje: pagoReserva.descuento_porcentaje,
                 descuento_valor: pagoReserva.descuento_valor
             });
@@ -449,6 +494,14 @@ export async function crearPagoReserva(req, res) {
             monto_reserva: pagoReserva.monto_reserva,
             monto_credito: pagoReserva.monto_credito,
             monto_pagado: pagoReserva.monto_pagado,
+            monto_online: pagoReserva.monto_pagado,
+            saldo_pendiente: Math.max(0,
+                Number(pagoReserva.precio_original)
+                - Number(pagoReserva.descuento_valor)
+                - Number(pagoReserva.monto_pagado)
+                - Number(pagoReserva.monto_credito)
+            ),
+            tipo_pago: tipoPago,
             descuento_porcentaje: pagoReserva.descuento_porcentaje,
             descuento_valor: pagoReserva.descuento_valor,
             checkout_url: obtenerUrlCheckout(pagoReserva)
@@ -497,6 +550,17 @@ export async function obtenerEstadoPagoReserva(req, res) {
             monto_reserva: pagoReserva.monto_reserva,
             monto_credito: pagoReserva.monto_credito,
             monto_pagado: pagoReserva.monto_pagado,
+            monto_online: pagoReserva.monto_pagado,
+            saldo_pendiente: Math.max(0,
+                Number(pagoReserva.precio_original)
+                - Number(pagoReserva.descuento_valor)
+                - Number(pagoReserva.monto_pagado)
+                - Number(pagoReserva.monto_credito)
+            ),
+            tipo_pago: Number(pagoReserva.monto_reserva) >=
+                Number(pagoReserva.precio_original) - Number(pagoReserva.descuento_valor)
+                ? "completo"
+                : "reserva",
             descuento_porcentaje: pagoReserva.descuento_porcentaje,
             descuento_valor: pagoReserva.descuento_valor,
             cita_id: pagoReserva.cita_id
@@ -521,13 +585,6 @@ export async function obtenerAbonosReserva(req, res) {
 
 
 export async function recibirEventoWompi(req, res) {
-    console.log("================================");
-    console.log("WEBHOOK WOMPI RECIBIDO");
-    console.log("EVENTO:", req.body?.event);
-    console.log("REFERENCIA:", req.body?.data?.transaction?.reference);
-    console.log("ESTADO:", req.body?.data?.transaction?.status);
-    console.log("ID TRANSACCIÓN:", req.body?.data?.transaction?.id);
-    console.log("================================");
 
     const eventsSecret = process.env.WOMPI_EVENTS_SECRET;
 
@@ -713,18 +770,15 @@ export async function recibirEventoWompi(req, res) {
                 transaction
             );
 
+            await registrarPagoOnlineCita(pagoReserva, cita, transaction, ahora);
+
             pagoReserva.estado = "aprobado";
             pagoReserva.transaction_id = transaccionWompi.id || null;
             pagoReserva.updated_at = ahora;
 
             await pagoReserva.save({ transaction });
 
-            console.log("================================");
-            console.log("PAGO WOMPI APROBADO");
-            console.log("PAGO ID:", pagoReserva.id);
-            console.log("CITA CREADA:", cita.id);
-            console.log("REFERENCIA:", pagoReserva.referencia);
-            console.log("================================");
+         
         });
 
         return res.sendStatus(200);
