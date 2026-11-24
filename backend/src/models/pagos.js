@@ -29,8 +29,7 @@ const Pago = db.define('Pago', {
         allowNull: false,
         defaultValue: 0
     },
-    // Compatibilidad con la columna existente en la base; el desglose contable
-    // se guarda en monto_online y monto_local.
+   
     medio_pago: {
         type: DataTypes.ENUM('online', 'local'),
         allowNull: false
@@ -55,3 +54,4 @@ const Pago = db.define('Pago', {
 });
 
 export default Pago;
+
