@@ -12,6 +12,7 @@ import { PRODUCT_IMAGES_DIR } from "./src/config/productImages.js";
 import authRoutes from "./src/routes/routes.js";
 import db from "./src/config/db.js";
 import { iniciarRecordatorios } from "./src/controllers/recordatorios.js";
+import { iniciarJobReportesQuincenales } from "./src/controllers/ReportesMensualesJob.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,13 +32,11 @@ const allowedOrigins = [
     frontendOrigin
 ].filter(Boolean);
 
-// Acepta los previews de Vercel de este proyecto, por ejemplo:
-//   spa-final-an59-ksky8u3xc-velure-spa.vercel.app
-//   spa-final-an59-git-develop-velure-spa.vercel.app
+
 const vercelPreviewRegex = /^https:\/\/spa-final-an59(-[a-z0-9-]+)?-velure-spa\.vercel\.app$/;
 
 function origenPermitido(origin) {
-    // Sin origin: Wompi (webhook), curl, Postman, etc.
+   
     if (!origin) return true;
     return allowedOrigins.includes(origin) || vercelPreviewRegex.test(origin);
 }
@@ -73,13 +72,6 @@ app.use(express.json());
 
 
 app.use("/inser", (req, res, next) => {
-    console.log("=================================");
-    console.log("PETICIÓN RECIBIDA EN BACKEND");
-    console.log("Método:", req.method);
-    console.log("Ruta:", req.originalUrl);
-    console.log("Origen:", req.headers.origin);
-    console.log("IP:", req.ip);
-    console.log("=================================");
 
     next();
 });
@@ -156,6 +148,7 @@ try {
     });
 
     iniciarRecordatorios();
+    iniciarJobReportesQuincenales();
 
     console.log("Recordatorios automáticos iniciados");
 
