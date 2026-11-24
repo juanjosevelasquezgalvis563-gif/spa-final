@@ -6,6 +6,144 @@ import { API_ROOT } from "../lib/api";
 import "./Registro.css";
 import PasswordVisibilityToggle from "./PasswordVisibilityToggle";
 
+/* ------------------------------------------------------------------ */
+/*  Hook: useTurnstile                                                */
+/*  Encapsula la carga del script de Cloudflare y el renderizado      */
+/*  del widget, con reintentos y manejo de errores claros.            */
+/* ------------------------------------------------------------------ */
+function useTurnstile(siteKey) {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(null);
+  const [widgetId, setWidgetId] = useState(null);
+  const [token, setToken] = useState("");
+  const [retryCount, setRetryCount] = useState(0);
+
+  const containerRef = useRef(null);
+  const scriptLoadedRef = useRef(false);
+
+  const MAX_RETRIES = 3;
+
+  const onVerify = useCallback((t) => {
+    console.log("[Turnstile] Token recibido:", t ? t.substring(0, 20) + "..." : "vacío");
+    setToken(t);
+    setError(null);
+  }, []);
+
+  const onError = useCallback(() => {
+    console.error("[Turnstile] Error-callback del widget.");
+    setToken("");
+    setError("Error al completar la verificación de seguridad. Inténtalo de nuevo.");
+  }, []);
+
+  const reset = useCallback(() => {
+    if (window.turnstile && widgetId) {
+      window.turnstile.reset(widgetId);
+    }
+    setWidgetId(null);
+    setToken("");
+    setError(null);
+  }, [widgetId]);
+
+  const remove = useCallback(() => {
+    if (window.turnstile && widgetId) {
+      window.turnstile.remove(widgetId);
+    }
+    setWidgetId(null);
+    setToken("");
+  }, [widgetId]);
+
+  const loadScript = useCallback(() => {
+    const scriptId = "cloudflare-turnstile";
+    const existing = document.getElementById(scriptId);
+
+    if (existing && scriptLoadedRef.current) {
+      setLoaded(true);
+      return;
+    }
+
+    if (existing) {
+      existing.remove();
+    }
+
+    const script = document.createElement("script");
+    script.id = scriptId;
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    script.async = true;
+    script.defer = true;
+
+    script.onload = () => {
+      scriptLoadedRef.current = true;
+      setLoaded(true);
+      console.log("[Turnstile] Script de Cloudflare cargado.");
+    };
+    script.onerror = () => {
+      setError("No se pudo cargar la verificación de seguridad. Comprueba tu conexión.");
+      console.error("[Turnstile] Error al cargar el script de Cloudflare.");
+    };
+
+    document.head.appendChild(script);
+  }, []);
+
+  useEffect(() => {
+    loadScript();
+  }, [loadScript]);
+
+  useEffect(() => {
+    if (!siteKey) {
+      setError("Configuración de seguridad incompleta.");
+      return;
+    }
+
+    if (!loaded || !containerRef.current || !window.turnstile || widgetId) {
+      return;
+    }
+
+    try {
+      const id = window.turnstile.render(containerRef.current, {
+        sitekey: siteKey,
+        callback: onVerify,
+        "error-callback": onError,
+      });
+      setWidgetId(id);
+      setError(null);
+      console.log("[Turnstile] Widget renderizado, ID:", id);
+    } catch {
+      setError("No se pudo renderizar la verificación de seguridad.");
+      console.error("[Turnstile] Excepción al renderizar el widget.");
+    }
+  }, [loaded, siteKey, widgetId, onVerify, onError]);
+
+  useEffect(() => {
+    if (error && !loaded && retryCount < MAX_RETRIES) {
+      const timer = setTimeout(() => {
+        setRetryCount((c) => c + 1);
+        scriptLoadedRef.current = false;
+        const existing = document.getElementById("cloudflare-turnstile");
+        if (existing) existing.remove();
+        setLoaded(false);
+        setError(null);
+      }, 2000 * (retryCount + 1));
+
+      return () => clearTimeout(timer);
+    }
+  }, [error, loaded, retryCount]);
+
+  return {
+    loaded,
+    error,
+    widgetId,
+    token,
+    retryCount,
+    containerRef,
+    reset,
+    remove,
+    setError,
+    setToken,
+    setLoaded,
+    loadScript,
+  };
+}
+
 export function Registro() {
   const [nombre, setNombre] = useState("");
   const [telefono, setTelefono] = useState("");
@@ -13,17 +151,28 @@ export function Registro() {
   const [password, setPassword] = useState("");
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [message, setMessage] = useState("");
-  const [turnstileToken, setTurnstileToken] = useState("");
-  const [turnstileLoaded, setTurnstileLoaded] = useState(false);
-  const [turnstileWidgetId, setTurnstileWidgetId] = useState(null);
-  const [turnstileError, setTurnstileError] = useState("");
   const [cargando, setCargando] = useState(false);
   const [awaitingVerification, setAwaitingVerification] = useState(false);
   const [confirmationCode, setConfirmationCode] = useState("");
   const [verificandoCorreo, setVerificandoCorreo] = useState(false);
   const [reenviandoCodigo, setReenviandoCodigo] = useState(false);
 
-  const turnstileRef = useRef(null);
+  const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+
+  const {
+    loaded: turnstileLoaded,
+    error: turnstileError,
+    widgetId: turnstileWidgetId,
+    token: turnstileToken,
+    retryCount: turnstileRetryCount,
+    containerRef: turnstileRef,
+    reset: resetTurnstile,
+    remove: removeTurnstile,
+    setError: setTurnstileError,
+    setToken: setTurnstileToken,
+    setLoaded: setTurnstileLoaded,
+    loadScript: loadTurnstileScript,
+  } = useTurnstile(siteKey);
 
   const limpiarCampos = () => {
     setNombre("");
@@ -34,28 +183,7 @@ export function Registro() {
     setMostrarPassword(false);
   };
 
-  const onTurnstileVerify = useCallback((token) => {
-    setTurnstileToken(token);
-    setMessage("");
-  }, []);
 
-  const onTurnstileError = useCallback(() => {
-    setTurnstileToken("");
-    setMessage(
-      "Error al completar la verificación de seguridad. Inténtalo de nuevo."
-    );
-  }, []);
-
-  const resetTurnstile = useCallback(() => {
-    if (window.turnstile && turnstileWidgetId) {
-      window.turnstile.reset(turnstileWidgetId);
-    } else {
-      setTurnstileWidgetId(null);
-    }
-
-    setTurnstileToken("");
-    setMessage("");
-  }, [turnstileWidgetId]);
 
   useEffect(() => {
     if (!message) return undefined;
@@ -65,119 +193,27 @@ export function Registro() {
     return () => clearTimeout(timer);
   }, [message]);
 
-  useEffect(() => {
-    const scriptId = "cloudflare-turnstile";
 
-    if (document.getElementById(scriptId)) {
-      setTurnstileLoaded(true);
-      return;
-    }
 
-    const script = document.createElement("script");
 
-    script.id = scriptId;
-    script.src =
-      "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-    script.async = true;
-    script.defer = true;
-
-    script.onload = () => {
-      setTurnstileLoaded(true);
-    };
-
-    script.onerror = () => {
-      setTurnstileError(
-        "No se pudo cargar la verificación de seguridad. Comprueba tu conexión."
-      );
-      setMessage(
-        "No se pudo cargar la verificación de seguridad. Comprueba tu conexión."
-      );
-    };
-
-    document.head.appendChild(script);
-  }, []);
-
-  useEffect(() => {
-    const shouldRender =
-      turnstileLoaded &&
-      !awaitingVerification &&
-      turnstileRef.current &&
-      window.turnstile &&
-      !turnstileWidgetId;
-
-    const shouldRemove =
-      turnstileWidgetId &&
-      (awaitingVerification || !turnstileRef.current || !window.turnstile);
-
-    if (shouldRender) {
-      const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
-
-      if (!siteKey) {
-        setMessage("Configuración de seguridad incompleta.");
-        setTurnstileError(
-          "Error: Clave de sitio de Turnstile no configurada."
-        );
-        return;
-      }
-
-      try {
-        const id = window.turnstile.render(turnstileRef.current, {
-          sitekey: siteKey,
-          callback: onTurnstileVerify,
-          "error-callback": onTurnstileError,
-        });
-
-        setTurnstileWidgetId(id);
-        setTurnstileError("");
-      } catch {
-        setTurnstileError(
-          "No se pudo cargar la verificación de seguridad."
-        );
-        setMessage(
-          "No se pudo cargar la verificación de seguridad. Inténtalo más tarde."
-        );
-      }
-    } else if (shouldRemove) {
-      window.turnstile.remove(turnstileWidgetId);
-      setTurnstileWidgetId(null);
-      setTurnstileToken("");
-    }
-
-    return () => {
-      if (
-        turnstileWidgetId &&
-        typeof window !== "undefined" &&
-        window.turnstile
-      ) {
-        window.turnstile.remove(turnstileWidgetId);
-      }
-    };
-  }, [
-    turnstileLoaded,
-    awaitingVerification,
-    turnstileWidgetId,
-    onTurnstileVerify,
-    onTurnstileError,
-  ]);
 
   const restablecerTurnstile = useCallback(() => {
-    if (
-      turnstileWidgetId &&
-      typeof window !== "undefined" &&
-      window.turnstile
-    ) {
-      window.turnstile.remove(turnstileWidgetId);
-      setTurnstileWidgetId(null);
-      setTurnstileToken("");
-    } else {
-      setTurnstileWidgetId(null);
-    }
-  }, [turnstileWidgetId]);
+    removeTurnstile();
+  }, [removeTurnstile]);
 
   async function handleSubmit(e) {
     e.preventDefault();
 
     if (awaitingVerification) return;
+
+    console.log("[Registro] Iniciando handleSubmit");
+    console.log("[Registro] siteKey:", siteKey ? "configurada" : "FALTA");
+    console.log("[Registro] turnstileToken:", turnstileToken ? turnstileToken.substring(0, 30) + "..." : "FALTA");
+
+    if (!siteKey) {
+      setMessage("Configuración de seguridad incompleta.");
+      return;
+    }
 
     if (!turnstileToken) {
       setMessage(
@@ -191,21 +227,25 @@ export function Registro() {
     try {
       const correoRegistrado = email.trim();
 
+      const payload = {
+        nombre,
+        telefono,
+        email: correoRegistrado,
+        password,
+        turnstileToken,
+      };
+      console.log("[Registro] Enviando payload:", { ...payload, turnstileToken: turnstileToken ? "[TOKEN]" : "" });
+
       const response = await fetch(`${API_ROOT}/inser/registrar`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          nombre,
-          telefono,
-          email: correoRegistrado,
-          password,
-          turnstileToken,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json().catch(() => ({}));
+      console.log("[Registro] Respuesta backend:", { status: response.status, data });
 
       if (response.ok) {
         setAwaitingVerification(true);
@@ -222,11 +262,12 @@ export function Registro() {
         setEmail(correoRegistrado);
       } else {
         setMessage(data.message || "No se pudo registrar el usuario");
+        restablecerTurnstile();
       }
     } catch {
       setMessage("Error de conexión con el servidor");
-    } finally {
       restablecerTurnstile();
+    } finally {
       setCargando(false);
     }
   }
@@ -490,9 +531,23 @@ export function Registro() {
 
               <div className="turnstile-container">
                 {turnstileError ? (
-                  <p className="turnstile-status error" role="alert">
-                    {turnstileError}
-                  </p>
+                  <>
+                    <p className="turnstile-status error" role="alert">
+                      {turnstileError}
+                    </p>
+                    {turnstileRetryCount < 3 && !turnstileLoaded && (
+                      <button
+                        className="registro-captcha-refresh"
+                        type="button"
+                        onClick={() => {
+                          console.log("[Turnstile] Usuario solicitó reintento de carga.");
+                          loadScript();
+                        }}
+                      >
+                        Reintentar carga
+                      </button>
+                    )}
+                  </>
                 ) : (
                   <div ref={turnstileRef} />
                 )}
