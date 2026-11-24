@@ -178,3 +178,4 @@ function HistorialPagos() {
 }
 
 export default HistorialPagos;
+
