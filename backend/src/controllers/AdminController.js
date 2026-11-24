@@ -617,6 +617,7 @@ export async function historialPagos(req, res) {
                 ...pago, monto_online: online, monto_local: local, total_pago: dinero(pago.total_pago),
                 tipo_pago: online > 0 && local === 0 ? 'Pago online' : 'Pago local'
             };
+            
         }));
         const citasConMovimientoOnline = new Set(filasPago.filter((p) => p.monto_online > 0).map((p) => Number(p.cita_id)));
     
