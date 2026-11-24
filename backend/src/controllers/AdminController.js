@@ -404,425 +404,190 @@ export async function historialCompras(req, res) {
     }
 }
 
+const dinero = (valor) => Math.round((Number(valor) || 0) * 100) / 100;
+const montoOnlineReserva = (reserva) => {
+    const pagado = dinero(reserva?.monto_pagado);
+    return pagado > 0
+        ? pagado
+        : Math.max(0, dinero(reserva?.monto_reserva) - dinero(reserva?.monto_credito));
+};
+
+function resumirMovimientosPago(pagos, reservas, citaId) {
+    const movimientos = pagos.filter((pago) => Number(pago.cita_id) === Number(citaId));
+    const reservasCita = reservas.filter((reserva) => Number(reserva.cita_id) === Number(citaId));
+    let montoOnlineEnPagos = 0;
+    let montoLocal = 0;
+
+    for (const pago of movimientos) {
+        const online = dinero(pago.monto_online);
+        const local = dinero(pago.monto_local);
+        if (online > 0 || local > 0) {
+            montoOnlineEnPagos += online;
+            montoLocal += local;
+        } else if (pago.medio_pago === 'online') {
+            // Compatibilidad con movimientos online antiguos guardados antes
+            // de que el desglose monto_online/monto_local estuviera poblado.
+            montoOnlineEnPagos += dinero(pago.total_pago);
+        } else {
+            // Los registros antiguos sin desglose se registraban en caja.
+            montoLocal += dinero(pago.total_pago);
+        }
+    }
+
+    const creditoAplicado = reservasCita.reduce((suma, reserva) => suma + dinero(reserva.monto_credito), 0);
+    const montoOnlineEnReservas = reservasCita.reduce((suma, reserva) => suma + montoOnlineReserva(reserva), 0);
+    // Las dos tablas pueden representar el mismo cobro online. Se toma el
+    // mayor agregado para recuperar datos antiguos sin duplicar el ingreso.
+    const montoOnline = Math.max(montoOnlineEnPagos, montoOnlineEnReservas);
+    return { monto_online: dinero(montoOnline), monto_local: dinero(montoLocal), credito_aplicado: creditoAplicado };
+}
+
+async function cargarMovimientosCitas(citaIds, transaction) {
+    if (!citaIds.length) return { pagos: [], reservas: [] };
+    const [pagos, reservas] = await Promise.all([
+        Pago.findAll({ where: { cita_id: { [Op.in]: citaIds }, estado_pago: 'pagada' }, raw: true, transaction }),
+        PagoReserva.findAll({
+            where: { cita_id: { [Op.in]: citaIds }, estado: 'aprobado' },
+            attributes: ['id', 'cita_id', 'monto_reserva', 'monto_pagado', 'monto_credito'], raw: true, transaction
+        })
+    ]);
+    return { pagos, reservas };
+}
 
 export async function citasFinalizadasParaPago(req, res) {
+    if (!['administrador', 'empleado'].includes(req.user?.rol)) {
+        return res.status(403).json({ message: 'No tienes permiso para consultar estas citas.' });
+    }
     try {
-        const usuario = req.user;
-
-        if (!usuario || !["administrador", "empleado"].includes(usuario.rol)) {
-            return res.status(403).json({
-                message: "No tienes permiso para consultar estas citas."
-            });
-        }
-
-        const where = {
-            estado: "finalizada"
-        };
-
-     
-        if (usuario.rol === "empleado") {
-            where.empleado_id = usuario.id;
-        }
-
+        const where = { estado: 'finalizada' };
+        if (req.user.rol === 'empleado') where.empleado_id = req.user.id;
         const citas = await Cita.findAll({
             where,
-            attributes: [
-                "id",
-                "usuario_id",
-                "empleado_id",
-                "servicio_id",
-                "fecha",
-                "hora",
-                "precio_original",
-                "descuento_porcentaje",
-                "descuento_valor",
-                "precio_final"
-            ],
+            attributes: ['id', 'usuario_id', 'empleado_id', 'servicio_id', 'fecha', 'hora', 'estado', 'precio_original', 'descuento_porcentaje', 'descuento_valor', 'precio_final'],
             include: [
-                {
-                    model: Usuario,
-                    as: "cliente",
-                    attributes: ["id", "nombre"],
-                    required: false
-                },
-                {
-                    model: Usuario,
-                    as: "empleado",
-                    attributes: ["id", "nombre"],
-                    required: false
-                },
-                {
-                    model: Servicio,
-                    attributes: ["id", "nombre", "precio"],
-                    required: false
-                },
-                {
-                    model: PagoReserva,
-                    as: "reservasPago",
-                    attributes: ["id", "monto_reserva", "estado"],
-                    where: {
-                        estado: "aprobado"
-                    },
-                    required: false
-                }
+                { model: Usuario, as: 'cliente', attributes: ['id', 'nombre'], required: false },
+                { model: Usuario, as: 'empleado', attributes: ['id', 'nombre'], required: false },
+                { model: Servicio, attributes: ['id', 'nombre', 'precio'], required: false }
             ],
-            order: [["fecha", "DESC"]]
+            order: [['fecha', 'DESC'], ['hora', 'DESC']]
         });
+        const ids = citas.map((cita) => Number(cita.id));
+        const { pagos, reservas } = await cargarMovimientosCitas(ids);
+        const citasConSaldo = citas.map((cita) => {
+            const item = cita.toJSON();
+            const precioOriginal = dinero(item.precio_original ?? item.Servicio?.precio);
+            const descuento = dinero(item.descuento_valor);
+            const precioFinal = dinero(item.precio_final ?? Math.max(0, precioOriginal - descuento));
+            const resumen = resumirMovimientosPago(pagos, reservas, item.id);
+            const saldoPendiente = Math.max(0, dinero(precioFinal - resumen.monto_online - resumen.monto_local - resumen.credito_aplicado));
+            return {
+                ...item, precio_original: precioOriginal, descuento_valor: descuento, precio_final: precioFinal,
+                monto_online: resumen.monto_online, monto_local: saldoPendiente,
+                monto_local_recibido: resumen.monto_local,
+                credito_aplicado: resumen.credito_aplicado, saldo_pendiente: saldoPendiente,
+                pago_completo: saldoPendiente <= 0
+            };
+        }).filter((cita) => !cita.pago_completo);
 
-        
-        const pagos = await Pago.findAll({
-            attributes: ["cita_id"],
-            where: {
-                cita_id: {
-                    [Op.ne]: null
-                },
-                estado_pago: "pagada"
-            },
-            raw: true
-        });
-
-        const citasPagadas = new Set(
-            pagos.map(p => Number(p.cita_id))
-        );
-
-        const citasPendientes = [];
-
-        for (const cita of citas) {
-            if (citasPagadas.has(Number(cita.id))) {
-                continue;
-            }
-
-            const resultado = cita.toJSON();
-
-            const reserva = (resultado.reservasPago || [])
-                .find(p => p.estado === "aprobado") || null;
-
-            const precioOriginal = Number(
-                resultado.precio_original ??
-                resultado.Servicio?.precio ??
-                0
-            );
-
-            const descuentoPorcentaje = Number(
-                resultado.descuento_porcentaje || 0
-            );
-
-            const descuentoValor = Number(
-                resultado.descuento_valor || 0
-            );
-
-            const precioFinal = Number(
-                resultado.precio_final ??
-                Math.max(0, precioOriginal - descuentoValor)
-            );
-
-            const reservaPagada = Number(
-                reserva?.monto_reserva || 0
-            );
-
-            const saldoPendiente = Math.max(
-                0,
-                precioFinal - reservaPagada
-            );
-
-            citasPendientes.push({
-                ...resultado,
-                precio_original: precioOriginal,
-                descuento_porcentaje: descuentoPorcentaje,
-                descuento_valor: descuentoValor,
-                precio_final: precioFinal,
-                reserva_pagada: reservaPagada,
-                saldo_pendiente: saldoPendiente
-            });
-        }
-
-        return res.status(200).json(citasPendientes);
-
+        return res.json(citasConSaldo);
     } catch (error) {
-        console.error("ERROR AL CONSULTAR CITAS PARA PAGO:", error);
-
-        return res.status(500).json({
-            message: "No se pudieron consultar las citas pendientes.",
-            error: error.message
-        });
+        console.error('No se pudieron cargar las citas finalizadas para pagos:', error);
+        return res.status(500).json({ message: 'No se pudieron cargar las citas finalizadas.' });
     }
 }
 
-
-
-function desglosarPrecioCita(cita, servicio, reservaPagada) {
-
-    const precioOriginal = Number(
-        cita.precio_original || servicio.precio || 0
-    );
-
-    const descuentoPorcentaje = Number(
-        cita.descuento_porcentaje || 0
-    );
-
-    const descuento = Number(
-        cita.descuento_valor ||
-        (precioOriginal * descuentoPorcentaje / 100)
-    );
-
-    const precioFinal = Math.max(
-        0,
-        precioOriginal - descuento
-    );
-
-    
-    const reserva = reservaPagada
-        ? Number(reservaPagada.monto_pagado || reservaPagada.monto_reserva || 0)
-        : 0;
-
-   
-    const saldo = Math.max(
-        0,
-        precioFinal - reserva
-    );
-
-    return {
-        precioOriginal,
-        descuentoPorcentaje,
-        descuento,
-        precioFinal,
-        reservaPagada: reserva,
-        saldo
-    };
-}
-
-
-
 export async function registrarPago(req, res) {
+    if (!['administrador', 'empleado'].includes(req.user?.rol)) {
+        return res.status(403).json({ message: 'No tienes permiso para registrar pagos.' });
+    }
+    const citaId = Number(req.body?.cita_id);
+    const fechaEntrada = req.body?.fecha_pago;
+    if (!Number.isInteger(citaId) || citaId <= 0 || !fechaEntrada) {
+        return res.status(400).json({ message: 'Selecciona una cita y la fecha del pago.' });
+    }
+    const fecha = /^\d{4}-\d{2}-\d{2}$/.test(String(fechaEntrada))
+        ? new Date(String(fechaEntrada) + 'T12:00:00')
+        : new Date(fechaEntrada);
+    if (Number.isNaN(fecha.getTime())) return res.status(400).json({ message: 'La fecha del pago no es v?lida.' });
+
     try {
-        const usuario = req.user;
+        const pago = await db.transaction(async (transaction) => {
+            const whereCita = { id: citaId, estado: 'finalizada' };
+            if (req.user.rol === 'empleado') whereCita.empleado_id = req.user.id;
+            const cita = await Cita.findOne({ where: whereCita, transaction, lock: transaction.LOCK.UPDATE });
+            if (!cita) throw Object.assign(new Error('La cita no existe, no est? finalizada o no te pertenece.'), { status: 404 });
+            const servicio = await Servicio.findByPk(cita.servicio_id, { transaction });
+            if (!servicio) throw Object.assign(new Error('No se encontr? el servicio asociado a la cita.'), { status: 404 });
 
-        if (!usuario || !["administrador", "empleado"].includes(usuario.rol)) {
-            return res.status(403).json({
-                message: "No tienes permiso para registrar pagos."
-            });
-        }
+            const precioOriginal = dinero(cita.precio_original ?? servicio.precio);
+            const descuento = dinero(cita.descuento_valor);
+            const precioFinal = dinero(cita.precio_final ?? Math.max(0, precioOriginal - descuento));
+            const { pagos, reservas } = await cargarMovimientosCitas([cita.id], transaction);
+            const resumen = resumirMovimientosPago(pagos, reservas, cita.id);
+            const saldoPendiente = Math.max(0, dinero(precioFinal - resumen.monto_online - resumen.monto_local - resumen.credito_aplicado));
+            const montoLocal = req.body?.monto_local == null && req.body?.total_pago == null
+                ? saldoPendiente
+                : dinero(req.body.monto_local ?? req.body.total_pago);
 
-        const citaId = Number(req.body.cita_id);
-        const fechaPago = req.body.fecha_pago;
-
-        if (
-            !Number.isInteger(citaId) ||
-            citaId <= 0 ||
-            !fechaPago
-        ) {
-            return res.status(400).json({
-                message: "Debes seleccionar una cita y una fecha de pago."
-            });
-        }
-
-        const fecha = new Date(`${fechaPago}T12:00:00`);
-
-        if (
-            Number.isNaN(fecha.getTime()) ||
-            fecha.toISOString().slice(0, 10) !== fechaPago
-        ) {
-            return res.status(400).json({
-                message: "La fecha de pago no es válida."
-            });
-        }
-
-        const resultado = await db.transaction(async (transaction) => {
-
-          
-            const whereCita = {
-                id: citaId,
-                estado: "finalizada"
-            };
-
-           
-            if (usuario.rol === "empleado") {
-                whereCita.empleado_id = usuario.id;
+            if (!Number.isFinite(montoLocal) || montoLocal <= 0) {
+                throw Object.assign(new Error('El monto local debe ser mayor que cero.'), { status: 400 });
             }
-
-            const cita = await Cita.findOne({
-                where: whereCita,
-                transaction,
-                lock: transaction.LOCK.UPDATE
-            });
-
-            if (!cita) {
-                throw Object.assign(
-                    new Error("La cita no existe, no está finalizada o no te pertenece."),
-                    { status: 404 }
-                );
+            if (montoLocal > saldoPendiente) {
+                throw Object.assign(new Error('El saldo pendiente es de $' + saldoPendiente.toLocaleString('es-CO') + ' COP.'), { status: 400 });
             }
-
-    
-            const pagoExistente = await Pago.findOne({
-                where: {
-                    cita_id: cita.id,
-                    estado_pago: "pagada"
-                },
-                transaction
-            });
-
-            if (pagoExistente) {
-                throw Object.assign(
-                    new Error("Esta cita ya tiene un pago registrado."),
-                    { status: 409 }
-                );
-            }
-
-         
-            const servicio = await Servicio.findByPk(cita.servicio_id, {
-                transaction
-            });
-
-            if (!servicio) {
-                throw Object.assign(
-                    new Error("No se encontró el servicio."),
-                    { status: 404 }
-                );
-            }
-
-           
-            const reservaPagada = await PagoReserva.findOne({
-                where: {
-                    cita_id: cita.id,
-                    estado: ["aprobado", "aprobado_abono"]
-                },
-                transaction
-            });
-
-          
-            const desglose = desglosarPrecioCita(
-                cita,
-                servicio,
-                reservaPagada
-            );
-
-            const precioOriginal = Number(desglose.precioOriginal);
-            const descuento = Number(desglose.descuento);
-            const precioFinal = Number(desglose.precioFinal);
-            const reserva = Number(desglose.reservaPagada);
-            const saldo = Number(desglose.saldo);
-
-            if (
-                !Number.isFinite(precioOriginal) ||
-                !Number.isFinite(descuento) ||
-                !Number.isFinite(precioFinal) ||
-                !Number.isFinite(reserva) ||
-                !Number.isFinite(saldo) ||
-                precioOriginal <= 0 ||
-                descuento < 0 ||
-                descuento > precioOriginal ||
-                precioFinal < 0 ||
-                reserva < 0 ||
-                saldo < 0 ||
-                saldo > precioFinal
-            ) {
-                throw Object.assign(
-                    new Error("Los valores del pago no son válidos."),
-                    { status: 400 }
-                );
-            }
-
-         
-            cita.precio_original = precioOriginal;
-            cita.descuento_porcentaje =
-                Number(desglose.descuentoPorcentaje) || 0;
-            cita.descuento_valor = descuento;
-            cita.precio_final = precioFinal;
-
-            await cita.save({ transaction });
-
-           
-            const nuevoPago = await Pago.create({
+            const onlineTotal = resumen.monto_online;
+            const localTotal = dinero(resumen.monto_local + montoLocal);
+            const pagoPrincipal = pagos.find((movimiento) =>
+                Number(movimiento.cita_id) === Number(cita.id) &&
+                (dinero(movimiento.monto_online) > 0 || movimiento.medio_pago === 'online')
+            ) || pagos.find((movimiento) => Number(movimiento.cita_id) === Number(cita.id));
+            const datosPago = {
                 usuario_id: cita.usuario_id,
                 servicio_id: cita.servicio_id,
                 cita_id: cita.id,
-                total_pago: saldo,
+                total_pago: dinero(onlineTotal + localTotal),
+                monto_online: onlineTotal,
+                monto_local: localTotal,
+                medio_pago: onlineTotal > 0 ? 'online' : 'local',
                 fecha_pago: fecha,
-                estado_pago: "pagada"
-            }, { transaction });
-
-            return {
-                pago: nuevoPago,
-                precio_original: precioOriginal,
-                descuento_porcentaje:
-                    Number(desglose.descuentoPorcentaje) || 0,
-                descuento_aplicado: descuento,
-                precio_final: precioFinal,
-                reserva_pagada: reserva,
-                total_pagado: saldo
+                estado_pago: 'pagada'
             };
-        });
 
-        return res.status(201).json({
-            message: "Pago registrado correctamente.",
-            pago: resultado.pago,
-            detalle: {
-                precio_original: resultado.precio_original,
-                descuento_porcentaje: resultado.descuento_porcentaje,
-                descuento_aplicado: resultado.descuento_aplicado,
-                precio_final: resultado.precio_final,
-                reserva_pagada: resultado.reserva_pagada,
-                total_pagado: resultado.total_pagado
+            if (pagoPrincipal) {
+                const pagoPersistido = await Pago.findByPk(pagoPrincipal.id, {
+                    transaction,
+                    lock: transaction.LOCK.UPDATE
+                });
+                if (pagoPersistido) {
+                    await pagoPersistido.update(datosPago, { transaction });
+                    return pagoPersistido;
+                }
             }
+            return Pago.create(datosPago, { transaction });
         });
-
+        return res.status(201).json({ message: 'Pago local registrado correctamente.', pago });
     } catch (error) {
-        console.error("Error al registrar pago:", error);
-
-        return res.status(error.status || 500).json({
-            message: error.status
-                ? error.message
-                : "Error al registrar el pago."
-        });
+        console.error('Error al registrar el pago local:', error);
+        return res.status(error.status || 500).json({ message: error.status ? error.message : 'No se pudo registrar el pago.' });
     }
 }
 
-
-
-
-
-
-
 export async function historialPagos(req, res) {
+    if (req.user?.rol !== 'administrador') {
+        return res.status(403).json({ message: 'No tienes permiso para consultar el historial de pagos.' });
+    }
     try {
-        if (req.user?.rol !== 'administrador') {
-            return res.status(403).json({
-                message: 'No tienes permiso para consultar el historial de pagos.'
-            });
-        }
-
-        const [pagos, reservasPagadas] = await Promise.all([
+        const [pagos, reservas] = await Promise.all([
             Pago.findAll({
-                include: [
-                    {
-                        model: Cita,
-                        as: 'cita',
-                        required: false,
-                        include: [
-                            {
-                                model: Usuario,
-                                as: 'cliente',
-                                attributes: ['id', 'nombre']
-                            },
-                            {
-                                model: Usuario,
-                                as: 'empleado',
-                                attributes: ['id', 'nombre']
-                            },
-                            {
-                                model: Servicio,
-                                attributes: ['id', 'nombre', 'precio']
-                            }
-                        ]
-                    }
-                ],
+                include: [{ model: Cita, as: 'cita', required: false, include: [
+                    { model: Usuario, as: 'cliente', attributes: ['id', 'nombre'] },
+                    { model: Usuario, as: 'empleado', attributes: ['id', 'nombre'] },
+                    { model: Servicio, attributes: ['id', 'nombre', 'precio'] }
+                ] }],
                 order: [['fecha_pago', 'DESC']]
             }),
             PagoReserva.findAll({
-                where: {
-                    estado: { [Op.in]: ['aprobado', 'aprobado_abono'] }
-                },
+                where: { estado: { [Op.in]: ['aprobado', 'aprobado_abono'] } },
                 include: [
                     { model: Usuario, as: 'cliente', attributes: ['id', 'nombre'] },
                     { model: Usuario, as: 'empleado', attributes: ['id', 'nombre'] },
@@ -831,37 +596,124 @@ export async function historialPagos(req, res) {
                 order: [['updated_at', 'DESC']]
             })
         ]);
-
-        const pagosCombinados = [
-            ...pagos.map((pago) => ({
-                ...pago.toJSON(),
-                tipo_pago: 'Saldo en el salón',
-                credito_aplicado: 0
-            })),
-            ...reservasPagadas.map((reserva) => ({
-                id: `reserva-${reserva.id}`,
-                fecha_pago: reserva.updated_at,
-                total_pago: reserva.monto_pagado,
-                credito_aplicado: reserva.estado === 'aprobado' ? reserva.monto_credito : 0,
-                estado_pago: reserva.estado === 'aprobado' ? 'Reserva pagada' : 'Abono disponible',
-                tipo_pago: 'Reserva en línea (Wompi)',
-                cita: {
-                    cliente: reserva.cliente,
-                    empleado: reserva.empleado,
-                    Servicio: reserva.Servicio,
-                    fecha: reserva.fecha_reserva,
-                    hora: reserva.hora_reserva
+        const filasPago = await Promise.all(pagos.map(async (instancia) => {
+            const pago = instancia.toJSON();
+            let online = dinero(pago.monto_online);
+            let local = dinero(pago.monto_local);
+            const camposActualizar = {};
+            if (online === 0 && pago.medio_pago === 'online' && dinero(pago.total_pago) > 0) {
+                online = dinero(pago.total_pago);
+                camposActualizar.monto_online = online;
+            }
+            if (local === 0 && pago.medio_pago === 'local' && dinero(pago.total_pago) > 0) {
+                local = dinero(pago.total_pago);
+                camposActualizar.monto_local = local;
+            }
+            if (Object.keys(camposActualizar).length) {
+                await instancia.update(camposActualizar);
+            }
+            if (online === 0 && local === 0) local = dinero(pago.total_pago);
+            return {
+                ...pago, monto_online: online, monto_local: local, total_pago: dinero(pago.total_pago),
+                tipo_pago: online > 0 && local === 0 ? 'Pago online' : 'Pago local'
+            };
+        }));
+        const citasConMovimientoOnline = new Set(filasPago.filter((p) => p.monto_online > 0).map((p) => Number(p.cita_id)));
+    
+        for (const reserva of reservas) {
+            const citaId = Number(reserva.cita_id);
+            const montoOnline = montoOnlineReserva(reserva);
+            if (reserva.estado !== 'aprobado' || !citaId || montoOnline <= 0) {
+                continue;
+            }
+            const pagoOnlineExistente = filasPago.find((pago) =>
+                Number(pago.cita_id) === citaId && pago.medio_pago === 'online'
+            );
+            if (pagoOnlineExistente) {
+                if (dinero(pagoOnlineExistente.monto_online) <= 0) {
+                    await Pago.update({
+                        total_pago: montoOnline,
+                        monto_online: montoOnline,
+                        monto_local: 0
+                    }, { where: { id: pagoOnlineExistente.id } });
+                    pagoOnlineExistente.total_pago = montoOnline;
+                    pagoOnlineExistente.monto_online = montoOnline;
+                    pagoOnlineExistente.monto_local = 0;
+                    pagoOnlineExistente.tipo_pago = 'Pago online';
                 }
-            }))
-        ].sort((a, b) => new Date(b.fecha_pago).getTime() - new Date(a.fecha_pago).getTime());
-
-        return res.status(200).json(pagosCombinados);
-
+                citasConMovimientoOnline.add(citaId);
+                continue;
+            }
+            if (citasConMovimientoOnline.has(citaId)) continue;
+            const pagoOnline = await Pago.create({
+                usuario_id: reserva.usuario_id,
+                servicio_id: reserva.servicio_id,
+                cita_id: citaId,
+                total_pago: montoOnline,
+                monto_online: montoOnline,
+                monto_local: 0,
+                medio_pago: 'online',
+                fecha_pago: reserva.updated_at,
+                estado_pago: 'pagada'
+            });
+            filasPago.push({
+                ...pagoOnline.toJSON(),
+                monto_online: montoOnline,
+                monto_local: 0,
+                total_pago: montoOnline,
+                tipo_pago: 'Pago online'
+            });
+            citasConMovimientoOnline.add(citaId);
+        }
+        const resumenPorCita = new Map();
+        for (const pago of filasPago) {
+            if (!pago.cita_id) continue;
+            const id = Number(pago.cita_id);
+            const resumen = resumenPorCita.get(id) || { online: 0, local: 0, credito: 0 };
+            resumen.online += pago.monto_online;
+            resumen.local += pago.monto_local;
+            resumenPorCita.set(id, resumen);
+        }
+        for (const reserva of reservas) {
+            if (!reserva.cita_id) continue;
+            const id = Number(reserva.cita_id);
+            const resumen = resumenPorCita.get(id) || { online: 0, local: 0, credito: 0 };
+            if (!citasConMovimientoOnline.has(id)) resumen.online += montoOnlineReserva(reserva);
+            if (reserva.estado === 'aprobado') resumen.credito += dinero(reserva.monto_credito);
+            resumenPorCita.set(id, resumen);
+        }
+        for (const [id, resumen] of resumenPorCita) {
+            const cita = filasPago.find((pago) => Number(pago.cita_id) === id)?.cita;
+            const reserva = reservas.find((pago) => Number(pago.cita_id) === id);
+            const precioOriginal = dinero(cita?.precio_original ?? reserva?.precio_original ?? cita?.Servicio?.precio ?? reserva?.Servicio?.precio);
+            const descuento = dinero(cita?.descuento_valor ?? reserva?.descuento_valor);
+            const precioFinal = dinero(cita?.precio_final ?? Math.max(0, precioOriginal - descuento));
+            resumenPorCita.set(id, Math.max(0, dinero(precioFinal - resumen.online - resumen.local - resumen.credito)));
+        }
+        const filasReserva = reservas
+            .filter((reserva) => !reserva.cita_id || !citasConMovimientoOnline.has(Number(reserva.cita_id)))
+            .filter((reserva) => montoOnlineReserva(reserva) > 0)
+            .map((reserva) => ({
+                id: 'reserva-' + reserva.id, cita_id: reserva.cita_id, fecha_pago: reserva.updated_at,
+                total_pago: montoOnlineReserva(reserva), monto_online: montoOnlineReserva(reserva), monto_local: 0,
+                estado_pago: reserva.estado === 'aprobado' ? 'pagada' : 'abono disponible',
+                tipo_pago: 'Reserva online (Wompi)',
+                credito_aplicado: reserva.estado === 'aprobado' ? dinero(reserva.monto_credito) : 0,
+                cita: {
+                    cliente: reserva.cliente, empleado: reserva.empleado, Servicio: reserva.Servicio,
+                    fecha: reserva.fecha_reserva, hora: reserva.hora_reserva,
+                    precio_original: dinero(reserva.precio_original),
+                    descuento_valor: dinero(reserva.descuento_valor),
+                    precio_final: Math.max(0, dinero(reserva.precio_original) - dinero(reserva.descuento_valor))
+                }
+            }));
+        return res.json([...filasPago, ...filasReserva].map((pago) => ({
+            ...pago,
+            saldo_pendiente_local: pago.cita_id ? (resumenPorCita.get(Number(pago.cita_id)) || 0) : 0
+        }))
+            .sort((a, b) => new Date(b.fecha_pago).getTime() - new Date(a.fecha_pago).getTime()));
     } catch (error) {
         console.error('Error al consultar historial de pagos:', error);
-
-        return res.status(500).json({
-            message: 'No se pudo cargar el historial de pagos.'
-        });
+        return res.status(500).json({ message: 'No se pudo cargar el historial de pagos.' });
     }
 }
