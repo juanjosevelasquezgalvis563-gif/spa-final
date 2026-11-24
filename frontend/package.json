@@ -12,6 +12,7 @@
   "dependencies": {
     "@marsidev/react-turnstile": "^1.6.3",
     "@react-oauth/google": "^0.13.5",
+    "date-fns": "^4.4.0",
     "lucide-react": "^1.76.0",
     "motion": "^14.10.1",
     "react": "^19.2.8",
@@ -19,7 +20,6 @@
     "react-router-dom": "^7.18.2",
     "swiper": "^14.0.7",
     "tailwindcss": "^4.3.3"
-    
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
