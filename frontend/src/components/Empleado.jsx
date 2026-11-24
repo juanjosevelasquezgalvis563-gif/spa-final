@@ -417,7 +417,7 @@ export function Empleado() {
                                     </span>
                                 </article>
                             ))}
-                            
+
                         </div>
                     ) : (
                         <div className="empleado-agenda-empty">
@@ -425,6 +425,7 @@ export function Empleado() {
                             <span>Cuando tengas citas para hoy, aparecerán aquí.</span>
                         </div>
                     )}
+                    
                 </section>
             </main>
         </div>
