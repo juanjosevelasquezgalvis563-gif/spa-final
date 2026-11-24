@@ -429,6 +429,7 @@ async function obtenerEmpleados(servicioActual) {
           role="status"
           aria-live="polite"
         >
+          
           <strong>
             {resultadoPago.estado === "pendiente" && "Verificando el pago de tu reserva"}
             {resultadoPago.estado === "aprobado" && "Pago aprobado"}
