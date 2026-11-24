@@ -1,8 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { Op } from "sequelize";
 import db from "../config/db.js";
-import AbonoReserva from "../models/AbonoReserva.js";
-import AbonoReservaUso from "../models/AbonoReservaUso.js";
 import Cita from "../models/citas.js";
 import MovimientoPuntos from "../models/MovimientoPuntos.js";
 import PagoReserva from "../models/PagoReserva.js";
@@ -599,7 +597,7 @@ export async function recibirEventoWompi(req, res) {
     }
 
     const transaccionWompi = req.body?.data?.transaction;
-    
+
 
     if (
         req.body?.event !== "transaction.updated"
