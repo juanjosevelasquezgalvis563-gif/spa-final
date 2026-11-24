@@ -19,6 +19,22 @@ const Pago = db.define('Pago', {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false
     },
+    monto_online: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+        defaultValue: 0
+    },
+    monto_local: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+        defaultValue: 0
+    },
+    // Compatibilidad con la columna existente en la base; el desglose contable
+    // se guarda en monto_online y monto_local.
+    medio_pago: {
+        type: DataTypes.ENUM('online', 'local'),
+        allowNull: false
+    },
     fecha_pago: {
         type: DataTypes.DATE,
         allowNull: false
