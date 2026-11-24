@@ -431,3 +431,4 @@ export function Empleado() {
 }
 
 export default Empleado;
+
