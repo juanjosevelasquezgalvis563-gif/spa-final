@@ -17,9 +17,13 @@ const INCLUIR_RESERVA = {
     required: false
 };
 
+function obtenerIdEmpleado(req) {
+    return req.user?.empleadoActivoId || req.user?.id;
+}
+
 export async function empleado(req, res) {
     try {
-        const empleadoId = req.user.id;
+        const empleadoId = obtenerIdEmpleado(req);
 
         const citas = await Cita.findAll({
             where: {
@@ -53,7 +57,7 @@ export async function empleado(req, res) {
 
 export async function citasHoy(req, res) {
     try {
-        const empleadoId = req.user.id;
+        const empleadoId = obtenerIdEmpleado(req);
         const ahora = new Date();
         const inicioHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 0, 0, 0);
         const finHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() + 1, 0, 0, 0);
@@ -85,7 +89,7 @@ export async function citasHoy(req, res) {
 export async function citasPendientesEmpleado(req, res) {
     try {
 
-        const empleadoId = req.user.id;
+        const empleadoId = obtenerIdEmpleado(req);
         const citasPendientesEmpleado = await Cita.count({
             where: {
                 empleado_id: empleadoId,
@@ -101,7 +105,7 @@ export async function citasPendientesEmpleado(req, res) {
 
 export async function citasFinalizadasEmpleado(req, res) {
     try {
-        const empleadoId = req.user.id;
+        const empleadoId = obtenerIdEmpleado(req);
         const citasFinalizadas = await Cita.count({
             where: {
                 empleado_id: empleadoId,
@@ -119,7 +123,7 @@ export async function citasFinalizadasEmpleado(req, res) {
 
 export async function comfirmarCita(req, res) {
     try {
-        const empleadoId = req.user.id;
+        const empleadoId = obtenerIdEmpleado(req);
         const id = req.params.id;
 
         const cita = await Cita.findOne({
@@ -195,7 +199,7 @@ export async function comenzarCita(req, res) {
         const cita = await Cita.findOne({
             where: {
                 id: req.params.id,
-                empleado_id: req.user.id
+                empleado_id: obtenerIdEmpleado(req)
             }
         });
 
@@ -224,7 +228,7 @@ export async function comenzarCita(req, res) {
 
 export async function cancelarCita(req, res) {
     try {
-        const empleadoId = req.user.id;
+        const empleadoId = obtenerIdEmpleado(req);
         const id = req.params.id;
         const resultado = await db.transaction(async (transaction) => {
             const cita = await Cita.findOne({
@@ -265,7 +269,7 @@ export async function cancelarCita(req, res) {
 export async function finalizarCita(req, res) {
     try {
        
-        const empleadoId = req.user.empleadoActivoId || req.user.id;
+        const empleadoId = obtenerIdEmpleado(req);
         const citaId = Number(req.params.id);
 
         if (!citaId || !Number.isFinite(citaId) || citaId <= 0) {
@@ -433,7 +437,7 @@ export async function finalizarCita(req, res) {
 export async function citaRealizarEmpleado(req, res) {
     try {
 
-        const empleadoId = req.user.id;
+        const empleadoId = obtenerIdEmpleado(req);
         const citaRealizarEmpleado = await Cita.findOne({
             where: {
                 empleado_id: empleadoId,
