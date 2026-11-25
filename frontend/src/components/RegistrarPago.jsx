@@ -34,7 +34,7 @@ export default function RegistrarPago({ rol }) {
             });
             const data = await response.json().catch(() => ({}));
             if (!response.ok) throw new Error(data.message || "No se pudieron cargar las citas finalizadas.");
-            if (!Array.isArray(data)) throw new Error("El servidor devolvi? una lista de citas inv?lida.");
+            if (!Array.isArray(data)) throw new Error("No pudimos cargar las citas finalizadas. Inténtalo de nuevo.");
             const pendientes = data.filter((cita) =>
                 cita.estado === "finalizada" &&
                 !cita.pago_completo &&
@@ -49,7 +49,7 @@ export default function RegistrarPago({ rol }) {
             })));
         } catch (error) {
             if (error.name !== "AbortError") {
-                setMensaje(error.message || "No se pudieron cargar las citas finalizadas.");
+                setMensaje("No pudimos cargar las citas finalizadas. Inténtalo de nuevo.");
                 setEsError(true);
                 setCitas([]);
             }
@@ -98,8 +98,8 @@ export default function RegistrarPago({ rol }) {
 
             setMensaje(data.message || "Pago local registrado correctamente.");
             await obtenerCitas(undefined, false);
-        } catch (error) {
-            setMensaje(error.message || "Error de conexi?n al registrar el pago.");
+        } catch {
+            setMensaje("No pudimos registrar el pago. Revisa tu conexión e inténtalo de nuevo.");
             setEsError(true);
         } finally {
             setGuardandoId(null);
@@ -110,9 +110,9 @@ export default function RegistrarPago({ rol }) {
         <section className="registrar-pago-cita">
             <header className="registrar-pago-panel-head">
                 <div>
-                    <span>CAJA DEL SAL?N</span>
+                    <span>CAJA DEL SALÓN</span>
                     <h2>Registrar pagos</h2>
-                    <p>Las citas finalizadas aparecen aqu?. Cada registro agrega un movimiento local independiente.</p>
+                    <p>Las citas finalizadas aparecen aquí. Cada registro agrega un movimiento local independiente.</p>
                 </div>
             </header>
 
@@ -134,7 +134,7 @@ export default function RegistrarPago({ rol }) {
             )}
 
             {cargando ? (
-                <p className="registrar-pago-estado" role="status">Cargando citas finalizadas?</p>
+                <p className="registrar-pago-estado" role="status">Cargando citas finalizadas…</p>
             ) : citas.length === 0 ? (
                 <div className="registrar-pago-vacio">
                     <p>No hay citas finalizadas para registrar pagos.</p>
@@ -152,7 +152,7 @@ export default function RegistrarPago({ rol }) {
                             <article className="registrar-pago-card" key={cita.id}>
                                 <header className="registrar-pago-card-header">
                                     <div>
-                                        <span className="registrar-pago-card-kicker">{cita.fecha ? String(cita.fecha).slice(0, 10) : "Fecha no disponible"} ? {cita.hora ? String(cita.hora).slice(0, 5) : "Hora no disponible"}</span>
+                                        <span className="registrar-pago-card-kicker">{cita.fecha ? String(cita.fecha).slice(0, 10) : "Fecha no disponible"} · {cita.hora ? String(cita.hora).slice(0, 5) : "Hora no disponible"}</span>
                                         <h3>{cita.Servicio?.nombre || "Servicio"}</h3>
                                     </div>
                                     <span className={"registrar-pago-estado " + (pagada ? "pagada" : "pendiente")}>
@@ -170,7 +170,7 @@ export default function RegistrarPago({ rol }) {
                                     <div><span>Precio original del servicio</span><strong>{formatoCOP(precioOriginal)}</strong></div>
                                     {descuento > 0 && (
                                         <div className="registrar-pago-descuento">
-                                            <span>Descuento aplicado</span><strong>?{formatoCOP(descuento)}</strong>
+                                            <span>Descuento aplicado</span><strong>− {formatoCOP(descuento)}</strong>
                                         </div>
                                     )}
                                     <div><span>Precio final</span><strong>{formatoCOP(precioFinal)}</strong></div>
@@ -201,7 +201,7 @@ export default function RegistrarPago({ rol }) {
                                                 onClick={() => registrar(cita)}
                                                 disabled={guardandoId !== null || Number(montoPorCita[cita.id]) <= 0 || Number(montoPorCita[cita.id]) > saldo}
                                             >
-                                                {guardandoId === cita.id ? "Registrando?" : "Registrar pago local"}
+                                                {guardandoId === cita.id ? "Registrando…" : "Registrar pago local"}
                                             </button>
                                         </div>
                                     </div>
