@@ -2066,6 +2066,236 @@
   .empleado-dashboard .registrar-pago-panel-head h2 { font-size: 21px !important; }
 }
 
+/* Caja del administrador: jerarquía clara y controles consistentes. */
+.admin-dashboard .registrar-pago-cita {
+  display: grid;
+  gap: 20px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: clamp(22px, 2.6vw, 34px);
+  border: 1px solid #e2e3e6;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(18, 20, 24, .055);
+  box-sizing: border-box;
+}
+.admin-dashboard .registrar-pago-panel-head {
+  padding: 0 0 18px;
+  border-bottom: 1px solid #ececef;
+}
+.admin-dashboard .registrar-pago-panel-head span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 25px;
+  padding: 0 10px;
+  border: 1px solid #e5e5e7;
+  border-radius: 999px;
+  background: #f7f7f8;
+  color: #5e6066;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .12em;
+}
+.admin-dashboard .registrar-pago-panel-head h2 {
+  margin: 11px 0 5px;
+  color: #191a1d;
+  font-size: clamp(24px, 2vw, 30px);
+  font-weight: 650;
+  letter-spacing: -.04em;
+  line-height: 1.15;
+}
+.admin-dashboard .registrar-pago-panel-head p {
+  max-width: 680px;
+  margin: 0;
+  color: #707279;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.admin-dashboard .registrar-pago-fecha {
+  display: grid;
+  grid-template-columns: minmax(150px, .35fr) minmax(220px, 1fr);
+  align-items: center;
+  gap: 16px;
+  width: min(100%, 760px);
+  padding: 16px 18px;
+  border: 1px solid #e7e7e9;
+  border-radius: 14px;
+  background: #fafafa;
+  box-sizing: border-box;
+}
+.admin-dashboard .registrar-pago-fecha label,
+.admin-dashboard .registrar-pago-accion label {
+  color: #414248;
+  font-size: 12px;
+  font-weight: 700;
+}
+.admin-dashboard .registrar-pago-fecha input,
+.admin-dashboard .registrar-pago-accion input {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 10px 13px;
+  border: 1px solid #d9dadd;
+  border-radius: 10px;
+  background: #fff;
+  color: #202125;
+  font: inherit;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+.admin-dashboard .registrar-pago-fecha input:focus,
+.admin-dashboard .registrar-pago-accion input:focus {
+  outline: 3px solid rgba(32, 33, 37, .1);
+  border-color: #77797f;
+}
+.admin-dashboard .registrar-pago-cita .registrar-pago-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr));
+  gap: 18px;
+}
+.admin-dashboard .registrar-pago-cita .registrar-pago-card {
+  display: grid;
+  align-content: start;
+  gap: 17px;
+  min-width: 0;
+  padding: 21px;
+  border: 1px solid #e5e5e7;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 5px 16px rgba(20, 21, 24, .035);
+}
+.admin-dashboard .registrar-pago-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eeeeef;
+}
+.admin-dashboard .registrar-pago-card-kicker {
+  display: block;
+  margin-bottom: 7px;
+  color: #777980;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: .035em;
+}
+.admin-dashboard .registrar-pago-card-header h3 {
+  margin: 0;
+  color: #202125;
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+.admin-dashboard .registrar-pago-estado {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border: 1px solid #e4e4e6;
+  border-radius: 999px;
+  background: #f7f7f8;
+  color: #5d5f65;
+  font-size: 10px;
+  font-weight: 700;
+}
+.admin-dashboard .registrar-pago-info {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.admin-dashboard .registrar-pago-info > div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 12px 13px;
+  border: 1px solid #ededee;
+  border-radius: 11px;
+  background: #fafafa;
+}
+.admin-dashboard .registrar-pago-info strong,
+.admin-dashboard .registrar-pago-desglose h4 {
+  color: #777980;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.admin-dashboard .registrar-pago-info span {
+  overflow-wrap: anywhere;
+  color: #28292d;
+  font-size: 12px;
+  font-weight: 600;
+}
+.admin-dashboard .registrar-pago-desglose {
+  padding: 15px;
+  border: 1px solid #e8e8ea;
+  border-radius: 13px;
+  background: #f8f8f9;
+}
+.admin-dashboard .registrar-pago-desglose h4 { margin: 0 0 9px; }
+.admin-dashboard .registrar-pago-desglose > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 7px 0;
+  border-bottom: 1px solid #e9e9eb;
+  color: #62646a;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.admin-dashboard .registrar-pago-desglose > div:last-child { border-bottom: 0; }
+.admin-dashboard .registrar-pago-desglose > div strong {
+  flex: 0 0 auto;
+  color: #25262a;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.admin-dashboard .registrar-pago-accion {
+  display: grid;
+  gap: 9px;
+}
+.admin-dashboard .registrar-pago-accion > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+.admin-dashboard .registrar-pago-boton {
+  min-height: 46px;
+  padding: 10px 17px;
+  border: 1px solid #202125;
+  border-radius: 10px;
+  background: #202125;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .18s ease, transform .18s ease;
+}
+.admin-dashboard .registrar-pago-boton:hover:not(:disabled) { background: #3b3c41; transform: translateY(-1px); }
+.admin-dashboard .registrar-pago-boton:disabled { cursor: not-allowed; opacity: .48; }
+.admin-dashboard .registrar-pago-vacio {
+  margin: 0;
+  padding: 18px 20px;
+  border: 1px dashed #d7d8db;
+  border-radius: 13px;
+  background: #fafafa;
+  color: #66686e;
+}
+.admin-dashboard .registrar-pago-vacio p,
+.admin-dashboard .registrar-pago-estado { margin: 0; color: #66686e; font-size: 13px; line-height: 1.6; }
+.admin-dashboard .registrar-pago-mensaje { margin: 0; padding: 12px 15px; border: 1px solid #e2e2e5; border-radius: 11px; background: #f7f7f8; color: #3f4045; font-size: 12px; }
+.admin-dashboard .registrar-pago-mensaje.error { border-color: #eccdcd; background: #fff7f7; color: #873d3d; }
+.admin-dashboard .registrar-pago-mensaje.exito { border-color: #d7e6da; background: #f5faf6; color: #356141; }
+@media (max-width: 600px) {
+  .admin-dashboard .registrar-pago-cita { gap: 16px; padding: 18px; border-radius: 16px; }
+  .admin-dashboard .registrar-pago-fecha { grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 14px; }
+  .admin-dashboard .registrar-pago-info { grid-template-columns: minmax(0, 1fr); }
+  .admin-dashboard .registrar-pago-cita .registrar-pago-card { padding: 16px; }
+  .admin-dashboard .registrar-pago-accion > div { grid-template-columns: minmax(0, 1fr); }
+  .admin-dashboard .registrar-pago-boton { width: 100%; }
+}
+
 .actualizar-datos-page {
   display: grid;
   min-height: 100vh;
