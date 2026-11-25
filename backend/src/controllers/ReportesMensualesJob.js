@@ -43,3 +43,4 @@ export function iniciarJobReportesQuincenales() {
     }, { timezone: ZONA_HORARIA });
 }
 
+
