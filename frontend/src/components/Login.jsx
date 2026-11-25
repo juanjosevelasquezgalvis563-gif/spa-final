@@ -62,7 +62,7 @@ export function Login() {
         setMessage(data.message);
       }
     } catch {
-      setMessage("Error de conexión con el servidor");
+      setMessage("No pudimos iniciar sesión. Revisa tu conexión e inténtalo de nuevo.");
     }
   }
 
@@ -90,7 +90,7 @@ export function Login() {
         setMessage(data.message || "No se pudo iniciar sesión con Google");
       }
     } catch {
-      setMessage("Error de conexión con el servidor");
+      setMessage("No pudimos iniciar sesión con Google. Revisa tu conexión e inténtalo de nuevo.");
     }
   }
 
