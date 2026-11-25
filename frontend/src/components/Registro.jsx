@@ -18,7 +18,7 @@ function useTurnstile(siteKey) {
         setError(null);
 
         if (!siteKey) {
-            setError("Configuración de seguridad incompleta.");
+            setError("No pudimos iniciar la verificación. Actualiza la página e inténtalo de nuevo.");
             return;
         }
 
@@ -183,7 +183,7 @@ export function Registro() {
         setMessage("");
 
         if (!siteKey) {
-            setMessage("Configuración de seguridad incompleta.");
+            setMessage("No pudimos iniciar la verificación. Actualiza la página e inténtalo de nuevo.");
             return;
         }
 
@@ -228,7 +228,7 @@ export function Registro() {
 
         } catch (error) {
             console.error("Error de conexión:", error);
-            setMessage("Error de conexión con el servidor.");
+            setMessage("No pudimos crear tu cuenta. Revisa tu conexión e inténtalo de nuevo.");
             resetTurnstile();
 
         } finally {
