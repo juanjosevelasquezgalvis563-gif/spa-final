@@ -3,7 +3,11 @@ import reportesRoutes from "./reportes.js";
 import {
     registro,
 } from "../controllers/RegistroController.js";
-import {actualizarDatos} from "../controllers/RegistroController.js";
+import {
+    actualizarDatos,
+    obtenerDatosActualizacion,
+    solicitarCodigoActualizacion
+} from "../controllers/RegistroController.js";
 import {login, me,loginGoogle} from "../controllers/LoginController.js";
 
 import {middleware} from "../middlewares/middleware.js";
@@ -139,6 +143,15 @@ const registroCodigoLimiter = rateLimit({
     message: { message: "Demasiados intentos de confirmación. Intenta de nuevo más tarde." }
 });
 
+const actualizarCodigoLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => `actualizar-datos:${req.user?.id || ipKeyGenerator(req.ip)}`,
+    message: { message: "Pediste varios códigos. Inténtalo de nuevo más tarde." }
+});
+
 const carritoActionLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     limit: 10,
@@ -150,6 +163,8 @@ const carritoActionLimiter = rateLimit({
 router.post('/registrar', captchaLimiter, registroLimiter, registroCorreoLimiter, registro);
 router.post('/registrar/verificar', registroCodigoLimiter );
 router.post('/registrar/reenviar-codigo', registroCorreoLimiter);
+router.get('/actualizar-datos',middleware,obtenerDatosActualizacion);
+router.post('/actualizar-datos/codigo',middleware,actualizarCodigoLimiter,solicitarCodigoActualizacion);
 router.put('/registrarr',middleware,actualizarDatos);
 
 
