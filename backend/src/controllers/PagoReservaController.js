@@ -194,27 +194,6 @@ async function registrarPagoOnlineCita(pagoReserva, cita, transaction, fechaPago
 export async function crearPagoReserva(req, res) {
     const simulado = pagosSimulados();
 
-    
-    if (!simulado) {
-        if (
-            !process.env.WOMPI_PUBLIC_KEY
-            || !process.env.WOMPI_INTEGRITY_SECRET
-            || !process.env.WOMPI_EVENTS_SECRET
-            || !process.env.FRONTEND_URL
-        ) {
-            return res.status(503).json({
-                message: "Los pagos en línea aún no están configurados. Contacta al salón."
-            });
-        }
-        try {
-            new URL(process.env.FRONTEND_URL);
-        } catch {
-            return res.status(503).json({
-                message: "La URL del sitio no está configurada correctamente para los pagos."
-            });
-        }
-    }
-
     const usuarioId = req.user.id;
     const fecha = req.body?.fecha;
     const horaSolicitada = req.body?.hora;
@@ -254,7 +233,65 @@ export async function crearPagoReserva(req, res) {
 
             const precioPesos = obtenerPrecioPesos(servicio);
             if (precioPesos === null) {
-                return { error: "El servicio no tiene un precio válido para calcular la reserva.", status: 400 };
+                const citaEnCurso = await Cita.findOne({
+                    where: {
+                        fecha,
+                        hora,
+                        empleado_id: empleadoId,
+                        estado: { [Op.in]: ESTADOS_OCUPAN_HORARIO }
+                    },
+                    transaction,
+                    lock: transaction.LOCK.UPDATE
+                });
+                if (citaEnCurso) {
+                    return { error: "El empleado ya tiene una cita a esa hora. Elige otro horario.", status: 409 };
+                }
+
+                const reservaActiva = await PagoReserva.findOne({
+                    where: {
+                        empleado_id: empleadoId,
+                        fecha_reserva: fecha,
+                        hora_reserva: hora,
+                        estado: "pendiente",
+                        expira_en: { [Op.gt]: ahora }
+                    },
+                    transaction,
+                    lock: transaction.LOCK.UPDATE
+                });
+                if (reservaActiva) {
+                    return { error: "Este horario está reservado mientras se completa otro pago. Elige otro horario.", status: 409 };
+                }
+
+                const cita = await Cita.create({
+                    fecha,
+                    hora,
+                    usuario_id: usuarioId,
+                    empleado_id: empleadoId,
+                    servicio_id: servicioId,
+                    estado: "pendiente",
+                    precio_original: null,
+                    descuento_porcentaje: 0,
+                    descuento_valor: 0,
+                    precio_final: null
+                }, { transaction });
+
+                return { citaSinPago: cita };
+            }
+
+            if (!simulado) {
+                if (
+                    !process.env.WOMPI_PUBLIC_KEY
+                    || !process.env.WOMPI_INTEGRITY_SECRET
+                    || !process.env.WOMPI_EVENTS_SECRET
+                    || !process.env.FRONTEND_URL
+                ) {
+                    return { error: "Los pagos en línea aún no están configurados. Contacta al salón.", status: 503 };
+                }
+                try {
+                    new URL(process.env.FRONTEND_URL);
+                } catch {
+                    return { error: "La URL del sitio no está configurada correctamente para los pagos.", status: 503 };
+                }
             }
 
           
@@ -367,6 +404,14 @@ export async function crearPagoReserva(req, res) {
 
         if (resultado.error) {
             return res.status(resultado.status).json({ message: resultado.error });
+        }
+
+        if (resultado.citaSinPago) {
+            return res.status(201).json({
+                message: "Tu cita quedó reservada. El precio se acordará en el salón según el estado de tu cabello o las necesidades del servicio.",
+                estado: "sin_pago",
+                cita_id: resultado.citaSinPago.id
+            });
         }
 
         const { pagoReserva } = resultado;
