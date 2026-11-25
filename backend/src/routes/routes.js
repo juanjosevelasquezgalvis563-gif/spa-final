@@ -54,7 +54,6 @@ import { citasFinalizadasParaPago, registrarPago} from "../controllers/AdminCont
 import {historialPagos} from "../controllers/AdminController.js";
 import {
     crearPagoReserva,
-    obtenerAbonosReserva,
     obtenerEstadoPagoReserva,
     recibirEventoWompi
 } from "../controllers/PagoReservaController.js";
@@ -173,7 +172,6 @@ router.get('/cliente/productos', middlewareCliente, productosCatalogo);
 router.post('/cliente', middlewareCliente, carritoActionLimiter, crearPagoReserva);
 router.get('/cliente',middlewareCliente, obtenerCliente);
 router.get('/cliente/reserva/:referencia', middlewareCliente, obtenerEstadoPagoReserva);
-router.get('/cliente/abonos', middlewareCliente, obtenerAbonosReserva);
 router.put('/cliente/cancelar/:id',middlewareCliente,cancelarSuCita);
 router.put('/cliente/actualizar/:id',middlewareCliente,actualizarCita);
 router.get('/cliente/cantidadCitas',middlewareCliente,cantidadDeCitas);
