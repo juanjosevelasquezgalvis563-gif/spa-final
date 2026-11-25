@@ -35,7 +35,7 @@ export function MisCitas() {
             }
 
         } catch (error) {
-            SetMessage('Error de conexion con el servidor');
+            SetMessage('No pudimos cargar tus citas. Revisa tu conexión e inténtalo de nuevo.');
         }
     }
 
@@ -59,7 +59,7 @@ export function MisCitas() {
             }
 
         } catch (error) {
-            SetMessage('Error de conexion con el servidor');
+            SetMessage('No pudimos cancelar la cita. Revisa tu conexión e inténtalo de nuevo.');
         }
     }
 
