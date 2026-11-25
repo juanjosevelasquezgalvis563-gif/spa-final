@@ -19,7 +19,7 @@ dist-ssr/
 # Variables de entorno
 .env
 .env.*
-!.env.example
+backend/.env.example
 backend/.env
 frontend/.env
 
