@@ -34,13 +34,13 @@ export default function CatalogoProductos() {
           throw new Error(data.message || "No se pudo cargar el catálogo.");
         }
         if (!Array.isArray(data)) {
-          throw new Error("El servidor devolvió un catálogo inválido.");
+          throw new Error("No pudimos mostrar el catálogo. Inténtalo de nuevo.");
         }
         setProductos(data);
       })
       .catch((error) => {
         if (error.name !== "AbortError") {
-          setMensaje(error.message || "Error al conectar con el servidor.");
+          setMensaje("No pudimos cargar el catálogo. Revisa tu conexión e inténtalo de nuevo.");
         }
       })
       .finally(() => {
