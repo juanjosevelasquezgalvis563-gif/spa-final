@@ -35,5 +35,6 @@ export function desglosarPrecioCita(cita, servicio, reservaPagada) {
         precioFinal,
         reservaPagada: reserva,
         saldo: precioFinal - reserva
+        
     };
 }
