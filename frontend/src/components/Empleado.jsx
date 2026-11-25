@@ -19,7 +19,7 @@ async function obtenerJson(ruta) {
     try {
         data = await response.json();
     } catch {
-        throw new Error("El servidor devolvió una respuesta inválida.");
+        throw new Error("No pudimos cargar la información. Inténtalo de nuevo.");
     }
 
     if (!response.ok) {
@@ -104,7 +104,7 @@ export function Empleado() {
             ]);
 
             if (!Array.isArray(citas)) {
-                throw new Error("La respuesta del servidor no contiene una agenda válida.");
+                throw new Error("No pudimos cargar tu agenda. Inténtalo de nuevo.");
             }
 
             setResumen({
@@ -120,8 +120,8 @@ export function Empleado() {
                     )
                     .sort((a, b) => formatearHora(a.hora).localeCompare(formatearHora(b.hora)))
             });
-        } catch (error) {
-            setMessage(error.message || "No se pudo cargar el panel del empleado.");
+        } catch {
+            setMessage("No pudimos cargar tu panel. Inténtalo de nuevo.");
         } finally {
             setCargando(false);
         }
@@ -147,9 +147,9 @@ export function Empleado() {
                 }
 
                 if (vigente) setNombreEmpleado(data.user?.nombre || "");
-            } catch (error) {
+            } catch {
                 if (vigente) {
-                    setMessage(error.message || "No se pudo cargar el nombre del empleado.");
+                    setMessage("No pudimos cargar tu información. Inténtalo de nuevo.");
                 }
             }
         }
@@ -177,8 +177,8 @@ export function Empleado() {
         try {
             await logout();
             navigate("/");
-        } catch (error) {
-            setMessage(error.message || "Error de conexión al cerrar sesión.");
+        } catch {
+            setMessage("No pudimos cerrar tu sesión. Inténtalo de nuevo.");
         }
     }
 
