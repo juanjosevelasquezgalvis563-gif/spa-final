@@ -9,51 +9,6 @@ function formatoPrecio(valor) {
 
 
 
-const EMPLEADOS_ESPECIALIDAD = {
-  manicurista: ["melany arango", "valentina alvarez"],
-  estilista: ["steven piedradita", "evelyn nino"],
-};
-
-const normalizarTexto = (valor = "") =>
-  String(valor)
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .replace(/\s+/g, " ");
-
-function obtenerEspecialidadPorIndice(indice) {
-  if (indice < 0) return null;
-
-  return indice < 17 ? "manicurista" : "estilista";
-}
-
-function obtenerEspecialidadServicio(servicio, listaServicios) {
-  const indice = listaServicios.findIndex(
-    item => String(item.id) === String(servicio?.id)
-  );
-
-  return obtenerEspecialidadPorIndice(indice);
-}
-
-function empleadoPuedeRealizar(empleado, servicio, listaServicios) {
-  const especialidad = obtenerEspecialidadServicio(
-    servicio,
-    listaServicios
-  );
-
-  if (!especialidad || !empleado?.nombre) return false;
-
-  const nombre = normalizarTexto(empleado.nombre);
-
-  return EMPLEADOS_ESPECIALIDAD[especialidad].some(
-    permitido => nombre === permitido
-  );
-}
-
-
-
-
 export function Cita() {
 
   const [fecha, SetFecha] = useState("");
@@ -67,7 +22,6 @@ export function Cita() {
   const [cargandoServicios, SetCargandoServicios] = useState(true);
   const [reservando, setReservando] = useState(false);
   const [resultadoPago, setResultadoPago] = useState(null);
-  const [abonoDisponible, setAbonoDisponible] = useState(0);
   const [fidelizacion, setFidelizacion] = useState({
     saldo_puntos: 0,
     descuentoDisponible: 0,
@@ -99,8 +53,6 @@ export function Cita() {
   // La reserva es el 20 % del precio con descuento.
   const montoReserva = Math.round(precioConDescuento * 0.2);
   const montoSeleccionado = tipoPagoReserva === "completo" ? precioConDescuento : montoReserva;
-  const abonoAplicable = tipoPagoReserva === "completo" ? 0 : Math.min(abonoDisponible, montoSeleccionado);
-  const montoEnLinea = Math.max(0, montoSeleccionado - abonoAplicable);
   const saldoEnSalon = Math.max(0, precioConDescuento - montoSeleccionado);
   const tipoProfesionalLabel = () => {
     const nombre = (servicioSeleccionado?.nombre || "").toLowerCase();
@@ -165,7 +117,6 @@ export function Cita() {
 
       if (data.estado === "aprobado") {
         setResultadoPago(data);
-        setAbonoDisponible((saldoActual) => Math.max(0, saldoActual - Number(data.monto_credito || 0)));
         SetMessage(data.message);
         SetFecha("");
         SetHora("");
@@ -215,11 +166,7 @@ export function Cita() {
 
 
 async function obtenerEmpleados(servicioActual) {
-  const servicio = servicios.find(
-    item => String(item.id) === String(servicioActual)
-  );
-
-  if (!servicio) {
+  if (!servicioActual) {
     SetEmpleados([]);
     SetEmpleadoId("");
     return;
@@ -249,11 +196,7 @@ async function obtenerEmpleados(servicioActual) {
       );
     }
 
-    const filtrados = data.filter(empleado =>
-      empleadoPuedeRealizar(empleado, servicio, servicios)
-    );
-
-    SetEmpleados(filtrados);
+    SetEmpleados(data);
 
   } catch (error) {
     console.error("Error al cargar empleados:", error);
@@ -290,28 +233,6 @@ async function obtenerEmpleados(servicioActual) {
       cargarFidelizacion();
     }, 0);
     return () => window.clearTimeout(temporizador);
-  }, []);
-
-  useEffect(() => {
-    let vigente = true;
-
-    async function consultarAbono() {
-      try {
-        const response = await fetch(`${API_ROOT}/inser/cliente/abonos`, {
-          credentials: "include"
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || "No se pudo consultar el abono disponible.");
-        if (vigente) setAbonoDisponible(Number(data.saldo_disponible) || 0);
-      } catch (error) {
-        if (vigente) SetMessage(error.message || "No se pudo consultar el abono disponible.");
-      }
-    }
-
-    void consultarAbono();
-    return () => {
-      vigente = false;
-    };
   }, []);
 
   useEffect(() => {
@@ -433,7 +354,7 @@ async function obtenerEmpleados(servicioActual) {
           <strong>
             {resultadoPago.estado === "pendiente" && "Verificando el pago de tu reserva"}
             {resultadoPago.estado === "aprobado" && "Pago aprobado"}
-            {resultadoPago.estado === "aprobado_abono" && "El pago quedó como abono disponible"}
+            {resultadoPago.estado === "aprobado_abono" && "Pago recibido; la cita necesita revisión"}
             {resultadoPago.estado === "rechazado" && "El pago fue rechazado"}
             {resultadoPago.estado === "error" && "No se pudo procesar el pago"}
             {resultadoPago.estado === "anulado" && "El pago fue anulado"}
@@ -442,7 +363,7 @@ async function obtenerEmpleados(servicioActual) {
           <p>
             {resultadoPago.estado === "pendiente" && "Estamos esperando la confirmación segura de Wompi."}
             {resultadoPago.estado === "aprobado" && `Pago en línea recibido: ${formatoPrecio(resultadoPago.monto_pagado)}.${Number(resultadoPago.monto_credito) > 0 ? ` Crédito aplicado: ${formatoPrecio(resultadoPago.monto_credito)}.` : ""}${Number(resultadoPago.descuento_valor) > 0 ? ` Descuento aplicado: ${formatoPrecio(resultadoPago.descuento_valor)}.` : ""} ${Number(resultadoPago.saldo_pendiente) > 0 ? `Saldo que pagarás en el salón: ${formatoPrecio(resultadoPago.saldo_pendiente)}.` : "El servicio quedó pagado por completo en línea."} Tu cita está pendiente de confirmación del profesional; te avisaremos por correo cuando la confirme.`}
-            {resultadoPago.estado === "aprobado_abono" && "El pago fue recibido, pero el horario ya no está disponible. El importe quedó guardado como abono para una nueva reserva."}
+            {resultadoPago.estado === "aprobado_abono" && "El pago fue recibido, pero no se pudo confirmar la cita automáticamente. Contacta al salón para resolverlo."}
             {["rechazado", "error", "anulado", "expirado"].includes(resultadoPago.estado)
               && "No se confirmó la cita. Vuelve a elegir un horario e intenta reservar otra vez."}
           </p>
@@ -602,15 +523,9 @@ async function obtenerEmpleados(servicioActual) {
                       <option value="completo">El total del servicio: {formatoPrecio(precioConDescuento)}</option>
                     </select>
                   </div>
-                  {abonoAplicable > 0 && (
-                    <div>
-                      <span>Abono aplicado</span>
-                      <strong className="cita-descuento-valor">−{formatoPrecio(abonoAplicable)}</strong>
-                    </div>
-                  )}
                   <div className="cita-reserva-pago">
-                    <span>{montoEnLinea > 0 ? "Pagas ahora en línea" : "Cubierto con abono"}</span>
-                    <strong>{formatoPrecio(montoEnLinea || montoSeleccionado)}</strong>
+                    <span>Pagas ahora en línea</span>
+                    <strong>{formatoPrecio(montoSeleccionado)}</strong>
                   </div>
                   <div>
                     <span>Saldo a pagar en el salón</span>
