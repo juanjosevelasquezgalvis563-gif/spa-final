@@ -12,7 +12,9 @@ export async function middleware(req,res,next){
         const perfilActivo = decoded.rol === 'administrador' && req.cookies.adminPerfil
             ? JSON.parse(req.cookies.adminPerfil)
             : null;
-        if (perfilActivo && req.method === 'PUT') {
+        // Los datos personales se verifican contra el contacto del usuario que inició sesión.
+        // No aplicar la suplantación del perfil activo en este endpoint.
+        if (perfilActivo && req.method === 'PUT' && req.path !== '/registrarr') {
             const perfil = await Usuario.findOne({
                 attributes: ['id'],
                 where: { id: perfilActivo.id, rol: perfilActivo.rol }
