@@ -36,7 +36,7 @@ export async function empleado(req, res) {
                 },
                 {
                     model: Servicio,
-                    attributes: ['nombre']
+                    attributes: ['nombre', 'precio']
                 },
                 INCLUIR_RESERVA
             ],
@@ -347,9 +347,16 @@ export async function finalizarCita(req, res) {
             );
 
         
+            const precioConfigurado = Number(servicio.precio);
+            const servicioTienePrecioFijo = Number.isFinite(precioConfigurado) && precioConfigurado > 0;
+            const precioIngresado = Number(req.body?.precio_servicio);
             const precioOriginal = Number(cita.precio_original) > 0
                 ? Math.round(Number(cita.precio_original))
-                : Math.round(Number(servicio.precio) || 0);
+                : servicioTienePrecioFijo
+                    ? Math.round(precioConfigurado)
+                    : Number.isFinite(precioIngresado) && precioIngresado > 0
+                        ? Math.round(precioIngresado)
+                        : 0;
 
             if (
                 !Number.isFinite(precioOriginal) ||
@@ -357,7 +364,7 @@ export async function finalizarCita(req, res) {
             ) {
                 return {
                     status: 400,
-                    message: "El precio del servicio no es válido."
+                    message: "Indica el precio acordado con el cliente para finalizar este servicio."
                 };
             }
 
