@@ -1,14 +1,18 @@
 
 const EMPLEADO_ESPECIALIDAD = {
-    "Melany arango": "manicurista",
-    "Juliana correa": "manicurista",
-    "Steven piedradita": "estilista",
-    "Evelyn nino": "estilista",
+    "melany arango": "manicurista",
+    "juliana correa": "manicurista",
+    "valentina alvarez": "manicurista",
+    "steven piedrahita": "estilista",
+    "steven piedradita": "estilista",
+    "stiven piedrahita": "estilista",
+    "evelyn nino": "estilista",
+    "jennifer correa": "estilista",
 };
 
 const SERVICIO_ESPECIALIDAD = {
     manicurista: [
-        "uñas",
+        "unas",
         "manicure",
         "manicura",
         "pedicure",
@@ -28,7 +32,7 @@ const SERVICIO_ESPECIALIDAD = {
         "acrilica",
         "acrilico",
         "semipermanente",
-        "decoracion de uñas"
+        "decoracion de unas"
     ],
 
     estilista: [
@@ -42,7 +46,7 @@ const SERVICIO_ESPECIALIDAD = {
         "color",
         "alisado",
         "estilo",
-        "pestañas",
+        "pestanas",
         "cejas",
         "depilacion",
         "hidratacion",
@@ -89,13 +93,11 @@ export function puedeRealizarServicio(empleado, servicio) {
     const especialidadEmpleado = EMPLEADO_ESPECIALIDAD[nombreEmpleado];
 
   
-    if (!especialidadEmpleado) return false;
-
-   
     const especialidadServicio = obtenerEspecialidadServicio(servicio);
 
-    if (!especialidadServicio) return false;
+    // La tabla usuarios no guarda una especialidad. Si el nombre del empleado
+    // o del servicio no está en el catálogo conocido, no se debe bloquear la cita.
+    if (!especialidadEmpleado || !especialidadServicio) return true;
 
-   
     return especialidadEmpleado === especialidadServicio;
 }
