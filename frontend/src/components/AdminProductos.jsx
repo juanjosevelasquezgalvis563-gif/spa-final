@@ -48,13 +48,13 @@ export default function AdminProductos() {
           throw new Error(data.message || "No se pudieron cargar los productos.");
         }
         if (!Array.isArray(data)) {
-          throw new Error("El servidor devolvió una lista de productos inválida.");
+          throw new Error("No pudimos mostrar los productos. Inténtalo de nuevo.");
         }
         setProductos(data);
       })
       .catch((error) => {
         if (error.name !== "AbortError") {
-          setMensaje(error.message || "Error al conectar con el servidor.");
+          setMensaje("No pudimos cargar los productos. Revisa tu conexión e inténtalo de nuevo.");
           setEsError(true);
         }
       })
@@ -126,8 +126,8 @@ export default function AdminProductos() {
       setImagen(null);
       setMensaje(data.message || "Producto agregado correctamente.");
       setEsError(false);
-    } catch (error) {
-      setMensaje(error.message || "Error al conectar con el servidor.");
+    } catch {
+      setMensaje("No pudimos guardar el producto. Revisa tu conexión e inténtalo de nuevo.");
       setEsError(true);
     } finally {
       setGuardando(false);
