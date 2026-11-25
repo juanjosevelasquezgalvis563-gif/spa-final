@@ -5,7 +5,6 @@ import MovimientoPuntos from '../models/MovimientoPuntos.js';
 import PagoReserva from '../models/PagoReserva.js';
 import { Op } from "sequelize";
 import db from "../config/db.js";
-import { acreditarReservaCancelada } from "./PagoReservaController.js";
 import {enviarCorreoCitaConfirmada} from "../utils/correo.js";
 import { desglosarPrecioCita } from "../utils/precioCita.js";
 
@@ -250,15 +249,14 @@ export async function cancelarCita(req, res) {
 
             cita.estado = 'cancelada';
             await cita.save({ transaction });
-            await acreditarReservaCancelada(cita, transaction);
-            return { message: 'Cita cancelada; el pago se conservó como abono del cliente.' };
+            return { message: 'Cita cancelada.' };
         });
 
         if (resultado.error) return res.status(resultado.status).json({ message: resultado.error });
         return res.status(200).json({ message: resultado.message });
 
     } catch (error) {
-        console.error('Error al cancelar la cita y conservar el abono:', error);
+        console.error('Error al cancelar la cita:', error);
         return res.status(500).json({ message: "No se pudo cancelar la cita" });
     }
 
