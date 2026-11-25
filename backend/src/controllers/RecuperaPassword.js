@@ -11,9 +11,7 @@ const MINUTOS_EXPIRACION = 15;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const CARACTERES_ESPECIALES = "@#$%&*()_";
 
-// ==========================================
-// VALIDAR CONTRASEÑA
-// ==========================================
+
 
 function validarPassword(password) {
     let tieneMayuscula = false;
@@ -56,9 +54,7 @@ function validarPassword(password) {
     return null;
 }
 
-// ==========================================
-// FUNCIÓN 1: RECUPERAR CONTRASEÑA
-// ==========================================
+
 
 export async function forgotPassword(req, res) {
     try {
@@ -95,21 +91,21 @@ export async function forgotPassword(req, res) {
             });
         }
 
-        // Generar token seguro
+      
         const token = crypto.randomBytes(32).toString("hex");
 
         const expiraEn = new Date(
             Date.now() + MINUTOS_EXPIRACION * 60 * 1000
         );
 
-        // Guardar token en la base de datos
+      
         const recuperacion = await PasswordReset.create({
             usuario_id: usuario.id,
             token,
             expires_at: expiraEn
         });
 
-        // Configurar Gmail
+       
         const transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {
@@ -118,11 +114,11 @@ export async function forgotPassword(req, res) {
             }
         });
 
-        // Crear enlace
+        
         const enlace =
             `${FRONTEND_URL}/reset-password/${token}`;
 
-        // Enviar correo
+       
         const resultado = await transporter.sendMail({
             from: `"JC Alta Peluquería" <${EMAIL_USER}>`,
             to: usuario.email,
@@ -172,7 +168,7 @@ export async function forgotPassword(req, res) {
             resultado.messageId
         );
 
-        // Eliminar tokens anteriores después del envío exitoso
+        
         await PasswordReset.destroy({
             where: {
                 usuario_id: usuario.id,
@@ -199,9 +195,6 @@ export async function forgotPassword(req, res) {
     }
 }
 
-// ==========================================
-// FUNCIÓN 2: RESTABLECER CONTRASEÑA
-// ==========================================
 
 export async function resetPassword(req, res) {
     try {
@@ -218,21 +211,21 @@ export async function resetPassword(req, res) {
             });
         }
 
-        // Validar formato del token
+      
         if (!/^[a-f0-9]{64}$/i.test(token)) {
             return res.status(400).json({
                 message: "El enlace es inválido o expiró"
             });
         }
 
-        // Validar longitud máxima compatible con bcrypt
+      
         if (Buffer.byteLength(nuevaPassword, "utf8") > 72) {
             return res.status(400).json({
                 message: "La contraseña no puede superar los 72 bytes"
             });
         }
 
-        // Validar requisitos de contraseña
+        
         const errorPassword = validarPassword(nuevaPassword);
 
         if (errorPassword) {
@@ -241,7 +234,7 @@ export async function resetPassword(req, res) {
             });
         }
 
-        // Buscar token vigente
+       
         const recuperacion = await PasswordReset.findOne({
             where: {
                 token,
@@ -257,13 +250,13 @@ export async function resetPassword(req, res) {
             });
         }
 
-        // Generar hash de contraseña
+        
         const passwordHash = await bcrypt.hash(
             nuevaPassword,
             10
         );
 
-        // Actualizar contraseña
+       
         const [actualizados] = await Usuario.update(
             {
                 password: passwordHash
@@ -281,7 +274,7 @@ export async function resetPassword(req, res) {
             });
         }
 
-        // Eliminar token utilizado
+       
         await PasswordReset.destroy({
             where: {
                 id: recuperacion.id

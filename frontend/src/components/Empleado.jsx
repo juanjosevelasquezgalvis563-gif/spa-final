@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowUpRight, CalendarCheck2, CalendarDays, CircleCheck, Clock3 } from "lucide-react";
+import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { API_ROOT } from "../lib/api";
 import logo from "../assets/image.png";
 import { useSession } from "../context/useSession";
@@ -62,10 +62,12 @@ export function Empleado() {
     const [cargando, setCargando] = useState(true);
     const [message, setMessage] = useState("");
     const [nombreEmpleado, setNombreEmpleado] = useState("");
+    const [mostrarBienvenida, setMostrarBienvenida] = useState(true);
 
     const navigate = useNavigate();
     const location = useLocation();
     const { logout } = useSession();
+    const reduceMotion = useReducedMotion();
     const perfilId = new URLSearchParams(location.search).get("perfilId");
     const perfilPath = (path) => perfilId ? `${path}?perfilId=${encodeURIComponent(perfilId)}` : path;
     const abrirGestionCitas = (filtro) => {
@@ -158,6 +160,14 @@ export function Empleado() {
         };
     }, []);
 
+    useEffect(() => {
+        const temporizador = window.setTimeout(() => {
+            setMostrarBienvenida(false);
+        }, 10000);
+
+        return () => window.clearTimeout(temporizador);
+    }, []);
+
     async function cerrarSesion() {
         if (perfilId) {
             navigate("/admin");
@@ -185,15 +195,18 @@ export function Empleado() {
                         type="button"
                         onClick={() => navigate(perfilPath("/empleado"))}
                     >
+                        <span className="empleado-menu-indicator" aria-hidden="true">01</span>
                         Resumen
                     </button>
                     <button
                         type="button"
                         onClick={() => abrirGestionCitas("pendientes")}
                     >
+                        <span className="empleado-menu-indicator" aria-hidden="true">02</span>
                         Gestionar mis citas
                     </button>
                     <button type="button" onClick={() => navigate("/")}>
+                        <span className="empleado-menu-indicator" aria-hidden="true">03</span>
                         Ir a la página principal
                     </button>
                     {!perfilId && (
@@ -201,10 +214,12 @@ export function Empleado() {
                             type="button"
                             onClick={() => navigate("/actualizar-datos-empleado")}
                         >
+                            <span className="empleado-menu-indicator" aria-hidden="true">04</span>
                             Actualizar datos
                         </button>
                     )}
                     <button type="button" onClick={cerrarSesion}>
+                        <span className="empleado-menu-indicator" aria-hidden="true">{perfilId ? "04" : "05"}</span>
                         {perfilId ? "Volver al panel administrador" : "Cerrar sesión"}
                     </button>
                 </nav>
@@ -219,15 +234,39 @@ export function Empleado() {
                 <section className="empleado-welcome">
                     <div className="empleado-welcome-copy">
                         <span className="empleado-eyebrow">PANEL DEL EQUIPO</span>
-                        <div className="empleado-welcome-message">
-                            <h2>{nombreEmpleado ? `Bienvenid@, ${nombreEmpleado}` : "Panel de trabajo"}</h2>
-                            <p>Consulta tus citas y organiza los servicios de la jornada.</p>
-                        </div>
+                        <AnimatePresence mode="wait" initial={false}>
+                            {mostrarBienvenida ? (
+                                <m.div
+                                    key="empleado-greeting"
+                                    className="empleado-welcome-message"
+                                    initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12, filter: "blur(4px)" }}
+                                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                                    exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -10, filter: "blur(4px)" }}
+                                    transition={{ duration: reduceMotion ? 0.2 : 0.45, ease: [0.22, 0.61, 0.36, 1] }}
+                                >
+                                    <h2>{nombreEmpleado ? `¡Bienvenido, ${nombreEmpleado}!` : "¡Bienvenido a tu espacio de trabajo!"}</h2>
+                                    <p>Un resumen claro para que puedas enfocarte en cada cliente.</p>
+                                </m.div>
+                            ) : (
+                                <m.div
+                                    key="empleado-workspace"
+                                    className="empleado-welcome-message"
+                                    initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12, filter: "blur(4px)" }}
+                                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                                    exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -10, filter: "blur(4px)" }}
+                                    transition={{ duration: reduceMotion ? 0.2 : 0.45, ease: [0.22, 0.61, 0.36, 1] }}
+                                >
+                                    <h2>Tu espacio para organizar cada jornada.</h2>
+                                    <p>Consulta tus citas y acompaña cada servicio desde aquí.</p>
+                                </m.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                     <div className="empleado-today">
                         <span className="empleado-today-mark" aria-hidden="true">HOY</span>
                         <time dateTime={hoyKey}>{hoyLabel}</time>
                     </div>
+                    <span className="empleado-welcome-watermark" aria-hidden="true">JC</span>
                 </section>
 
                 {message && (
@@ -252,7 +291,7 @@ export function Empleado() {
                     >
                         <div className="empleado-stat-topline">
                             <span>CITAS DE HOY</span>
-                            <span className="empleado-stat-icon" aria-hidden="true"><CalendarDays className="dashboard-icon" /></span>
+                            <span className="empleado-stat-icon" aria-hidden="true">01</span>
                         </div>
                         <strong>{cargando ? "—" : resumen?.citasHoy ?? "—"}</strong>
                         <p>Por atender durante la jornada</p>
@@ -267,7 +306,7 @@ export function Empleado() {
                     >
                         <div className="empleado-stat-topline">
                             <span>PENDIENTES</span>
-                            <span className="empleado-stat-icon" aria-hidden="true"><Clock3 className="dashboard-icon" /></span>
+                            <span className="empleado-stat-icon" aria-hidden="true">02</span>
                         </div>
                         <strong>{cargando ? "—" : resumen?.pendientes ?? "—"}</strong>
                         <p>Esperan confirmación</p>
@@ -282,7 +321,7 @@ export function Empleado() {
                     >
                         <div className="empleado-stat-topline">
                             <span>FINALIZADAS</span>
-                            <span className="empleado-stat-icon" aria-hidden="true"><CircleCheck className="dashboard-icon" /></span>
+                            <span className="empleado-stat-icon" aria-hidden="true">03</span>
                         </div>
                         <strong>{cargando ? "—" : resumen?.finalizadas ?? "—"}</strong>
                         <p>Servicios completados</p>
@@ -298,7 +337,7 @@ export function Empleado() {
                                 <span className="empleado-section-kicker">SIGUIENTE EN TU AGENDA</span>
                                 <h3>Próxima cita</h3>
                             </div>
-                            <span className="empleado-heading-mark" aria-hidden="true"><ArrowUpRight className="dashboard-icon" /></span>
+                            <span className="empleado-heading-mark" aria-hidden="true">↗</span>
                         </div>
 
                         {cargando ? (
@@ -327,16 +366,16 @@ export function Empleado() {
 
                         <button
                             type="button"
-                            className="pc-text-link"
+                            className="empleado-text-link"
                             onClick={() => abrirGestionCitas("pendientes")}
                         >
                             Ver agenda completa <span aria-hidden="true">→</span>
                         </button>
                     </article>
 
-                    <aside className="pc-quick-card">
-                        <span className="pc-section-kicker">ACCESO RÁPIDO</span>
-                        <div className="pc-quick-icon" aria-hidden="true"><CalendarCheck2 /></div>
+                    <aside className="empleado-quick-card">
+                        <span className="empleado-section-kicker">ACCESO RÁPIDO</span>
+                        <div className="empleado-quick-icon" aria-hidden="true">↗</div>
                         <h3>Gestiona tu agenda</h3>
                         <p>Confirma citas, consulta los servicios y mantén cada turno actualizado.</p>
                         <button
@@ -346,47 +385,47 @@ export function Empleado() {
                             Abrir gestión de citas <span aria-hidden="true">→</span>
                         </button>
                     </aside>
-
-                    
                 </section>
 
-                <section className="pc-agenda-card">
-                    <div className="pc-section-heading">
+                <section className="empleado-agenda-card">
+                    <div className="empleado-section-heading">
                         <div>
-                            <span className="pc-section-kicker">VISTA DEL DÍA</span>
+                            <span className="empleado-section-kicker">VISTA DEL DÍA</span>
                             <h3>Agenda de hoy</h3>
                         </div>
-                        <span className="pc-agenda-count">
+                        <span className="empleado-agenda-count">
                             {cargando ? "…" : `${resumen?.agendaHoy.length || 0} ${resumen?.agendaHoy.length === 1 ? "turno" : "turnos"}`}
                         </span>
                     </div>
 
                     {cargando ? (
-                        <div className="pc-agenda-empty">Cargando los turnos de hoy…</div>
+                        <div className="empleado-agenda-empty">Cargando los turnos de hoy…</div>
                     ) : message && !resumen ? (
-                        <div className="pc-agenda-empty">No se pudo cargar la agenda del día.</div>
+                        <div className="empleado-agenda-empty">No se pudo cargar la agenda del día.</div>
                     ) : resumen?.agendaHoy.length ? (
-                        <div className="pc-agenda-list">
+                        <div className="empleado-agenda-list">
                             {resumen.agendaHoy.map((cita) => (
-                                <article className="pc-agenda-row" key={cita.id}>
-                                    <time className="pc-agenda-time">{formatearHora(cita.hora)}</time>
-                                    <span className="pc-agenda-rule" aria-hidden="true" />
-                                    <div className="pc-agenda-client">
+                                <article className="empleado-agenda-row" key={cita.id}>
+                                    <time className="empleado-agenda-time">{formatearHora(cita.hora)}</time>
+                                    <span className="empleado-agenda-rule" aria-hidden="true" />
+                                    <div className="empleado-agenda-client">
                                         <strong>{cita.cliente?.nombre || "Cliente"}</strong>
                                         <span>{cita.Servicio?.nombre || "Servicio por confirmar"}</span>
                                     </div>
-                                    <span className={`pc-agenda-status ${cita.estado?.toLowerCase() || ""}`}>
+                                    <span className={`empleado-agenda-status ${cita.estado?.toLowerCase() || ""}`}>
                                         {cita.estado || "Programada"}
                                     </span>
                                 </article>
                             ))}
+
                         </div>
                     ) : (
-                        <div className="pc-agenda-empty">
+                        <div className="empleado-agenda-empty">
                             <strong>Tu agenda está despejada por ahora.</strong>
                             <span>Cuando tengas citas para hoy, aparecerán aquí.</span>
                         </div>
                     )}
+                    
                 </section>
             </main>
         </div>
@@ -394,3 +433,4 @@ export function Empleado() {
 }
 
 export default Empleado;
+

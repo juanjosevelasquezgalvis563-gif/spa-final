@@ -1,4 +1,5 @@
 import {Router} from "express";
+import reportesRoutes from "./reportes.js";
 import {
     registro,
 } from "../controllers/RegistroController.js";
@@ -53,10 +54,10 @@ import { citasFinalizadasParaPago, registrarPago} from "../controllers/AdminCont
 import {historialPagos} from "../controllers/AdminController.js";
 import {
     crearPagoReserva,
-    obtenerAbonosReserva,
     obtenerEstadoPagoReserva,
     recibirEventoWompi
 } from "../controllers/PagoReservaController.js";
+
 
 
 import { forgotPassword } from "../controllers/RecuperaPassword.js";
@@ -146,7 +147,7 @@ const carritoActionLimiter = rateLimit({
 });
 
 
-router.post('/registrar', registroLimiter, registroCorreoLimiter, registro);
+router.post('/registrar', captchaLimiter, registroLimiter, registroCorreoLimiter, registro);
 router.post('/registrar/verificar', registroCodigoLimiter );
 router.post('/registrar/reenviar-codigo', registroCorreoLimiter);
 router.put('/registrarr',middleware,actualizarDatos);
@@ -171,7 +172,6 @@ router.get('/cliente/productos', middlewareCliente, productosCatalogo);
 router.post('/cliente', middlewareCliente, carritoActionLimiter, crearPagoReserva);
 router.get('/cliente',middlewareCliente, obtenerCliente);
 router.get('/cliente/reserva/:referencia', middlewareCliente, obtenerEstadoPagoReserva);
-router.get('/cliente/abonos', middlewareCliente, obtenerAbonosReserva);
 router.put('/cliente/cancelar/:id',middlewareCliente,cancelarSuCita);
 router.put('/cliente/actualizar/:id',middlewareCliente,actualizarCita);
 router.get('/cliente/cantidadCitas',middlewareCliente,cantidadDeCitas);
@@ -229,6 +229,8 @@ router.get('/administrador/historialCompras',middlewareAdmin,historialCompras);
 router.get('/administrador/citasFinalizadasPago', middlewareAdmin, citasFinalizadasParaPago);
 router.post('/administrador/registrarPago', middlewareAdmin, registrarPago);
 router.get('/administrador/historialPagos',middlewareAdmin,historialPagos);
+router.use('/administrador/reportes', middlewareAdmin, reportesRoutes);
+
 
 router.post('/wompi/webhook', recibirEventoWompi);
 

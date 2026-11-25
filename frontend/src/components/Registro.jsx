@@ -6,539 +6,385 @@ import { API_ROOT } from "../lib/api";
 import "./Registro.css";
 import PasswordVisibilityToggle from "./PasswordVisibilityToggle";
 
+function useTurnstile(siteKey) {
+    const [loaded, setLoaded] = useState(false);
+    const [error, setError] = useState(null);
+    const [widgetId, setWidgetId] = useState(null);
+    const [token, setToken] = useState("");
+
+    const containerRef = useRef(null);
+
+    const loadScript = useCallback(() => {
+        setError(null);
+
+        if (!siteKey) {
+            setError("Configuración de seguridad incompleta.");
+            return;
+        }
+
+        if (window.turnstile) {
+            setLoaded(true);
+            return;
+        }
+
+        let script = document.getElementById("cloudflare-turnstile");
+
+        if (!script) {
+            script = document.createElement("script");
+            script.id = "cloudflare-turnstile";
+            script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+        }
+
+        const handleLoad = () => {
+            setLoaded(true);
+            setError(null);
+        };
+
+        const handleError = () => {
+            setLoaded(false);
+            setError("No se pudo cargar la verificación de seguridad. Comprueba tu conexión.");
+        };
+
+        if (script.dataset.loaded === "true" && window.turnstile) {
+            setLoaded(true);
+            return;
+        }
+
+        script.addEventListener("load", handleLoad, { once: true });
+        script.addEventListener("error", handleError, { once: true });
+
+    }, [siteKey]);
+
+    useEffect(() => {
+        loadScript();
+    }, [loadScript]);
+
+    useEffect(() => {
+        if (
+            !loaded ||
+            !siteKey ||
+            !containerRef.current ||
+            !window.turnstile ||
+            widgetId !== null
+        ) {
+            return;
+        }
+
+        try {
+            const id = window.turnstile.render(containerRef.current, {
+                sitekey: siteKey,
+                callback: (receivedToken) => {
+                    setToken(receivedToken);
+                    setError(null);
+                },
+                "error-callback": () => {
+                    setToken("");
+                    setError("Error al completar la verificación de seguridad. Inténtalo de nuevo.");
+                },
+                "expired-callback": () => {
+                    setToken("");
+                }
+            });
+
+            setWidgetId(id);
+
+        } catch (error) {
+            console.error("Error al renderizar Turnstile:", error);
+            setError("No se pudo mostrar la verificación de seguridad.");
+        }
+
+    }, [loaded, siteKey, widgetId]);
+
+    const reset = useCallback(() => {
+        setToken("");
+        setError(null);
+
+        if (window.turnstile && widgetId !== null) {
+            window.turnstile.reset(widgetId);
+        }
+    }, [widgetId]);
+
+    const retry = useCallback(() => {
+        setToken("");
+        setError(null);
+
+        if (window.turnstile && widgetId !== null) {
+            window.turnstile.reset(widgetId);
+            return;
+        }
+
+        const existing = document.getElementById("cloudflare-turnstile");
+
+        if (existing) {
+            existing.remove();
+        }
+
+        setLoaded(false);
+        loadScript();
+
+    }, [widgetId, loadScript]);
+
+    return {
+        loaded,
+        error,
+        token,
+        containerRef,
+        reset,
+        retry
+    };
+}
+
 export function Registro() {
-  const [nombre, setNombre] = useState("");
-  const [telefono, setTelefono] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [mostrarPassword, setMostrarPassword] = useState(false);
-  const [message, setMessage] = useState("");
-  const [turnstileToken, setTurnstileToken] = useState("");
-  const [turnstileLoaded, setTurnstileLoaded] = useState(false);
-  const [turnstileWidgetId, setTurnstileWidgetId] = useState(null);
-  const [turnstileError, setTurnstileError] = useState("");
-  const [cargando, setCargando] = useState(false);
-  const [awaitingVerification, setAwaitingVerification] = useState(false);
-  const [confirmationCode, setConfirmationCode] = useState("");
-  const [verificandoCorreo, setVerificandoCorreo] = useState(false);
-  const [reenviandoCodigo, setReenviandoCodigo] = useState(false);
+    const [nombre, setNombre] = useState("");
+    const [telefono, setTelefono] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [mostrarPassword, setMostrarPassword] = useState(false);
+    const [message, setMessage] = useState("");
+    const [cargando, setCargando] = useState(false);
 
-  const turnstileRef = useRef(null);
+    const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
-  const limpiarCampos = () => {
-    setNombre("");
-    setTelefono("");
-    setEmail("");
-    setPassword("");
-    setConfirmationCode("");
-    setMostrarPassword(false);
-  };
+    const {
+        loaded: turnstileLoaded,
+        error: turnstileError,
+        token: turnstileToken,
+        containerRef: turnstileRef,
+        reset: resetTurnstile,
+        retry: retryTurnstile
+    } = useTurnstile(siteKey);
 
-  const onTurnstileVerify = useCallback((token) => {
-    setTurnstileToken(token);
-    setMessage("");
-  }, []);
-
-  const onTurnstileError = useCallback(() => {
-    setTurnstileToken("");
-    setMessage(
-      "Error al completar la verificación de seguridad. Inténtalo de nuevo."
-    );
-  }, []);
-
-  const resetTurnstile = useCallback(() => {
-    if (window.turnstile && turnstileWidgetId) {
-      window.turnstile.reset(turnstileWidgetId);
-    } else {
-      setTurnstileWidgetId(null);
-    }
-
-    setTurnstileToken("");
-    setMessage("");
-  }, [turnstileWidgetId]);
-
-  useEffect(() => {
-    if (!message) return undefined;
-
-    const timer = setTimeout(() => setMessage(""), 5000);
-
-    return () => clearTimeout(timer);
-  }, [message]);
-
-  useEffect(() => {
-    const scriptId = "cloudflare-turnstile";
-
-    if (document.getElementById(scriptId)) {
-      setTurnstileLoaded(true);
-      return;
-    }
-
-    const script = document.createElement("script");
-
-    script.id = scriptId;
-    script.src =
-      "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-    script.async = true;
-    script.defer = true;
-
-    script.onload = () => {
-      setTurnstileLoaded(true);
-    };
-
-    script.onerror = () => {
-      setTurnstileError(
-        "No se pudo cargar la verificación de seguridad. Comprueba tu conexión."
-      );
-      setMessage(
-        "No se pudo cargar la verificación de seguridad. Comprueba tu conexión."
-      );
-    };
-
-    document.head.appendChild(script);
-  }, []);
-
-  useEffect(() => {
-    const shouldRender =
-      turnstileLoaded &&
-      !awaitingVerification &&
-      turnstileRef.current &&
-      window.turnstile &&
-      !turnstileWidgetId;
-
-    const shouldRemove =
-      turnstileWidgetId &&
-      (awaitingVerification || !turnstileRef.current || !window.turnstile);
-
-    if (shouldRender) {
-      const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
-
-      if (!siteKey) {
-        setMessage("Configuración de seguridad incompleta.");
-        setTurnstileError(
-          "Error: Clave de sitio de Turnstile no configurada."
-        );
-        return;
-      }
-
-      try {
-        const id = window.turnstile.render(turnstileRef.current, {
-          sitekey: siteKey,
-          callback: onTurnstileVerify,
-          "error-callback": onTurnstileError,
-        });
-
-        setTurnstileWidgetId(id);
-        setTurnstileError("");
-      } catch {
-        setTurnstileError(
-          "No se pudo cargar la verificación de seguridad."
-        );
-        setMessage(
-          "No se pudo cargar la verificación de seguridad. Inténtalo más tarde."
-        );
-      }
-    } else if (shouldRemove) {
-      window.turnstile.remove(turnstileWidgetId);
-      setTurnstileWidgetId(null);
-      setTurnstileToken("");
-    }
-
-    return () => {
-      if (
-        turnstileWidgetId &&
-        typeof window !== "undefined" &&
-        window.turnstile
-      ) {
-        window.turnstile.remove(turnstileWidgetId);
-      }
-    };
-  }, [
-    turnstileLoaded,
-    awaitingVerification,
-    turnstileWidgetId,
-    onTurnstileVerify,
-    onTurnstileError,
-  ]);
-
-  const restablecerTurnstile = useCallback(() => {
-    if (
-      turnstileWidgetId &&
-      typeof window !== "undefined" &&
-      window.turnstile
-    ) {
-      window.turnstile.remove(turnstileWidgetId);
-      setTurnstileWidgetId(null);
-      setTurnstileToken("");
-    } else {
-      setTurnstileWidgetId(null);
-    }
-  }, [turnstileWidgetId]);
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-
-    if (awaitingVerification) return;
-
-    if (!turnstileToken) {
-      setMessage(
-        "Debes completar la verificación de seguridad antes de registrarte."
-      );
-      return;
-    }
-
-    setCargando(true);
-
-    try {
-      const correoRegistrado = email.trim();
-
-      const response = await fetch(`${API_ROOT}/inser/registrar`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          nombre,
-          telefono,
-          email: correoRegistrado,
-          password,
-          turnstileToken,
-        }),
-      });
-
-      const data = await response.json().catch(() => ({}));
-
-      if (response.ok) {
-        setAwaitingVerification(true);
-        setConfirmationCode("");
-        setMessage(
-          data.message ||
-            "Enviamos un código a tu correo para confirmar la dirección."
-        );
-
+    const limpiarCampos = () => {
         setNombre("");
         setTelefono("");
+        setEmail("");
         setPassword("");
         setMostrarPassword(false);
-        setEmail(correoRegistrado);
-      } else {
-        setMessage(data.message || "No se pudo registrar el usuario");
-      }
-    } catch {
-      setMessage("Error de conexión con el servidor");
-    } finally {
-      restablecerTurnstile();
-      setCargando(false);
-    }
-  }
+    };
 
-  async function verificarCorreo(e) {
-    e.preventDefault();
+    useEffect(() => {
+        if (!message) return;
 
-    if (confirmationCode.length !== 6) {
-      setMessage(
-        "Ingresa el código de 6 dígitos que enviamos a tu correo."
-      );
-      return;
-    }
+        const timer = setTimeout(() => {
+            setMessage("");
+        }, 5000);
 
-    setVerificandoCorreo(true);
-    setMessage("");
+        return () => clearTimeout(timer);
+    }, [message]);
 
-    try {
-      const response = await fetch(
-        `${API_ROOT}/inser/registrar/verificar`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: email.trim(),
-            codigo: confirmationCode,
-          }),
+    async function handleSubmit(e) {
+        e.preventDefault();
+
+        if (cargando) return;
+
+        setMessage("");
+
+        if (!siteKey) {
+            setMessage("Configuración de seguridad incompleta.");
+            return;
         }
-      );
 
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        setMessage(data.message || "No se pudo confirmar el correo.");
-        return;
-      }
-
-      setMessage(
-        data.message || "Correo confirmado. Ya puedes iniciar sesión."
-      );
-
-      limpiarCampos();
-      setAwaitingVerification(false);
-    } catch {
-      setMessage("Error de conexión al confirmar el correo.");
-    } finally {
-      setVerificandoCorreo(false);
-    }
-  }
-
-  async function reenviarCodigo() {
-    setReenviandoCodigo(true);
-    setMessage("");
-
-    try {
-      const response = await fetch(
-        `${API_ROOT}/inser/registrar/reenviar-codigo`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: email.trim(),
-          }),
+        if (!turnstileToken) {
+            setMessage("Debes completar la verificación de seguridad antes de registrarte.");
+            return;
         }
-      );
 
-      const data = await response.json().catch(() => ({}));
+        setCargando(true);
 
-      setMessage(
-        data.message ||
-          (response.ok
-            ? "Enviamos un nuevo código a tu correo."
-            : "No se pudo reenviar el código.")
-      );
-    } catch {
-      setMessage("Error de conexión al reenviar el código.");
-    } finally {
-      setReenviandoCodigo(false);
+        try {
+            const payload = {
+                nombre,
+                telefono,
+                email: email.trim(),
+                password,
+                turnstileToken
+            };
+
+            const response = await fetch(`${API_ROOT}/inser/registrar`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                setMessage(data.message || "No se pudo registrar el usuario.");
+                resetTurnstile();
+                return;
+            }
+
+            limpiarCampos();
+            resetTurnstile();
+
+            setMessage(
+                data.message || "Usuario registrado exitosamente. Ya puedes iniciar sesión."
+            );
+
+        } catch (error) {
+            console.error("Error de conexión:", error);
+            setMessage("Error de conexión con el servidor.");
+            resetTurnstile();
+
+        } finally {
+            setCargando(false);
+        }
     }
-  }
 
-  return (
-    <div className="registro-container auth-page auth-page-register">
-      <div className="auth-layout">
-        <aside className="auth-brand-panel auth-brand-panel-register">
-          <div className="auth-brand">
-            <img src={logo} alt="JC Alta Peluquería" />
-            <span>JC Alta Peluquería</span>
-          </div>
+    return (
+        <div className="registro-container auth-page auth-page-register">
+            <div className="auth-layout">
 
-          <div className="auth-brand-copy">
-            <span className="auth-eyebrow">
-              BIENVENIDA A TU NUEVO RITUAL
-            </span>
+                <aside className="auth-brand-panel auth-brand-panel-register">
+                    <div className="auth-brand">
+                        <img src={logo} alt="JC Alta Peluquería" />
+                        <span>JC Alta Peluquería</span>
+                    </div>
 
-            <h1>Tu momento de cuidarte empieza aquí.</h1>
+                    <div className="auth-brand-copy">
+                        <span className="auth-eyebrow">
+                            BIENVENIDA A TU NUEVO RITUAL
+                        </span>
 
-            <p>
-              Crea tu cuenta para reservar tus servicios y vivir una
-              experiencia de belleza hecha para ti.
-            </p>
-          </div>
+                        <h1>Tu momento de cuidarte empieza aquí.</h1>
 
-          <div className="auth-brand-detail" aria-hidden="true">
-            <span>JC</span>
-          </div>
+                        <p>
+                            Crea tu cuenta para reservar tus servicios y vivir una
+                            experiencia de belleza hecha para ti.
+                        </p>
+                    </div>
 
-          <p className="auth-brand-caption">
-            Tu belleza, nuestro arte.
-          </p>
-        </aside>
+                    <div className="auth-brand-detail" aria-hidden="true">
+                        <span>JC</span>
+                    </div>
 
-        <form
-          className="registro-form auth-card auth-card-register"
-          onSubmit={
-            awaitingVerification ? verificarCorreo : handleSubmit
-          }
-        >
-          <div className="auth-form-heading">
-            <span className="auth-eyebrow">ÚNETE A NOSOTROS</span>
+                    <p className="auth-brand-caption">
+                        Tu belleza, nuestro arte.
+                    </p>
+                </aside>
 
-            <h2 className="registro-title">
-              {awaitingVerification
-                ? "Confirma tu correo"
-                : "Crear cuenta"}
-            </h2>
+                <form
+                    className="registro-form auth-card auth-card-register"
+                    onSubmit={handleSubmit}
+                >
+                    <div className="auth-form-heading">
+                        <span className="auth-eyebrow">
+                            ÚNETE A NOSOTROS
+                        </span>
 
-            <p>
-              {awaitingVerification
-                ? `Ingresa el código que enviamos a ${email}.`
-                : "Completa tus datos para comenzar."}
-            </p>
-          </div>
+                        <h2 className="registro-title">
+                            Crear cuenta
+                        </h2>
 
-          {awaitingVerification ? (
-            <div className="registro-email-confirmation">
-              <label htmlFor="registro-codigo">
-                Código de confirmación
-              </label>
+                        <p>
+                            Completa tus datos para comenzar.
+                        </p>
+                    </div>
 
-              <input
-                id="registro-codigo"
-                className="registro-input registro-code-input"
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                pattern="[0-9]{6}"
-                maxLength={6}
-                placeholder="000000"
-                value={confirmationCode}
-                onChange={(e) =>
-                  setConfirmationCode(
-                    e.target.value.replace(/\D/g, "").slice(0, 6)
-                  )
-                }
-                aria-describedby="registro-codigo-ayuda"
-                required
-              />
+                    <input
+                        className="registro-input"
+                        type="text"
+                        placeholder="Nombre"
+                        autoComplete="name"
+                        aria-label="Nombre"
+                        value={nombre}
+                        onChange={(e) => setNombre(e.target.value)}
+                        required
+                    />
 
-              <p id="registro-codigo-ayuda">
-                El código vence en 10 minutos. Revisa también la
-                carpeta de spam.
-              </p>
+                    <input
+                        className="registro-input"
+                        type="tel"
+                        placeholder="Teléfono"
+                        autoComplete="tel"
+                        aria-label="Teléfono"
+                        value={telefono}
+                        onChange={(e) => setTelefono(e.target.value)}
+                        required
+                    />
 
-              <button
-                className="registro-button"
-                type="submit"
-                disabled={
-                  verificandoCorreo || confirmationCode.length !== 6
-                }
-              >
-                {verificandoCorreo
-                  ? "Confirmando..."
-                  : "Confirmar correo y crear cuenta"}
-              </button>
+                    <input
+                        className="registro-input"
+                        type="email"
+                        placeholder="Correo electrónico"
+                        autoComplete="email"
+                        autoCapitalize="none"
+                        maxLength={254}
+                        aria-label="Correo electrónico"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
 
-              <button
-                className="registro-captcha-refresh"
-                type="button"
-                onClick={reenviarCodigo}
-                disabled={reenviandoCodigo || verificandoCorreo}
-              >
-                {reenviandoCodigo
-                  ? "Enviando..."
-                  : "Reenviar código"}
-              </button>
+                    <div className="password-field">
+                        <input
+                            className="registro-input"
+                            type={mostrarPassword ? "text" : "password"}
+                            placeholder="Contraseña"
+                            autoComplete="new-password"
+                            aria-label="Contraseña"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
 
-              <button
-                className="registro-captcha-refresh"
-                type="button"
-                onClick={() => {
-                  setAwaitingVerification(false);
-                  setConfirmationCode("");
-                  setMessage("");
-                }}
-                disabled={reenviandoCodigo || verificandoCorreo}
-              >
-                Volver al formulario
-              </button>
+                        <PasswordVisibilityToggle
+                            visible={mostrarPassword}
+                            onToggle={() =>
+                                setMostrarPassword((visible) => !visible)
+                            }
+                        />
+                    </div>
+
+                    <div className="turnstile-container">
+                        <div ref={turnstileRef} />
+
+                        {turnstileError && (
+                            <p className="turnstile-status error" role="alert">
+                                {turnstileError}
+                            </p>
+                        )}
+
+                        {turnstileError && (
+                            <button
+                                className="registro-captcha-refresh"
+                                type="button"
+                                onClick={retryTurnstile}
+                            >
+                                Reintentar verificación
+                            </button>
+                        )}
+                    </div>
+
+                    <button
+                        className="registro-button"
+                        type="submit"
+                        disabled={cargando || !turnstileToken || !turnstileLoaded}
+                    >
+                        {cargando ? "Registrando..." : "Registrarse"}
+                    </button>
+
+                    {message && (
+                        <p className="registro-message" role="status">
+                            {message}
+                        </p>
+                    )}
+
+                    <p className="auth-switch">
+                        ¿Ya tienes cuenta?{" "}
+                        <Link to="/login">
+                            Inicia sesión
+                        </Link>
+                    </p>
+                </form>
             </div>
-          ) : (
-            <>
-              <input
-                className="registro-input"
-                type="text"
-                placeholder="Nombre"
-                autoComplete="name"
-                aria-label="Nombre"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                required
-              />
-
-              <input
-                className="registro-input"
-                type="tel"
-                placeholder="Teléfono"
-                autoComplete="tel"
-                aria-label="Teléfono"
-                value={telefono}
-                onChange={(e) => setTelefono(e.target.value)}
-                required
-              />
-
-              <input
-                className="registro-input"
-                type="email"
-                placeholder="Correo electrónico"
-                autoComplete="email"
-                autoCapitalize="none"
-                maxLength={254}
-                aria-label="Correo electrónico"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-
-              <div className="password-field">
-                <input
-                  className="registro-input"
-                  type={mostrarPassword ? "text" : "password"}
-                  placeholder="Contraseña"
-                  autoComplete="new-password"
-                  aria-label="Contraseña"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-
-                <PasswordVisibilityToggle
-                  visible={mostrarPassword}
-                  onToggle={() =>
-                    setMostrarPassword((visible) => !visible)
-                  }
-                />
-              </div>
-
-              <div className="turnstile-container">
-                {turnstileError ? (
-                  <p className="turnstile-status error" role="alert">
-                    {turnstileError}
-                  </p>
-                ) : (
-                  <div ref={turnstileRef} />
-                )}
-              </div>
-
-              <button
-                className="registro-button"
-                type="submit"
-                disabled={cargando || !turnstileToken}
-              >
-                {cargando ? "Enviando código..." : "Registrarse"}
-              </button>
-            </>
-          )}
-
-          {message && (
-            <p
-              className={`registro-message${
-                turnstileError
-                  ? " turnstile-message-duplicate"
-                  : ""
-              }`}
-              role="status"
-            >
-              {message}
-            </p>
-          )}
-
-          {message &&
-            message.includes("verificación de seguridad") && (
-              <button
-                className="registro-captcha-refresh"
-                type="button"
-                onClick={resetTurnstile}
-              >
-                Reintentar Verificación
-              </button>
-            )}
-
-          <p className="auth-switch">
-            ¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link>
-          </p>
-        </form>
-      </div>
-    </div>
-  );
+        </div>
+    );
 }
 
 export default Registro;

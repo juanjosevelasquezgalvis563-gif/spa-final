@@ -31,6 +31,29 @@ const PagoReserva = db.define("PagoReserva", {
         type: DataTypes.TIME,
         allowNull: false
     },
+   
+    precio_original: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+    },
+  
+    descuento_porcentaje: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+    },
+    descuento_valor: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+    },
+    
+    puntos_canje: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+    },
     monto_reserva: {
         type: DataTypes.INTEGER,
         allowNull: false
@@ -84,5 +107,6 @@ const PagoReserva = db.define("PagoReserva", {
     tableName: "pagos_reserva",
     timestamps: false
 });
+
 
 export default PagoReserva;

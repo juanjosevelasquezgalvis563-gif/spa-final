@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import { API_ROOT } from '../lib/api';
 
+const formatoCOP = (valor) => '$' + (Number(valor) || 0).toLocaleString('es-CO') + ' COP';
+
 function HistorialPagos() {
     const [pagos, setPagos] = useState([]);
     const [cargando, setCargando] = useState(false);
@@ -95,17 +97,23 @@ function HistorialPagos() {
                                         <th>Hora</th>
                                         <th>Concepto</th>
                                         <th>Fecha de pago</th>
+                                        <th>Precio original</th>
+                                        <th>Precio final</th>
+                                        <th>Monto online</th>
+                                        <th>Monto local recibido</th>
+                                        <th>Saldo pendiente local</th>
                                         <th>Total pagado</th>
                                         <th>Estado</th>
                                     </tr>
                                 </thead>
 
                                 <tbody>
-                                    {pagos.map((pago) => (
-                                        <tr
-                                            key={pago.id}
-                                            className="admin-historial-fila"
-                                        >
+                                    {pagos.map((pago) => {
+                                        const precioOriginal = Number(pago.cita?.precio_original ?? pago.cita?.Servicio?.precio) || 0;
+                                        const descuento = Number(pago.cita?.descuento_valor) || 0;
+                                        const precioFinal = Number(pago.cita?.precio_final) || Math.max(0, precioOriginal - descuento);
+                                        return (
+                                        <tr key={pago.id} className="admin-historial-fila">
                                             <td>
                                                 {pago.cita?.cliente?.nombre || 'No disponible'}
                                             </td>
@@ -132,12 +140,22 @@ function HistorialPagos() {
                                                 {pago.fecha_pago?.split('T')[0] || pago.fecha_pago || 'No disponible'}
                                             </td>
 
+                                            <td>{formatoCOP(precioOriginal)}</td>
+
+                                            <td>{formatoCOP(precioFinal)}</td>
+
+                                            <td>{formatoCOP(pago.monto_online)}</td>
+
+                                            <td>{formatoCOP(pago.monto_local)}</td>
+
+                                            <td>{formatoCOP(pago.saldo_pendiente_local)}</td>
+
                                             <td className="admin-historial-total">
-                                                ${Number(pago.total_pago || 0).toLocaleString('es-CO')}
+                                                {formatoCOP(pago.total_pago)}
                                                 {Number(pago.credito_aplicado) > 0 && (
                                                     <small>
                                                         <br />
-                                                        Abono aplicado: ${Number(pago.credito_aplicado).toLocaleString('es-CO')}
+                                                        Abono aplicado: {formatoCOP(pago.credito_aplicado)}
                                                     </small>
                                                 )}
                                             </td>
@@ -148,7 +166,7 @@ function HistorialPagos() {
                                                 </span>
                                             </td>
                                         </tr>
-                                    ))}
+                                    );})}
                                 </tbody>
                             </table>
                         </div>
@@ -160,3 +178,4 @@ function HistorialPagos() {
 }
 
 export default HistorialPagos;
+

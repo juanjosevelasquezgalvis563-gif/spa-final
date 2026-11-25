@@ -19,6 +19,21 @@ const Pago = db.define('Pago', {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false
     },
+    monto_online: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+        defaultValue: 0
+    },
+    monto_local: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+        defaultValue: 0
+    },
+   
+    medio_pago: {
+        type: DataTypes.ENUM('online', 'local'),
+        allowNull: false
+    },
     fecha_pago: {
         type: DataTypes.DATE,
         allowNull: false
@@ -39,3 +54,4 @@ const Pago = db.define('Pago', {
 });
 
 export default Pago;
+

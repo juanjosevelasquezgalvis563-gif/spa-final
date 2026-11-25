@@ -2,13 +2,27 @@ import Cita from '../models/citas.js';
 import Servicio from '../models/servicios.js';
 import Usuario from '../models/Usuario.js';
 import MovimientoPuntos from '../models/MovimientoPuntos.js';
+import PagoReserva from '../models/PagoReserva.js';
 import { Op } from "sequelize";
 import db from "../config/db.js";
-import { acreditarReservaCancelada } from "./PagoReservaController.js";
+import {enviarCorreoCitaConfirmada} from "../utils/correo.js";
+import { desglosarPrecioCita } from "../utils/precioCita.js";
+
+
+const INCLUIR_RESERVA = {
+    model: PagoReserva,
+    as: 'reservasPago',
+    attributes: ['monto_reserva', 'monto_credito', 'monto_pagado', 'estado'],
+    required: false
+};
+
+function obtenerIdEmpleado(req) {
+    return req.user?.empleadoActivoId || req.user?.id;
+}
 
 export async function empleado(req, res) {
     try {
-        const empleadoId = req.user.id;
+        const empleadoId = obtenerIdEmpleado(req);
 
         const citas = await Cita.findAll({
             where: {
@@ -23,8 +37,8 @@ export async function empleado(req, res) {
                 {
                     model: Servicio,
                     attributes: ['nombre']
-                }
-
+                },
+                INCLUIR_RESERVA
             ],
             order:[
                 ['fecha', 'DESC'],
@@ -42,7 +56,7 @@ export async function empleado(req, res) {
 
 export async function citasHoy(req, res) {
     try {
-        const empleadoId = req.user.id;
+        const empleadoId = obtenerIdEmpleado(req);
         const ahora = new Date();
         const inicioHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 0, 0, 0);
         const finHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() + 1, 0, 0, 0);
@@ -74,7 +88,7 @@ export async function citasHoy(req, res) {
 export async function citasPendientesEmpleado(req, res) {
     try {
 
-        const empleadoId = req.user.id;
+        const empleadoId = obtenerIdEmpleado(req);
         const citasPendientesEmpleado = await Cita.count({
             where: {
                 empleado_id: empleadoId,
@@ -90,7 +104,7 @@ export async function citasPendientesEmpleado(req, res) {
 
 export async function citasFinalizadasEmpleado(req, res) {
     try {
-        const empleadoId = req.user.id;
+        const empleadoId = obtenerIdEmpleado(req);
         const citasFinalizadas = await Cita.count({
             where: {
                 empleado_id: empleadoId,
@@ -108,13 +122,31 @@ export async function citasFinalizadasEmpleado(req, res) {
 
 export async function comfirmarCita(req, res) {
     try {
-        const empleadoId = req.user.id;
+        const empleadoId = obtenerIdEmpleado(req);
         const id = req.params.id;
+
         const cita = await Cita.findOne({
-            where:{
-                id:id,
-                empleado_id:empleadoId
-            }
+            where: {
+                id: id,
+                empleado_id: empleadoId
+            },
+            include: [
+                {
+                    model: Usuario,
+                    as: 'cliente',
+                    attributes: ['id', 'nombre', 'email']
+                },
+                {
+                    model: Usuario,
+                    as: 'empleado',
+                    attributes: ['id', 'nombre']
+                },
+                {
+                    model: Servicio,
+                    attributes: ['id', 'nombre', 'precio']
+                },
+                INCLUIR_RESERVA
+            ]
         });
 
         if (!cita) {
@@ -128,10 +160,35 @@ export async function comfirmarCita(req, res) {
         cita.estado = 'confirmada';
         await cita.save();
 
-        return res.status(200).json({ message: 'Cita confirmada' });
+      
+        const reservaPagada = (cita.reservasPago || []).find(
+            (reserva) => reserva.estado === 'aprobado'
+        );
+        const desglose = desglosarPrecioCita(cita, cita.Servicio, reservaPagada);
+
+        const correoEnviado = await enviarCorreoCitaConfirmada({
+            email: cita.cliente?.email,
+            nombreCliente: cita.cliente?.nombre,
+            servicio: cita.Servicio?.nombre,
+            profesional: cita.empleado?.nombre,
+            fecha: cita.fecha,
+            hora: cita.hora,
+            descuentoPorcentaje: desglose.descuentoPorcentaje,
+            precioFinal: desglose.precioFinal,
+            reservaPagada: desglose.reservaPagada,
+            saldo: desglose.saldo
+        });
+
+        return res.status(200).json({
+            message: correoEnviado
+                ? 'Cita confirmada. Se envió un correo al cliente.'
+                : 'Cita confirmada, pero no se pudo enviar el correo al cliente.',
+            correo_enviado: correoEnviado
+        });
 
     } catch (error) {
-        return res.status(401).json({ message: 'error al comfirmar la cita' });
+        console.error('Error al confirmar la cita:', error);
+        return res.status(500).json({ message: 'error al comfirmar la cita' });
     }
 
 }
@@ -141,7 +198,7 @@ export async function comenzarCita(req, res) {
         const cita = await Cita.findOne({
             where: {
                 id: req.params.id,
-                empleado_id: req.user.id
+                empleado_id: obtenerIdEmpleado(req)
             }
         });
 
@@ -170,7 +227,7 @@ export async function comenzarCita(req, res) {
 
 export async function cancelarCita(req, res) {
     try {
-        const empleadoId = req.user.id;
+        const empleadoId = obtenerIdEmpleado(req);
         const id = req.params.id;
         const resultado = await db.transaction(async (transaction) => {
             const cita = await Cita.findOne({
@@ -192,15 +249,14 @@ export async function cancelarCita(req, res) {
 
             cita.estado = 'cancelada';
             await cita.save({ transaction });
-            await acreditarReservaCancelada(cita, transaction);
-            return { message: 'Cita cancelada; el pago se conservó como abono del cliente.' };
+            return { message: 'Cita cancelada.' };
         });
 
         if (resultado.error) return res.status(resultado.status).json({ message: resultado.error });
         return res.status(200).json({ message: resultado.message });
 
     } catch (error) {
-        console.error('Error al cancelar la cita y conservar el abono:', error);
+        console.error('Error al cancelar la cita:', error);
         return res.status(500).json({ message: "No se pudo cancelar la cita" });
     }
 
@@ -210,24 +266,28 @@ export async function cancelarCita(req, res) {
 
 export async function finalizarCita(req, res) {
     try {
-        const empleadoId = req.user.id;
-        const id = req.params.id;
+       
+        const empleadoId = obtenerIdEmpleado(req);
+        const citaId = Number(req.params.id);
+
+        if (!citaId || !Number.isFinite(citaId) || citaId <= 0) {
+            return res.status(400).json({ message: "ID de cita inválido." });
+        }
 
         const resultado = await db.transaction(async (transaction) => {
 
             const cita = await Cita.findOne({
                 where: {
-                    id,
+                    id: citaId,
                     empleado_id: empleadoId
                 },
-                transaction,
-                lock: transaction.LOCK.UPDATE
+                transaction
             });
 
             if (!cita) {
                 return {
                     status: 404,
-                    message: "Cita no encontrada."
+                    message: "Cita no encontrada o no te pertenece."
                 };
             }
 
@@ -253,7 +313,7 @@ export async function finalizarCita(req, res) {
                 };
             }
 
-            // Evitar acreditar puntos dos veces.
+            
             const movimientoExistente = await MovimientoPuntos.findOne({
                 where: {
                     cita_id: cita.id,
@@ -271,19 +331,25 @@ export async function finalizarCita(req, res) {
 
             const finAtencion = new Date();
 
+            const inicioMs = new Date(cita.inicio_atencion).getTime();
+            if (!Number.isFinite(inicioMs)) {
+                return {
+                    status: 400,
+                    message: "La fecha de inicio de la cita no es válida."
+                };
+            }
+
             const duracionMinutos = Math.max(
                 0,
                 Math.floor(
-                    (
-                        finAtencion.getTime() -
-                        new Date(cita.inicio_atencion).getTime()
-                    ) / 60000
+                    (finAtencion.getTime() - inicioMs) / 60000
                 )
             );
 
-            const precioOriginal = Math.round(
-                Number(servicio.precio)
-            );
+        
+            const precioOriginal = Number(cita.precio_original) > 0
+                ? Math.round(Number(cita.precio_original))
+                : Math.round(Number(servicio.precio) || 0);
 
             if (
                 !Number.isFinite(precioOriginal) ||
@@ -295,50 +361,72 @@ export async function finalizarCita(req, res) {
                 };
             }
 
-            // Inicializar los precios de la cita.
+            const descuentoValor = Math.max(0, Math.round(Number(cita.descuento_valor) || 0));
+            const descuento = Math.min(descuentoValor, precioOriginal);
+            const precioFinal = precioOriginal - descuento;
+
             cita.precio_original = precioOriginal;
-            cita.descuento_porcentaje = 0;
-            cita.descuento_valor = 0;
-            cita.precio_final = precioOriginal;
+            cita.descuento_valor = descuento;
+            cita.precio_final = precioFinal;
 
             cita.estado = "finalizada";
             cita.fin_atencion = finAtencion;
 
             await cita.save({ transaction });
 
-            // Un punto por cada $2.000 del servicio.
-            const puntos = Math.floor(
-                precioOriginal / 2000
-            );
+           
+            const puntos = Math.floor(precioOriginal / 2000);
 
-            if (puntos > 0) {
-                await MovimientoPuntos.create({
-                    usuario_id: cita.usuario_id,
-                    cita_id: cita.id,
-                    tipo: "acumulacion",
-                    puntos,
-                    descripcion:
-                        `Puntos por finalizar el servicio: ${servicio.nombre}`
-                }, { transaction });
+            let puntosAcreditados = 0;
+
+          
+            if (puntos > 0 && Number.isInteger(cita.usuario_id) && cita.usuario_id > 0) {
+                try {
+                    await MovimientoPuntos.create({
+                        usuario_id: cita.usuario_id,
+                        cita_id: cita.id,
+                        tipo: "acumulacion",
+                        puntos,
+                        fecha_creacion: new Date(),
+                        descripcion:
+                            `Puntos por finalizar el servicio: ${servicio.nombre}`.slice(0, 255)
+                    }, { transaction });
+                    puntosAcreditados = puntos;
+                } catch (puntosError) {
+                    console.error("No se pudo acreditar movimiento de puntos (no bloquea la cita):", {
+                        message: puntosError.message,
+                        citaId: cita.id,
+                        usuario_id: cita.usuario_id,
+                        puntos
+                    });
+                }
             }
 
             return {
                 status: 200,
                 message: "Cita finalizada correctamente.",
-                puntos_ganados: puntos,
+                puntos_ganados: puntosAcreditados,
                 duracion_minutos: duracionMinutos,
                 precio_original: precioOriginal,
-                precio_final: precioOriginal
+                descuento_aplicado: descuento,
+                precio_final: precioFinal
             };
         });
 
         return res.status(resultado.status).json(resultado);
 
     } catch (error) {
-        console.error("Error al finalizar la cita:", error);
+        console.error("Error al finalizar la cita:", {
+            message: error.message,
+            stack: error.stack,
+            citaId: req.params.id,
+            empleadoId: req.user?.id,
+            empleadoActivoId: req.user?.empleadoActivoId
+        });
 
         return res.status(500).json({
-            message: "Error al finalizar la cita."
+            message: "Error al finalizar la cita.",
+            detalle: process.env.NODE_ENV === "development" ? error.message : undefined
         });
     }
 }
@@ -347,7 +435,7 @@ export async function finalizarCita(req, res) {
 export async function citaRealizarEmpleado(req, res) {
     try {
 
-        const empleadoId = req.user.id;
+        const empleadoId = obtenerIdEmpleado(req);
         const citaRealizarEmpleado = await Cita.findOne({
             where: {
                 empleado_id: empleadoId,
@@ -364,7 +452,8 @@ export async function citaRealizarEmpleado(req, res) {
                 {
                     model: Servicio,
                     attributes: ['nombre']
-                }
+                },
+                INCLUIR_RESERVA
             ],
 
             order: [
@@ -379,5 +468,4 @@ export async function citaRealizarEmpleado(req, res) {
         return res.status(403).json({ message: "no se pudieron obtener las citas" })
     }
 }
-
 

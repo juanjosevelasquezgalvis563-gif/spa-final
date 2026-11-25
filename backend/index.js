@@ -12,15 +12,14 @@ import { PRODUCT_IMAGES_DIR } from "./src/config/productImages.js";
 import authRoutes from "./src/routes/routes.js";
 import db from "./src/config/db.js";
 import { iniciarRecordatorios } from "./src/controllers/recordatorios.js";
+import { iniciarJobReportesQuincenales } from "./src/controllers/ReportesMensualesJob.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.set("trust proxy", 1);
 
-// ======================================
-// CONFIGURACIÓN DE CORS
-// ======================================
+
 
 const frontendOrigin = process.env.FRONTEND_URL?.replace(/\/+$/, "");
 
@@ -30,9 +29,17 @@ const allowedOrigins = [
     "http://localhost:5174",
     "http://127.0.0.1:5174",
     "https://spa-final-an59.vercel.app",
-    "https://spa-final-an59-git-develop-velure-spa.vercel.app",
     frontendOrigin
 ].filter(Boolean);
+
+
+const vercelPreviewRegex = /^https:\/\/spa-final-an59(-[a-z0-9-]+)?-velure-spa\.vercel\.app$/;
+
+function origenPermitido(origin) {
+   
+    if (!origin) return true;
+    return allowedOrigins.includes(origin) || vercelPreviewRegex.test(origin);
+}
 
 app.use(
     helmet({
@@ -45,56 +52,31 @@ app.use(
 app.use(
     cors({
         origin: function (origin, callback) {
-            if (!origin || allowedOrigins.includes(origin)) {
+            if (origenPermitido(origin)) {
                 return callback(null, true);
             }
 
             console.error("ORIGEN BLOQUEADO POR CORS:", origin);
-
             return callback(new Error("No permitido por CORS"));
         },
         credentials: true,
-        methods: [
-            "GET",
-            "POST",
-            "PUT",
-            "PATCH",
-            "DELETE",
-            "OPTIONS"
-        ],
-        allowedHeaders: [
-            "Content-Type",
-            "Authorization"
-        ]
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"]
     })
 );
 
-// ======================================
-// MIDDLEWARES
-// ======================================
 
 app.use(cookieParser());
 app.use(express.json());
 
-// ======================================
-// REGISTRO TEMPORAL DE PETICIONES
-// ======================================
+
 
 app.use("/inser", (req, res, next) => {
-    console.log("=================================");
-    console.log("PETICIÓN RECIBIDA EN BACKEND");
-    console.log("Método:", req.method);
-    console.log("Ruta:", req.originalUrl);
-    console.log("Origen:", req.headers.origin);
-    console.log("IP:", req.ip);
-    console.log("=================================");
 
     next();
 });
 
-// ======================================
-// IMÁGENES DE PRODUCTOS
-// ======================================
+
 
 app.use(
     "/uploads/products",
@@ -112,9 +94,6 @@ app.use(
     })
 );
 
-// ======================================
-// RUTAS DE PRUEBA
-// ======================================
 
 app.get("/", (req, res) => {
     res.status(200).json({
@@ -130,15 +109,11 @@ app.get("/health", (req, res) => {
     });
 });
 
-// ======================================
-// RUTAS PRINCIPALES
-// ======================================
+
 
 app.use("/inser", authRoutes);
 
-// ======================================
-// MANEJO DE ERRORES
-// ======================================
+
 
 app.use((err, req, res, next) => {
     console.error("ERROR GLOBAL:", {
@@ -162,9 +137,6 @@ app.use((err, req, res, next) => {
     });
 });
 
-// ======================================
-// INICIAR SERVIDOR
-// ======================================
 
 try {
     await db.authenticate();
@@ -176,6 +148,7 @@ try {
     });
 
     iniciarRecordatorios();
+    iniciarJobReportesQuincenales();
 
     console.log("Recordatorios automáticos iniciados");
 

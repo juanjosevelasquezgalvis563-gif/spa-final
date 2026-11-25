@@ -1,4 +1,3 @@
-
 import db from "../config/db.js";
 
 import MovimientoPuntos from "../models/MovimientoPuntos.js";
@@ -7,11 +6,13 @@ import Cita from "../models/citas.js";
 import Servicio from "../models/servicios.js";
 import Pago from "../models/pagos.js";
 
-const NIVELES_DESCUENTO = {
+
+export const NIVELES_DESCUENTO = {
     5: {
         puntos: 300,
         porcentaje: 5,
         descuentoMaximo: 6000
+        
     },
     10: {
         puntos: 600,
@@ -25,7 +26,8 @@ const NIVELES_DESCUENTO = {
     }
 };
 
-async function calcularSaldo(usuarioId, transaction = null) {
+
+export async function calcularSaldo(usuarioId, transaction = null) {
     const movimientos = await MovimientoPuntos.findAll({
         where: { usuario_id: usuarioId },
         order: [["fecha_creacion", "DESC"]],
@@ -50,7 +52,7 @@ async function calcularSaldo(usuarioId, transaction = null) {
     return { saldo, movimientos };
 }
 
-// CONSULTAR FIDELIZACIÓN
+
 export async function obtenerFidelizacion(req, res) {
     try {
         const usuarioId = req.user.id;
@@ -84,7 +86,7 @@ export async function obtenerFidelizacion(req, res) {
     }
 }
 
-// CANJEAR DESCUENTO PARA UNA CITA
+
 export async function canjearDescuento(req, res) {
     try {
         const usuarioId = req.user.id;
@@ -141,7 +143,7 @@ export async function canjearDescuento(req, res) {
                 };
             }
 
-            // No permitir descuentos después de registrar el pago.
+           
             const pagoExistente = await Pago.findOne({
                 where: { cita_id: citaId },
                 transaction

@@ -676,6 +676,60 @@
   }
 }
 
+/* Tarjetas actuales de caja: las reglas heredadas de la lista antigua
+   convertían cada cita en una fila y aplastaban el desglose de importes. */
+.admin-dashboard .registrar-pago-cita,
+.empleado-dashboard .registrar-pago-cita {
+  max-width: 1500px;
+  margin: 28px auto 0;
+  padding: clamp(18px, 2.5vw, 28px);
+  border: 1px solid #e5dfeb;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(32, 20, 45, .055);
+}
+.admin-dashboard .registrar-pago-cita .registrar-pago-lista,
+.empleado-dashboard .registrar-pago-cita .registrar-pago-lista {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 430px), 1fr));
+  gap: 16px;
+}
+.admin-dashboard .registrar-pago-cita .registrar-pago-card,
+.empleado-dashboard .registrar-pago-cita .registrar-pago-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 15px;
+  padding: 19px;
+  border: 1px solid #e5dfeb;
+  border-radius: 15px;
+  background: linear-gradient(150deg, #fff 55%, #faf8fc);
+  box-shadow: 0 7px 20px rgba(43, 24, 63, .055);
+}
+.admin-dashboard .registrar-pago-cita .registrar-pago-card-header,
+.empleado-dashboard .registrar-pago-cita .registrar-pago-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.admin-dashboard .registrar-pago-cita .registrar-pago-info,
+.empleado-dashboard .registrar-pago-cita .registrar-pago-info {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.admin-dashboard .registrar-pago-cita .registrar-pago-accion > div,
+.empleado-dashboard .registrar-pago-cita .registrar-pago-accion > div {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+@media (max-width: 560px) {
+  .admin-dashboard .registrar-pago-cita,
+  .empleado-dashboard .registrar-pago-cita { padding: 15px; }
+  .admin-dashboard .registrar-pago-cita .registrar-pago-info,
+  .empleado-dashboard .registrar-pago-cita .registrar-pago-info { grid-template-columns: minmax(0, 1fr); }
+  .admin-dashboard .registrar-pago-cita .registrar-pago-accion > div,
+  .empleado-dashboard .registrar-pago-cita .registrar-pago-accion > div { grid-template-columns: minmax(0, 1fr); }
+}
+
 .dashboard-icon {
   display: block;
   flex: none;

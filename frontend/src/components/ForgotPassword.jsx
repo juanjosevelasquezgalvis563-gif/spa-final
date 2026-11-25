@@ -31,6 +31,7 @@ export function ForgotPassword() {
           body: JSON.stringify({ email }),
         }
       );
+      
 
 
       const data = await response.json().catch(() => ({}));

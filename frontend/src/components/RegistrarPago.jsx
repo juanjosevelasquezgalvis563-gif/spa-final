@@ -1,364 +1,217 @@
-
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { API_ROOT } from "../lib/api";
 
-function fechaActual() {
+function fechaLocalActual() {
     const fecha = new Date();
-    const anio = fecha.getFullYear();
-    const mes = String(fecha.getMonth() + 1).padStart(2, "0");
-    const dia = String(fecha.getDate()).padStart(2, "0");
-
-    return `${anio}-${mes}-${dia}`;
+    const ajuste = fecha.getTimezoneOffset() * 60000;
+    return new Date(fecha.getTime() - ajuste).toISOString().slice(0, 10);
 }
 
-function formatoPrecio(valor) {
-    return new Intl.NumberFormat("es-CO", {
-        style: "currency",
-        currency: "COP",
-        maximumFractionDigits: 0
-    }).format(Number(valor) || 0);
-}
-
-async function leerRespuesta(respuesta) {
-    const texto = await respuesta.text();
-
-    try {
-        return texto ? JSON.parse(texto) : {};
-    } catch {
-        throw new Error("El servidor devolvió una respuesta no válida.");
-    }
+function formatoCOP(valor) {
+    return "$" + (Number(valor) || 0).toLocaleString("es-CO") + " COP";
 }
 
 export default function RegistrarPago({ rol }) {
-
-    const baseRuta = rol === "administrador"
-        ? "administrador"
-        : "empleado";
-
+    const baseRuta = rol === "administrador" ? "administrador" : "empleado";
     const [citas, setCitas] = useState([]);
-    const [fechaPago, setFechaPago] = useState(fechaActual());
+    const [montoPorCita, setMontoPorCita] = useState({});
+    const [fechaPago, setFechaPago] = useState(fechaLocalActual);
     const [cargando, setCargando] = useState(true);
     const [guardandoId, setGuardandoId] = useState(null);
     const [mensaje, setMensaje] = useState("");
     const [esError, setEsError] = useState(false);
 
-    // Consultar citas finalizadas que todavía no tienen pago.
-    const obtenerCitas = useCallback(async () => {
-        try {
-            setCargando(true);
+    const obtenerCitas = useCallback(async (signal, limpiarMensaje = true) => {
+        setCargando(true);
+        if (limpiarMensaje) {
             setMensaje("");
             setEsError(false);
-
-            const respuesta = await fetch(
-                `${API_ROOT}/inser/${baseRuta}/citasFinalizadasPago`,
-                {
-                    method: "GET",
-                    credentials: "include"
-                }
+        }
+        try {
+            const response = await fetch(API_ROOT + "/inser/" + baseRuta + "/citasFinalizadasPago", {
+                credentials: "include",
+                signal
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.message || "No se pudieron cargar las citas finalizadas.");
+            if (!Array.isArray(data)) throw new Error("El servidor devolvi? una lista de citas inv?lida.");
+            const pendientes = data.filter((cita) =>
+                cita.estado === "finalizada" &&
+                !cita.pago_completo &&
+                Number(cita.saldo_pendiente) > 0
             );
-
-            const data = await leerRespuesta(respuesta);
-
-            if (!respuesta.ok) {
-                throw new Error(
-                    data.message || "No se pudieron cargar las citas."
-                );
-            }
-
-            if (!Array.isArray(data)) {
-                throw new Error("La respuesta no contiene una lista de citas.");
-            }
-
-            setCitas(data);
-
+            setCitas(pendientes);
+            setMontoPorCita((actuales) => Object.fromEntries(pendientes.map((cita) => {
+                const saldo = Math.max(0, Number(cita.saldo_pendiente) || 0);
+                const anterior = Number(actuales[cita.id]);
+                const monto = anterior > 0 && anterior <= saldo ? String(anterior) : (saldo > 0 ? String(saldo) : "");
+                return [cita.id, monto];
+            })));
         } catch (error) {
-            console.error("Error al consultar citas:", error);
-            setMensaje(error.message);
-            setEsError(true);
-            setCitas([]);
-
+            if (error.name !== "AbortError") {
+                setMensaje(error.message || "No se pudieron cargar las citas finalizadas.");
+                setEsError(true);
+                setCitas([]);
+            }
         } finally {
-            setCargando(false);
+            if (!signal?.aborted) setCargando(false);
         }
     }, [baseRuta]);
 
     useEffect(() => {
-        obtenerCitas();
+        const controller = new AbortController();
+        obtenerCitas(controller.signal);
+        return () => controller.abort();
     }, [obtenerCitas]);
 
-    // Registrar el pago de una cita.
-    const registrar = async (cita) => {
-
+    async function registrar(cita) {
         if (guardandoId !== null) return;
-
-        try {
-            setMensaje("");
-            setEsError(false);
-
-            if (!Number.isInteger(Number(cita.id)) || Number(cita.id) <= 0) {
-                throw new Error("El ID de la cita no es válido.");
-            }
-
-            if (!fechaPago) {
-                throw new Error("Selecciona la fecha del pago.");
-            }
-
-            setGuardandoId(cita.id);
-
-            const respuesta = await fetch(
-                `${API_ROOT}/inser/${baseRuta}/registrarPago`,
-                {
-                    method: "POST",
-                    credentials: "include",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    // El backend calcula el total utilizando
-                    // precio_final y el descuento guardado en la cita.
-                    body: JSON.stringify({
-                        cita_id: Number(cita.id),
-                        fecha_pago: fechaPago
-                    })
-                }
-            );
-
-            const data = await leerRespuesta(respuesta);
-
-            if (!respuesta.ok) {
-                throw new Error(
-                    data.message || "No se pudo registrar el pago."
-                );
-            }
-
-            const detalle = data.detalle || {};
-
-            setMensaje(
-                `${data.message} Total pagado: ${formatoPrecio(
-                    detalle.total_pagado
-                )}`
-            );
-
-            setEsError(false);
-
-            // Actualizar la lista para retirar la cita que ya fue pagada.
-            await obtenerCitas();
-
-        } catch (error) {
-            console.error("Error al registrar pago:", error);
-            setMensaje(error.message);
+        const saldoPendiente = Math.max(0, Number(cita.saldo_pendiente) || 0);
+        const montoLocal = Number(montoPorCita[cita.id]);
+        if (!fechaPago) {
+            setMensaje("Selecciona la fecha en que recibiste el pago.");
             setEsError(true);
+            return;
+        }
+        if (!Number.isFinite(montoLocal) || montoLocal <= 0 || montoLocal > saldoPendiente) {
+            setMensaje("El monto local debe ser mayor que cero y no puede superar el saldo pendiente.");
+            setEsError(true);
+            return;
+        }
 
+        setGuardandoId(cita.id);
+        setMensaje("");
+        setEsError(false);
+        try {
+            const response = await fetch(API_ROOT + "/inser/" + baseRuta + "/registrarPago", {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    cita_id: Number(cita.id),
+                    monto_local: montoLocal,
+                    fecha_pago: fechaPago
+                })
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.message || "No se pudo registrar el pago.");
+
+            setMensaje(data.message || "Pago local registrado correctamente.");
+            await obtenerCitas(undefined, false);
+        } catch (error) {
+            setMensaje(error.message || "Error de conexi?n al registrar el pago.");
+            setEsError(true);
         } finally {
             setGuardandoId(null);
         }
-    };
-
-    if (cargando) {
-        return (
-            <section className="registrar-pago-container">
-                <p className="registrar-pago-cargando">
-                    Cargando citas finalizadas...
-                </p>
-            </section>
-        );
     }
 
     return (
-        <section className="registrar-pago-container">
-
-            <div className="registrar-pago-header">
-                <h2>Registrar pagos</h2>
-
-                <p>
-                    Registra los pagos de las citas finalizadas.
-                    Se respetará el descuento aplicado al cliente
-                    y el backend calculará el valor definitivo.
-                </p>
-            </div>
-
-            {mensaje && (
-                <div
-                    className={`registrar-pago-mensaje ${
-                        esError ? "error" : "exito"
-                    }`}
-                    role="status"
-                >
-                    {mensaje}
+        <section className="registrar-pago-cita">
+            <header className="registrar-pago-panel-head">
+                <div>
+                    <span>CAJA DEL SAL?N</span>
+                    <h2>Registrar pagos</h2>
+                    <p>Las citas finalizadas aparecen aqu?. Cada registro agrega un movimiento local independiente.</p>
                 </div>
-            )}
+            </header>
 
             <div className="registrar-pago-fecha">
-                <label htmlFor={`fechaPago-${baseRuta}`}>
-                    Fecha del pago
-                </label>
-
+                <label htmlFor={"fechaPago-" + baseRuta}>Fecha del pago</label>
                 <input
-                    id={`fechaPago-${baseRuta}`}
+                    id={"fechaPago-" + baseRuta}
                     type="date"
                     value={fechaPago}
-                    onChange={(e) => setFechaPago(e.target.value)}
-                    max={fechaActual()}
+                    max={fechaLocalActual()}
+                    onChange={(event) => setFechaPago(event.target.value)}
                 />
             </div>
 
-            {citas.length === 0 ? (
+            {mensaje && (
+                <p className={"registrar-pago-mensaje " + (esError ? "error" : "exito")} role={esError ? "alert" : "status"}>
+                    {mensaje}
+                </p>
+            )}
 
+            {cargando ? (
+                <p className="registrar-pago-estado" role="status">Cargando citas finalizadas?</p>
+            ) : citas.length === 0 ? (
                 <div className="registrar-pago-vacio">
-                    <p>
-                        No hay citas finalizadas pendientes por pagar.
-                    </p>
+                    <p>No hay citas finalizadas para registrar pagos.</p>
                 </div>
-
             ) : (
-
                 <div className="registrar-pago-lista">
-
                     {citas.map((cita) => {
-
-                        const precioOriginal = Number(
-                            cita.precio_original ??
-                            cita.Servicio?.precio ??
-                            0
-                        );
-
-                        const descuentoPorcentaje = Number(
-                            cita.descuento_porcentaje || 0
-                        );
-
-                        const descuentoValor = Number(
-                            cita.descuento_valor || 0
-                        );
-
-                        const precioFinal = Number(
-                            cita.precio_final ??
-                            Math.max(0, precioOriginal - descuentoValor)
-                        );
+                        const precioOriginal = Number(cita.precio_original ?? cita.Servicio?.precio) || 0;
+                        const descuento = Number(cita.descuento_valor) || 0;
+                        const precioFinal = Number(cita.precio_final) || Math.max(0, precioOriginal - descuento);
+                        const saldo = Math.max(0, Number(cita.saldo_pendiente) || 0);
+                        const pagada = saldo <= 0;
 
                         return (
-                            <article
-                                className="registrar-pago-card"
-                                key={cita.id}
-                            >
-
-                                <div className="registrar-pago-card-header">
-
-                                    <h3>
-                                        {cita.Servicio?.nombre || "Servicio"}
-                                    </h3>
-
-                                    <span className="registrar-pago-estado">
-                                        Finalizada
+                            <article className="registrar-pago-card" key={cita.id}>
+                                <header className="registrar-pago-card-header">
+                                    <div>
+                                        <span className="registrar-pago-card-kicker">{cita.fecha ? String(cita.fecha).slice(0, 10) : "Fecha no disponible"} ? {cita.hora ? String(cita.hora).slice(0, 5) : "Hora no disponible"}</span>
+                                        <h3>{cita.Servicio?.nombre || "Servicio"}</h3>
+                                    </div>
+                                    <span className={"registrar-pago-estado " + (pagada ? "pagada" : "pendiente")}>
+                                        {pagada ? "Pagada" : "Finalizada"}
                                     </span>
-
-                                </div>
+                                </header>
 
                                 <div className="registrar-pago-info">
-
-                                    <div>
-                                        <strong>Cliente:</strong>
-                                        <span>
-                                            {cita.cliente?.nombre || "No disponible"}
-                                        </span>
-                                    </div>
-
-                                    <div>
-                                        <strong>Empleado:</strong>
-                                        <span>
-                                            {cita.empleado?.nombre || "No disponible"}
-                                        </span>
-                                    </div>
-
-                                    <div>
-                                        <strong>Servicio:</strong>
-                                        <span>
-                                            {cita.Servicio?.nombre || "No disponible"}
-                                        </span>
-                                    </div>
-
-                                    <div>
-                                        <strong>Fecha de la cita:</strong>
-                                        <span>
-                                            {cita.fecha
-                                                ? String(cita.fecha).slice(0, 10)
-                                                : "No disponible"}
-                                        </span>
-                                    </div>
-
-                                    <div>
-                                        <strong>Hora:</strong>
-                                        <span>
-                                            {cita.hora
-                                                ? String(cita.hora).slice(0, 5)
-                                                : "No disponible"}
-                                        </span>
-                                    </div>
-
+                                    <div><strong>Cliente</strong><span>{cita.cliente?.nombre || "No disponible"}</span></div>
+                                    <div><strong>Empleado</strong><span>{cita.empleado?.nombre || "No disponible"}</span></div>
                                 </div>
 
                                 <div className="registrar-pago-desglose">
-
-                                    <h4>Desglose del pago</h4>
-
-                                    <div>
-                                        <span>Precio original:</span>
-                                        <strong>
-                                            {formatoPrecio(precioOriginal)}
-                                        </strong>
-                                    </div>
-
-                                    {descuentoPorcentaje > 0 && (
+                                    <h4>Resumen de pagos</h4>
+                                    <div><span>Precio original del servicio</span><strong>{formatoCOP(precioOriginal)}</strong></div>
+                                    {descuento > 0 && (
                                         <div className="registrar-pago-descuento">
-
-                                            <span>
-                                                Descuento aplicado ({descuentoPorcentaje}%):
-                                            </span>
-
-                                            <strong>
-                                                - {formatoPrecio(descuentoValor)}
-                                            </strong>
-
+                                            <span>Descuento aplicado</span><strong>?{formatoCOP(descuento)}</strong>
                                         </div>
                                     )}
-
-                                    <div className="registrar-pago-precio-final">
-                                        <span>Precio final:</span>
-
-                                        <strong>
-                                            {formatoPrecio(precioFinal)}
-                                        </strong>
-                                    </div>
-
-                                    <div className="registrar-pago-saldo">
-                                        <span>Total a registrar:</span>
-
-                                        <strong>
-                                            {formatoPrecio(precioFinal)}
-                                        </strong>
-                                    </div>
-
+                                    <div><span>Precio final</span><strong>{formatoCOP(precioFinal)}</strong></div>
+                                    <div className="registrar-pago-medio-online"><span>Monto online recibido</span><strong>{formatoCOP(cita.monto_online)}</strong></div>
+                                    <div className="registrar-pago-medio-local"><span>Monto local pendiente por cobrar</span><strong>{formatoCOP(cita.monto_local)}</strong></div>
+                                    {Number(cita.monto_local_recibido) > 0 && (
+                                        <div><span>Monto recibido en el local</span><strong>{formatoCOP(cita.monto_local_recibido)}</strong></div>
+                                    )}
                                 </div>
 
-                                <button
-                                    type="button"
-                                    className="registrar-pago-boton"
-                                    onClick={() => registrar(cita)}
-                                    disabled={
-                                        guardandoId !== null ||
-                                        precioFinal <= 0
-                                    }
-                                >
-                                    {guardandoId === cita.id
-                                        ? "Registrando..."
-                                        : "Registrar pago"}
-                                </button>
-
+                                {!pagada && (
+                                    <div className="registrar-pago-accion">
+                                        <label htmlFor={"monto-local-" + cita.id}>Monto local recibido (COP)</label>
+                                        <div>
+                                            <input
+                                                id={"monto-local-" + cita.id}
+                                                type="number"
+                                                min="0.01"
+                                                max={saldo}
+                                                step="0.01"
+                                                value={montoPorCita[cita.id] || ""}
+                                                onChange={(event) => setMontoPorCita((actuales) => ({ ...actuales, [cita.id]: event.target.value }))}
+                                                placeholder="Ingresa el pago recibido"
+                                            />
+                                            <button
+                                                type="button"
+                                                className="registrar-pago-boton"
+                                                onClick={() => registrar(cita)}
+                                                disabled={guardandoId !== null || Number(montoPorCita[cita.id]) <= 0 || Number(montoPorCita[cita.id]) > saldo}
+                                            >
+                                                {guardandoId === cita.id ? "Registrando?" : "Registrar pago local"}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </article>
                         );
                     })}
-
                 </div>
             )}
-
         </section>
     );
 }
+

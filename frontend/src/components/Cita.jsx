@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { Award } from "lucide-react";
 import { API_ROOT } from "../lib/api";
 
 function formatoPrecio(valor) {
   return `$${(Number(valor) || 0).toLocaleString("es-CO")}`;
 }
+
+
 
 export function Cita() {
 
@@ -12,14 +15,20 @@ export function Cita() {
   const [hora, SetHora] = useState("");
   const [empleadoId, SetEmpleadoId] = useState("");
   const [servicioId, SetServicioId] = useState("");
-  const [unasAbiertas, SetUnasAbiertas] = useState(false);
+  const [categoriaAbierta, setCategoriaAbierta] = useState("");
   const [message, SetMessage] = useState("");
   const [servicios, SetServicios] = useState([]);
   const [empleados, SetEmpleados] = useState([]);
   const [cargandoServicios, SetCargandoServicios] = useState(true);
   const [reservando, setReservando] = useState(false);
   const [resultadoPago, setResultadoPago] = useState(null);
-  const [abonoDisponible, setAbonoDisponible] = useState(0);
+  const [fidelizacion, setFidelizacion] = useState({
+    saldo_puntos: 0,
+    descuentoDisponible: 0,
+    niveles: [],
+  });
+  const [usarDescuento, setUsarDescuento] = useState(false);
+  const [tipoPagoReserva, setTipoPagoReserva] = useState("reserva");
   const [searchParams] = useSearchParams();
   const referenciaPago = searchParams.get("reserva");
 
@@ -27,10 +36,24 @@ export function Cita() {
     (servicio) => String(servicio.id) === String(servicioId)
   );
   const precioServicio = Math.round(Number(servicioSeleccionado?.precio) || 0);
-  const montoReserva = Math.round(precioServicio * 0.2);
-  const abonoAplicable = Math.min(abonoDisponible, montoReserva);
-  const montoEnLinea = Math.max(0, montoReserva - abonoAplicable);
-  const saldoEnSalon = Math.max(0, precioServicio - montoReserva);
+
+  // Descuento por puntos: se aplica el nivel más alto que el cliente tenga disponible.
+  const nivelDescuento = fidelizacion.niveles.find(
+    (nivel) => Number(nivel.porcentaje) === Number(fidelizacion.descuentoDisponible)
+  );
+  const descuentoPotencial = nivelDescuento && precioServicio > 0
+    ? Math.min(
+        Math.round(precioServicio * Number(nivelDescuento.porcentaje) / 100),
+        Number(nivelDescuento.descuentoMaximo) || 0
+      )
+    : 0;
+  const descuentoAplicado = usarDescuento ? descuentoPotencial : 0;
+  const precioConDescuento = precioServicio - descuentoAplicado;
+
+  // La reserva es el 20 % del precio con descuento.
+  const montoReserva = Math.round(precioConDescuento * 0.2);
+  const montoSeleccionado = tipoPagoReserva === "completo" ? precioConDescuento : montoReserva;
+  const saldoEnSalon = Math.max(0, precioConDescuento - montoSeleccionado);
   const tipoProfesionalLabel = () => {
     const nombre = (servicioSeleccionado?.nombre || "").toLowerCase();
 
@@ -44,36 +67,6 @@ export function Cita() {
 
     return "Profesionales disponibles";
   };
-  const serviciosUnas = servicios.slice(0, 17);
-  const otrosServicios = servicios.slice(17);
-  const renderServicio = (servicio) => {
-    const seleccionado = servicioId !== "" && Number(servicio.id) === Number(servicioId);
-
-    return (
-      <button
-        className={`servicio-card cita-service-card cita-detail-card${seleccionado ? " seleccionado" : ""}`}
-        key={servicio.id}
-        type="button"
-        aria-pressed={seleccionado}
-        onClick={() => SetServicioId(String(servicio.id))}
-      >
-        <span className="servicio-info">
-          <strong className={seleccionado ? "servicio-nombre-seleccionado" : ""}>
-            {servicio.nombre}
-          </strong>
-          <span className="cita-servicio-precio">
-            {servicio.precio != null && servicio.precio !== ""
-              ? `$${Number(servicio.precio).toLocaleString("es-CO")}`
-              : ""}
-          </span>
-          <span className="cita-seleccionar-servicio">
-            Seleccionar
-          </span>
-        </span>
-      </button>
-    );
-  };
-
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -105,6 +98,8 @@ export function Cita() {
             hora,
             empleado_id: empleadoId,
             servicio_id: servicioId,
+            aplicar_descuento: usarDescuento && descuentoPotencial > 0,
+            tipo_pago: tipoPagoReserva,
           }),
         }
       );
@@ -122,11 +117,13 @@ export function Cita() {
 
       if (data.estado === "aprobado") {
         setResultadoPago(data);
-        setAbonoDisponible((saldoActual) => Math.max(0, saldoActual - Number(data.monto_credito || 0)));
         SetMessage(data.message);
         SetFecha("");
         SetHora("");
         SetEmpleadoId("");
+        setUsarDescuento(false);
+        setTipoPagoReserva("reserva");
+        void cargarFidelizacion();
         return;
       }
 
@@ -167,42 +164,65 @@ export function Cita() {
     }
   }
 
-  async function obtenerEmpleados(servicioActual = servicioId) {
-    try {
-      const params = new URLSearchParams();
-      if (servicioActual) {
-        params.set("servicio_id", String(servicioActual));
-      }
 
-      const query = params.toString() ? `?${params.toString()}` : "";
-      const response = await fetch(
-        `${API_ROOT}/inser/cliente/empleados${query}`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
+async function obtenerEmpleados(servicioActual) {
+  if (!servicioActual) {
+    SetEmpleados([]);
+    SetEmpleadoId("");
+    return;
+  }
+
+  try {
+    SetEmpleados([]);
+    SetEmpleadoId("");
+
+    const params = new URLSearchParams({
+      servicio_id: String(servicioActual),
+    });
+
+    const response = await fetch(
+      `${API_ROOT}/inser/cliente/empleados?${params.toString()}`,
+      {
+        method: "GET",
+        credentials: "include",
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !Array.isArray(data)) {
+      throw new Error(
+        data.message || "No se pudieron cargar los profesionales."
       );
+    }
 
+    SetEmpleados(data);
+
+  } catch (error) {
+    console.error("Error al cargar empleados:", error);
+    SetEmpleados([]);
+    SetEmpleadoId("");
+    SetMessage(error.message || "Error al cargar profesionales.");
+  }
+}
+
+
+ 
+  async function cargarFidelizacion() {
+    try {
+      const response = await fetch(`${API_ROOT}/inser/cliente/fidelizacion`, {
+        credentials: "include"
+      });
       const data = await response.json();
+      if (!response.ok) return;
 
-      if (!response.ok) {
-        SetMessage(data.message || "No se pudo cargar la lista de empleados.");
-        SetEmpleados([]);
-        return;
-      }
-
-      if (!Array.isArray(data)) {
-        SetEmpleados([]);
-        return;
-      }
-
-      SetEmpleados(data);
-      if (servicioActual && !data.some((empleado) => String(empleado.id) === String(empleadoId))) {
-        SetEmpleadoId("");
-      }
+      setFidelizacion({
+        saldo_puntos: Number(data.saldo_puntos) || 0,
+        descuentoDisponible: Number(data.descuentoDisponible) || 0,
+        niveles: Array.isArray(data.niveles) ? data.niveles : [],
+      });
     } catch {
-      SetMessage("Error de conexión con el servidor al cargar empleados.");
-      SetEmpleados([]);
+     
     }
   }
 
@@ -210,30 +230,9 @@ export function Cita() {
     const temporizador = window.setTimeout(() => {
       Servicios();
       obtenerEmpleados();
+      cargarFidelizacion();
     }, 0);
     return () => window.clearTimeout(temporizador);
-  }, []);
-
-  useEffect(() => {
-    let vigente = true;
-
-    async function consultarAbono() {
-      try {
-        const response = await fetch(`${API_ROOT}/inser/cliente/abonos`, {
-          credentials: "include"
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || "No se pudo consultar el abono disponible.");
-        if (vigente) setAbonoDisponible(Number(data.saldo_disponible) || 0);
-      } catch (error) {
-        if (vigente) SetMessage(error.message || "No se pudo consultar el abono disponible.");
-      }
-    }
-
-    void consultarAbono();
-    return () => {
-      vigente = false;
-    };
   }, []);
 
   useEffect(() => {
@@ -255,6 +254,9 @@ export function Cita() {
         setResultadoPago(data);
         if (data.estado === "pendiente") {
           temporizador = window.setTimeout(consultarEstadoPago, 3000);
+        } else if (data.estado === "aprobado") {
+          // Los puntos del descuento se descuentan al aprobarse la reserva.
+          void cargarFidelizacion();
         }
       } catch (error) {
         if (vigente) SetMessage(error.message || "No se pudo consultar el estado del pago.");
@@ -288,7 +290,37 @@ export function Cita() {
     return () => clearTimeout(temporizador);
   }, [message]);
 
-  
+  const serviciosUnas = servicios.slice(0, 17);
+  const otrosServicios = servicios.slice(17);
+
+  const renderServicio = (servicio) => {
+    const seleccionado = servicioId !== "" && Number(servicio.id) === Number(servicioId);
+
+    return (
+      <button
+        className={`servicio-card cita-service-card cita-detail-card${seleccionado ? " seleccionado" : ""}`}
+        key={servicio.id}
+        type="button"
+        aria-pressed={seleccionado}
+        onClick={() => SetServicioId(String(servicio.id))}
+      >
+        <span className="servicio-info">
+          <strong className={seleccionado ? "servicio-nombre-seleccionado" : ""}>
+            {servicio.nombre}
+          </strong>
+          <span className="cita-servicio-precio">
+            {servicio.precio != null && servicio.precio !== ""
+              ? `$${Number(servicio.precio).toLocaleString("es-CO")}`
+              : ""}
+          </span>
+          <span className="cita-seleccionar-servicio">
+            Seleccionar
+          </span>
+        </span>
+      </button>
+    );
+  };
+
   return (
     <div className="cita-container">
 
@@ -304,8 +336,10 @@ export function Cita() {
         </h1>
 
         <p className="cita-subtitle">
-          Reserva tu cita pagando el 20 % del servicio. La cita quedará confirmada
-          cuando Wompi apruebe el pago; el saldo se paga en el salón al finalizar.
+          Reserva tu cita pagando el 20 % del servicio. Tu reserva queda pagada
+          cuando Wompi aprueba el pago y la cita queda confirmada cuando el
+          profesional la acepta; te avisaremos por correo. El saldo se paga en
+          el salón al finalizar.
         </p>
 
       </div>
@@ -316,10 +350,11 @@ export function Cita() {
           role="status"
           aria-live="polite"
         >
+          
           <strong>
             {resultadoPago.estado === "pendiente" && "Verificando el pago de tu reserva"}
-            {resultadoPago.estado === "aprobado" && "Reserva confirmada"}
-            {resultadoPago.estado === "aprobado_abono" && "El pago quedó como abono disponible"}
+            {resultadoPago.estado === "aprobado" && "Pago aprobado"}
+            {resultadoPago.estado === "aprobado_abono" && "Pago recibido; la cita necesita revisión"}
             {resultadoPago.estado === "rechazado" && "El pago fue rechazado"}
             {resultadoPago.estado === "error" && "No se pudo procesar el pago"}
             {resultadoPago.estado === "anulado" && "El pago fue anulado"}
@@ -327,8 +362,8 @@ export function Cita() {
           </strong>
           <p>
             {resultadoPago.estado === "pendiente" && "Estamos esperando la confirmación segura de Wompi."}
-            {resultadoPago.estado === "aprobado" && `La reserva de ${formatoPrecio(resultadoPago.monto_reserva)} COP quedó cubierta: pago en línea ${formatoPrecio(resultadoPago.monto_pagado)} COP y abono aplicado ${formatoPrecio(resultadoPago.monto_credito)} COP. El saldo del servicio se paga en el salón.`}
-            {resultadoPago.estado === "aprobado_abono" && "El pago fue recibido, pero el horario ya no está disponible. El importe quedó guardado como abono para una nueva reserva."}
+            {resultadoPago.estado === "aprobado" && `Pago en línea recibido: ${formatoPrecio(resultadoPago.monto_pagado)}.${Number(resultadoPago.monto_credito) > 0 ? ` Crédito aplicado: ${formatoPrecio(resultadoPago.monto_credito)}.` : ""}${Number(resultadoPago.descuento_valor) > 0 ? ` Descuento aplicado: ${formatoPrecio(resultadoPago.descuento_valor)}.` : ""} ${Number(resultadoPago.saldo_pendiente) > 0 ? `Saldo que pagarás en el salón: ${formatoPrecio(resultadoPago.saldo_pendiente)}.` : "El servicio quedó pagado por completo en línea."} Tu cita está pendiente de confirmación del profesional; te avisaremos por correo cuando la confirme.`}
+            {resultadoPago.estado === "aprobado_abono" && "El pago fue recibido, pero no se pudo confirmar la cita automáticamente. Contacta al salón para resolverlo."}
             {["rechazado", "error", "anulado", "expirado"].includes(resultadoPago.estado)
               && "No se confirmó la cita. Vuelve a elegir un horario e intenta reservar otra vez."}
           </p>
@@ -346,12 +381,31 @@ export function Cita() {
           <div className="servicios-container servicios-panel">
             <div className="servicios-head">
               <h2 className="servicios-titulo">
-                {unasAbiertas ? "Uñas" : "Elige un servicio"}
+                {categoriaAbierta ? "Uñas" : "Elige un servicio"}
               </h2>
               <span className="servicios-count">
                 {`${servicios.length} servicios`}
               </span>
             </div>
+
+            {nivelDescuento && (
+              <section className="cita-beneficio-fidelidad" role="status" aria-label="Descuento de fidelización disponible">
+                <div className="cita-beneficio-icono" aria-hidden="true">
+                  <Award />
+                </div>
+                <div className="cita-beneficio-contenido">
+                  <span className="cita-beneficio-etiqueta">Beneficio de fidelización disponible</span>
+                  <h3 className="cita-beneficio-titulo">
+                    {nivelDescuento.porcentaje}% de descuento en tu servicio
+                  </h3>
+                  <p className="cita-beneficio-detalle">
+                    Tienes <strong>{fidelizacion.saldo_puntos} puntos</strong>. Al aplicarlo ahorrarías{" "}
+                    <strong>{formatoPrecio(descuentoPotencial)}</strong> y se descontarán{" "}
+                    <strong>{nivelDescuento.puntos} puntos</strong> de tu saldo.
+                  </p>
+                </div>
+              </section>
+            )}
 
             {cargandoServicios ? (
               <p className="cita-servicios-estado" role="status">Cargando servicios...</p>
@@ -361,27 +415,34 @@ export function Cita() {
               </p>
             ) : (
               <div className="servicios-grid">
-                {serviciosUnas.length > 0 && (
-                  <button
-                    className="servicio-card cita-service-card cita-category-card"
-                    type="button"
-                    aria-expanded={unasAbiertas}
-                    onClick={() => {
-                      SetUnasAbiertas(!unasAbiertas);
-                      SetServicioId("");
-                    }}
-                  >
-                    <span className="servicio-info">
-                      <strong>Uñas</strong>
-                      <span>{serviciosUnas.length} servicios disponibles</span>
-                      <span className="cita-seleccionar-servicio">Ver servicios</span>
-                    </span>
-                  </button>
-                )}
 
-                {unasAbiertas && serviciosUnas.map(renderServicio)}
-                {otrosServicios.map(renderServicio)}
-              </div>
+  {serviciosUnas.length > 0 && (
+    <button
+      className="servicio-card cita-service-card cita-category-card"
+      type="button"
+      aria-expanded={categoriaAbierta === "unas"}
+      onClick={() => {
+        setCategoriaAbierta(categoriaAbierta === "unas" ? "" : "unas");
+        SetServicioId("");
+      }}
+    >
+      <span className="servicio-info">
+        <strong>Uñas</strong>
+        <span>{serviciosUnas.length} servicios disponibles</span>
+        <span className="cita-seleccionar-servicio">
+          {categoriaAbierta === "unas" ? "Ocultar servicios" : "Ver servicios"}
+        </span>
+      </span>
+    </button>
+  )}
+
+ 
+  {categoriaAbierta === "unas" && serviciosUnas.map(renderServicio)}
+
+ 
+  {categoriaAbierta !== "unas" && otrosServicios.map(renderServicio)}
+
+</div>
             )}
           </div>
         )}
@@ -402,32 +463,80 @@ export function Cita() {
                 Servicio seleccionado: <strong>{servicioSeleccionado.nombre}</strong>
               </p>
 
+              {descuentoPotencial > 0 && (
+                <section className="cita-opcion-descuento">
+                  <label
+                    className="cita-toggle-descuento"
+                    style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "0.75rem" }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={usarDescuento}
+                      onChange={(e) => setUsarDescuento(e.target.checked)}
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        accentColor: "#b45309",
+                      }}
+                    />
+                    <span className="cita-toggle-texto">
+                      <span className="cita-toggle-texto-principal">
+                        Aplicar descuento de fidelización {nivelDescuento.porcentaje}%
+                      </span>
+                      <span className="cita-toggle-texto-secundario">
+                        Ahorras {formatoPrecio(descuentoPotencial)} · Se descontarán {nivelDescuento.puntos} puntos
+                      </span>
+                    </span>
+                  </label>
+                  <p className="cita-toggle-nota">
+                    El descuento se aplicará sobre el precio original al confirmar tu reserva.
+                  </p>
+                </section>
+              )}
+
               <div className="cita-reserva-resumen">
                 <div className="cita-reserva-servicio">
                   <span>Precio del servicio</span>
                   <strong>{formatoPrecio(precioServicio)}</strong>
                 </div>
                 <div className="cita-reserva-lineas">
-                  <div>
-                    <span>Reserva (20 %)</span>
-                    <strong>{formatoPrecio(montoReserva)}</strong>
-                  </div>
-                  {abonoAplicable > 0 && (
-                    <div>
-                      <span>Abono aplicado</span>
-                      <strong>−{formatoPrecio(abonoAplicable)}</strong>
-                    </div>
+                  {descuentoAplicado > 0 && (
+                    <>
+                      <div className="cita-linea-descuento">
+                        <span>Descuento por fidelización ({nivelDescuento.porcentaje} %)</span>
+                        <strong className="cita-descuento-valor">−{formatoPrecio(descuentoAplicado)}</strong>
+                      </div>
+                      <div className="cita-linea-precio-con-descuento">
+                        <span>Precio con descuento aplicado</span>
+                        <strong>{formatoPrecio(precioConDescuento)}</strong>
+                      </div>
+                    </>
                   )}
+                  <div className="cita-campo cita-tipo-pago">
+                    <label htmlFor="cita-tipo-pago">¿Cuánto deseas pagar en línea?</label>
+                    <select
+                      id="cita-tipo-pago"
+                      value={tipoPagoReserva}
+                      onChange={(event) => setTipoPagoReserva(event.target.value)}
+                    >
+                      <option value="reserva">Solo la reserva (20 %): {formatoPrecio(montoReserva)}</option>
+                      <option value="completo">El total del servicio: {formatoPrecio(precioConDescuento)}</option>
+                    </select>
+                  </div>
                   <div className="cita-reserva-pago">
-                    <span>{montoEnLinea > 0 ? "Pagas ahora" : "Cubierto con abono"}</span>
-                    <strong>{formatoPrecio(montoEnLinea || montoReserva)}</strong>
+                    <span>Pagas ahora en línea</span>
+                    <strong>{formatoPrecio(montoSeleccionado)}</strong>
                   </div>
                   <div>
-                    <span>Saldo en el salón</span>
+                    <span>Saldo a pagar en el salón</span>
                     <strong>{formatoPrecio(saldoEnSalon)}</strong>
                   </div>
                 </div>
-                <p>La cita se confirma cuando se apruebe la reserva.</p>
+                <p className="cita-reserva-nota">
+                  Tu reserva queda pagada cuando se apruebe el pago. El profesional
+                  confirmará tu cita y te avisaremos por correo. Los puntos se
+                  descontarán automáticamente al aprobarse tu reserva.
+                </p>
               </div>
             </div>
 
@@ -472,12 +581,13 @@ export function Cita() {
                         {empleado.nombre}
                       </option>
                     ))}
+                    
                   </select>
                 )}
               </div>
 
               <button className="cita-boton" type="submit" disabled={reservando}>
-                {reservando ? "Preparando el pago..." : "Pagar reserva y confirmar cita"}
+                {reservando ? "Preparando el pago..." : tipoPagoReserva === "completo" ? "Pagar servicio completo" : "Pagar reserva y confirmar cita"}
               </button>
             </form>
           </section>
