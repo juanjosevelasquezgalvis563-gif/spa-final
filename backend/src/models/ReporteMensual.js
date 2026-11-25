@@ -49,3 +49,4 @@ ReporteMensual.sync().catch((error) => {
 });
 
 export default ReporteMensual;
+
