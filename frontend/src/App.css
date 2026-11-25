@@ -13196,15 +13196,15 @@ PROFESIONALES
 
 /* Panel de cliente: distribucion responsive y acabados monocromaticos */
 .dashboard {
-  --client-ink: #171719;
-  --client-ink-soft: #343438;
-  --client-muted: #737379;
-  --client-line: #e3e3e6;
+  --client-ink: #111113;
+  --client-ink-soft: #2c2c30;
+  --client-muted: #5a5a60;
+  --client-line: #d4d4d8;
   --client-surface: #ffffff;
-  --client-surface-soft: #f3f3f4;
+  --client-surface-soft: #f4f4f5;
   background:
-    radial-gradient(ellipse at 92% 9%, rgba(205, 205, 210, .35), transparent 28%),
-    linear-gradient(145deg, #f8f8f9, #eeeeef 70%, #f5f5f6);
+    radial-gradient(ellipse at 92% 9%, rgba(200, 200, 205, .35), transparent 28%),
+    linear-gradient(145deg, #f8f8f9, #ededef 70%, #f5f5f6);
   color: var(--client-ink);
 }
 
@@ -13232,19 +13232,19 @@ PROFESIONALES
   display: flex;
   align-items: flex-end;
   padding: clamp(28px, 5vw, 58px);
-  border: 1px solid #343438;
+  border: 1px solid #27272a;
   border-radius: 26px;
   background:
-    radial-gradient(circle at 88% 20%, rgba(255, 255, 255, .13), transparent 30%),
-    linear-gradient(125deg, #101012 0%, #27272b 58%, #45454a 100%);
-  box-shadow: 0 22px 48px rgba(0, 0, 0, .14);
+    radial-gradient(circle at 88% 20%, rgba(255, 255, 255, .12), transparent 30%),
+    linear-gradient(125deg, #09090b 0%, #1c1c1f 58%, #343438 100%);
+  box-shadow: 0 22px 48px rgba(0, 0, 0, .18);
 }
 
 .dashboard .bienvenida::before {
   position: absolute;
   top: 28px;
   left: clamp(28px, 5vw, 58px);
-  color: #bdbdc2;
+  color: #d4d4d8;
   content: "TU ESPACIO PERSONAL";
   font-size: 10px;
   font-weight: 800;
@@ -13263,7 +13263,7 @@ PROFESIONALES
   z-index: 1;
   max-width: 680px;
   margin: 0;
-  color: #f4f4f5;
+  color: #ffffff;
   font-size: clamp(24px, 3vw, 38px);
   font-weight: 600;
   letter-spacing: -.04em;
@@ -13273,10 +13273,10 @@ PROFESIONALES
 .dashboard .cliente-message {
   margin: 0;
   padding: 14px 18px;
-  border: 1px solid #d5d5d9;
+  border: 1px solid #c4c4ca;
   border-radius: 13px;
-  background: #fff;
-  color: #414147;
+  background: #ffffff;
+  color: #27272a;
   text-align: left;
 }
 
@@ -13302,8 +13302,8 @@ PROFESIONALES
   border-radius: 20px;
   background:
     radial-gradient(circle at 100% 0, rgba(0, 0, 0, .045), transparent 38%),
-    linear-gradient(145deg, #fff, #f7f7f8);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, .045);
+    linear-gradient(145deg, #ffffff, #f5f5f6);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .05);
   transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
 }
 
@@ -13315,10 +13315,10 @@ PROFESIONALES
   width: 36px;
   height: 36px;
   place-items: center;
-  border: 1px solid #e3e3e6;
+  border: 1px solid #d4d4d8;
   border-radius: 12px;
-  background: #f0f0f1;
-  color: #38383d;
+  background: #ededef;
+  color: #18181b;
   content: "01";
   font-size: 11px;
   font-weight: 800;
@@ -13330,13 +13330,13 @@ PROFESIONALES
 
 .dashboard .cards > .card:hover {
   transform: translateY(-4px);
-  border-color: #bdbdc2;
-  box-shadow: 0 16px 34px rgba(0, 0, 0, .09);
+  border-color: #71717a;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, .1);
 }
 
 .dashboard .cards > .card h4 {
   margin: 0 46px 8px 0;
-  color: #69696f;
+  color: #52525b;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: .04em;
@@ -13352,7 +13352,7 @@ PROFESIONALES
 
 .dashboard .cards > .card > span {
   margin-top: 9px;
-  color: #85858b;
+  color: #636369;
   font-size: 12px;
 }
 
@@ -13375,8 +13375,8 @@ PROFESIONALES
   padding: clamp(22px, 3vw, 30px);
   border: 1px solid var(--client-line);
   border-radius: 22px;
-  background: rgba(255, 255, 255, .92);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, .045);
+  background: #ffffff;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .05);
 }
 
 .dashboard .panel-superior > .citas-realizar h4 {
@@ -13397,17 +13397,17 @@ PROFESIONALES
 .dashboard .panel-superior .cita-info p,
 .dashboard .panel-superior .cita-info .estado {
   padding: 11px 0;
-  border-bottom: 1px solid #eeeeef;
+  border-bottom: 1px solid #e4e4e7;
 }
 
 .dashboard .panel-superior .cita-info h3 {
-  color: #85858b;
+  color: #636369;
   font-size: 10px;
   letter-spacing: .1em;
 }
 
 .dashboard .panel-superior .cita-info p {
-  color: #29292e;
+  color: #18181b;
   font-size: 13px;
   font-weight: 650;
   overflow-wrap: anywhere;
@@ -13416,10 +13416,10 @@ PROFESIONALES
 .dashboard .panel-superior .cita-info .estado {
   align-self: center;
   padding: 5px 10px;
-  border: 1px solid #d8d8dc;
+  border: 1px solid #bdbdc3;
   border-radius: 999px;
-  background: #f1f1f2;
-  color: #333338;
+  background: #ededef;
+  color: #18181b;
   font-size: 11px;
 }
 
@@ -13436,9 +13436,9 @@ PROFESIONALES
   align-items: center;
   gap: 14px;
   padding: 14px 42px 14px 14px;
-  border: 1px solid #e7e7e9;
+  border: 1px solid #d4d4d8;
   border-radius: 15px;
-  background: linear-gradient(110deg, #f7f7f8, #fff);
+  background: linear-gradient(110deg, #f4f4f5, #ffffff);
   color: var(--client-ink);
   text-align: left;
   transition: transform .2s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
@@ -13450,10 +13450,10 @@ PROFESIONALES
   width: 44px;
   height: 44px;
   place-items: center;
-  border: 1px solid #dedee1;
+  border: 1px solid #c4c4ca;
   border-radius: 14px;
-  background: #ededee;
-  color: #242428;
+  background: #e4e4e7;
+  color: #111113;
   font-size: 22px;
   font-weight: 600;
 }
@@ -13466,7 +13466,7 @@ PROFESIONALES
   position: absolute;
   top: 50%;
   right: 16px;
-  color: #88888e;
+  color: #52525b;
   content: "↗";
   font-size: 17px;
   transform: translateY(-50%);
@@ -13474,29 +13474,29 @@ PROFESIONALES
 }
 
 .dashboard .acciones > .accion h3 {
-  color: #242428;
+  color: #111113;
   font-size: 13px;
 }
 
 .dashboard .acciones > .accion p {
   margin-top: 5px;
-  color: #77777e;
+  color: #52525b;
   font-size: 11px;
   line-height: 1.45;
 }
 
 .dashboard .acciones > .accion:hover {
   transform: translateY(-2px);
-  border-color: #bcbcc1;
-  background: #202023;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, .12);
-  color: #fff;
+  border-color: #18181b;
+  background: #111113;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, .16);
+  color: #ffffff;
 }
 
 .dashboard .acciones > .accion:hover h3,
 .dashboard .acciones > .accion:hover p,
 .dashboard .acciones > .accion:hover > div::after {
-  color: #f4f4f5;
+  color: #ffffff;
 }
 
 .dashboard .acciones > .accion:hover > div::after {
@@ -13504,9 +13504,9 @@ PROFESIONALES
 }
 
 .dashboard .acciones > .accion:hover .accion-icono {
-  border-color: #55555a;
-  background: #3a3a3f;
-  color: #fff;
+  border-color: #52525b;
+  background: #27272a;
+  color: #ffffff;
 }
 
 .dashboard .contenido > .fidelizacion {
@@ -13532,23 +13532,23 @@ PROFESIONALES
   grid-column: 1 / -1;
   min-height: 118px;
   padding: 26px clamp(22px, 3vw, 36px);
-  border: 1px solid #343438;
+  border: 1px solid #27272a;
   border-radius: 20px;
   background:
     radial-gradient(circle at 90% 15%, rgba(255, 255, 255, .1), transparent 32%),
-    linear-gradient(125deg, #151517, #353539);
-  color: #fff;
+    linear-gradient(125deg, #09090b, #27272a);
+  color: #ffffff;
 }
 
 .dashboard .fidelizacion-etiqueta {
-  color: #c5c5ca;
+  color: #d4d4d8;
   font-size: 10px;
   letter-spacing: .16em;
 }
 
 .dashboard .fidelizacion-cabecera h2,
 .dashboard .fidelizacion-cabecera p {
-  color: #fff;
+  color: #ffffff;
 }
 
 .dashboard .fidelizacion-cabecera h2 {
@@ -13558,7 +13558,7 @@ PROFESIONALES
 }
 
 .dashboard .fidelizacion-cabecera p {
-  color: #c7c7cb;
+  color: #e4e4e7;
   font-size: 13px;
 }
 
@@ -13567,10 +13567,10 @@ PROFESIONALES
   width: 56px;
   height: 56px;
   place-items: center;
-  border: 1px solid rgba(255, 255, 255, .2);
+  border: 1px solid rgba(255, 255, 255, .25);
   border-radius: 17px;
-  background: rgba(255, 255, 255, .08);
-  color: #f4f4f5;
+  background: rgba(255, 255, 255, .1);
+  color: #ffffff;
   filter: grayscale(1);
 }
 
@@ -13578,30 +13578,30 @@ PROFESIONALES
   grid-column: span 4;
   min-width: 0;
   padding: 26px;
-  border: 1px solid #333337;
+  border: 1px solid #27272a;
   border-radius: 20px;
-  background: linear-gradient(145deg, #29292d, #111113);
-  color: #fff;
+  background: linear-gradient(145deg, #27272a, #09090b);
+  color: #ffffff;
 }
 
 .dashboard .puntos-resumen span,
 .dashboard .puntos-resumen p {
-  color: #c2c2c7;
+  color: #d4d4d8;
 }
 
 .dashboard .puntos-resumen h2 {
   margin: 12px 0;
-  color: #fff;
+  color: #ffffff;
   font-size: clamp(38px, 5vw, 54px);
 }
 
 .dashboard .puntos-icono {
   width: 48px;
   height: 48px;
-  border: 1px solid rgba(255, 255, 255, .2);
+  border: 1px solid rgba(255, 255, 255, .25);
   border-radius: 15px;
-  background: #3d3d42;
-  color: #fff;
+  background: #3f3f46;
+  color: #ffffff;
   filter: grayscale(1);
 }
 
@@ -13611,26 +13611,26 @@ PROFESIONALES
   padding: 26px;
   border: 1px solid var(--client-line);
   border-radius: 20px;
-  background: linear-gradient(145deg, #fff, #f2f2f3);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, .04);
+  background: linear-gradient(145deg, #ffffff, #f4f4f5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .05);
 }
 
 .dashboard .descuento-disponible h3,
 .dashboard .como-ganar-puntos h3,
 .dashboard .historial-puntos h3 {
   margin: 0 0 12px;
-  color: #232327;
+  color: #111113;
   font-size: 16px;
 }
 
 .dashboard .descuento-disponible h2 {
   margin: 0 0 8px;
-  color: #171719;
+  color: #09090b;
   font-size: 42px;
 }
 
 .dashboard .descuento-disponible p {
-  color: #717177;
+  color: #52525b;
   font-size: 12px;
   line-height: 1.65;
 }
@@ -13642,10 +13642,10 @@ PROFESIONALES
 
 .dashboard .niveles-descuento > div {
   padding: 14px;
-  border: 1px solid #e2e2e5;
+  border: 1px solid #d4d4d8;
   border-radius: 13px;
-  background: #fff;
-  color: #28282c;
+  background: #ffffff;
+  color: #18181b;
 }
 
 .dashboard .niveles-descuento > div strong,
@@ -13657,7 +13657,7 @@ PROFESIONALES
 
 .dashboard .niveles-descuento > div span {
   margin-top: 4px;
-  color: #77777e;
+  color: #52525b;
 }
 
 .dashboard .fidelizacion > .como-ganar-puntos {
@@ -13666,7 +13666,7 @@ PROFESIONALES
   padding: 24px;
   border: 1px solid var(--client-line);
   border-radius: 20px;
-  background: #fff;
+  background: #ffffff;
 }
 
 .dashboard .fidelizacion > .historial-puntos {
@@ -13675,45 +13675,45 @@ PROFESIONALES
   padding: 24px;
   border: 1px solid var(--client-line);
   border-radius: 20px;
-  background: #fff;
+  background: #ffffff;
 }
 
 .dashboard .beneficio-puntos > span,
 .dashboard .movimiento-icono {
-  background: #ededee;
-  color: #3c3c41;
+  background: #e4e4e7;
+  color: #18181b;
   filter: grayscale(1);
 }
 
 .dashboard .beneficio-puntos h4,
 .dashboard .movimiento-info h4 {
-  color: #28282c;
+  color: #111113;
 }
 
 .dashboard .beneficio-puntos p,
 .dashboard .sin-puntos,
 .dashboard .movimiento-info span {
-  color: #77777e;
+  color: #52525b;
 }
 
 .dashboard .movimiento-puntos {
-  border-color: #ededee;
+  border-color: #e4e4e7;
 }
 
 .dashboard .formulario-resena:hover {
   transform: none;
-  border-color: #e4e4e7;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, .06);
+  border-color: #d4d4d8;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, .07);
 }
 
 .dashboard .formulario-resena .resena-form-icon {
   border-radius: 14px;
-  background: linear-gradient(145deg, #18181a, #45454a);
+  background: linear-gradient(145deg, #09090b, #3f3f46);
 }
 
 .dashboard .resena-puntos {
   margin: 0;
-  color: #77777e;
+  color: #52525b;
   font-size: 11px;
   text-align: center;
 }
@@ -13850,11 +13850,11 @@ PROFESIONALES
 
 /* Agenda del empleado */
 .gestionar-citas {
-  --agenda-ink: #171719;
-  --agenda-muted: #77777e;
-  --agenda-line: #e2e2e5;
+  --agenda-ink: #111113;
+  --agenda-muted: #52525b;
+  --agenda-line: #d4d4d8;
   --agenda-surface: #ffffff;
-  --agenda-soft: #f3f3f4;
+  --agenda-soft: #f4f4f5;
   max-width: 1180px;
   margin: 0 auto;
   padding: clamp(24px, 5vw, 64px) clamp(18px, 4vw, 42px);
@@ -13863,19 +13863,19 @@ PROFESIONALES
 
 .gestionar-citas > .menu-btn {
   margin-bottom: 26px;
-  border: 1px solid #d5d5d9;
+  border: 1px solid #a1a1aa;
   border-radius: 999px;
-  background: #fff;
-  color: #333338;
+  background: #ffffff;
+  color: #18181b;
   font-size: 12px;
   font-weight: 650;
   transition: background .2s ease, color .2s ease, border-color .2s ease;
 }
 
 .gestionar-citas > .menu-btn:hover {
-  border-color: #222225;
-  background: #222225;
-  color: #fff;
+  border-color: #09090b;
+  background: #09090b;
+  color: #ffffff;
 }
 
 .gestionar-citas-header {
@@ -13889,7 +13889,7 @@ PROFESIONALES
 }
 
 .gestionar-citas-eyebrow {
-  color: #77777e;
+  color: #52525b;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: .2em;
@@ -13924,8 +13924,8 @@ PROFESIONALES
     padding: 8px 14px;
     border: 1px solid var(--agenda-line);
     border-radius: 999px;
-    background: #fff;
-    color: #48484e;
+    background: #ffffff;
+    color: #27272a;
     font: inherit;
     font-size: 12px;
     font-weight: 700;
@@ -13933,9 +13933,9 @@ PROFESIONALES
 }
 
 .gestionar-citas-filtros button.activo {
-    border-color: #222225;
-    background: #222225;
-    color: #fff;
+    border-color: #09090b;
+    background: #09090b;
+    color: #ffffff;
 }
 
 .gestionar-citas-total {
@@ -13946,11 +13946,11 @@ PROFESIONALES
   padding: 10px 14px;
   border: 1px solid var(--agenda-line);
   border-radius: 14px;
-  background: rgba(255, 255, 255, .76);
+  background: #ffffff;
 }
 
 .gestionar-citas-total strong {
-  color: #222225;
+  color: #09090b;
   font-size: 24px;
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -13966,19 +13966,19 @@ PROFESIONALES
 .gestionar-citas .mensaje-cita {
   margin: 0 0 18px;
   padding: 13px 16px;
-  border: 1px solid #d6d6da;
+  border: 1px solid #a1a1aa;
   border-radius: 12px;
-  background: #fff;
-  color: #38383d;
+  background: #ffffff;
+  color: #18181b;
   font-size: 13px;
   text-align: left;
 }
 
 .gestionar-citas .empleado-lista {
   display: grid;
-    grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
-    gap: 18px;
+  gap: 18px;
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -13998,7 +13998,7 @@ PROFESIONALES
     padding: 18px;
     border: 1px solid var(--agenda-line);
     border-radius: 18px;
-    background: rgba(255, 255, 255, .72);
+    background: #f8f8f9;
 }
 
 .agenda-estado-panel-header {
@@ -14033,7 +14033,7 @@ PROFESIONALES
 .agenda-estado-vacio {
     margin: 0;
     padding: 18px 12px;
-    border: 1px dashed var(--agenda-line);
+    border: 1px dashed #a1a1aa;
     border-radius: 12px;
     color: var(--agenda-muted);
     font-size: 13px;
@@ -14052,14 +14052,14 @@ PROFESIONALES
   background:
     radial-gradient(circle at 100% 0, rgba(0, 0, 0, .035), transparent 32%),
     var(--agenda-surface);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, .04);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .05);
   transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
 }
 
 .gestionar-citas .empleado-card:hover {
   transform: translateY(-3px);
-  border-color: #bcbcc1;
-  box-shadow: 0 16px 34px rgba(0, 0, 0, .085);
+  border-color: #52525b;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, .1);
 }
 
 .cita-agenda-head {
@@ -14068,7 +14068,7 @@ PROFESIONALES
   justify-content: space-between;
   gap: 14px;
   padding-bottom: 17px;
-  border-bottom: 1px solid #ededee;
+  border-bottom: 1px solid #e4e4e7;
 }
 
 .cita-agenda-fecha {
@@ -14077,31 +14077,31 @@ PROFESIONALES
 }
 
 .cita-agenda-fecha > span {
-  color: #85858b;
+  color: #636369;
   font-size: 9px;
   font-weight: 800;
   letter-spacing: .15em;
 }
 
 .cita-agenda-fecha strong {
-  color: #202023;
+  color: #09090b;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: -.025em;
 }
 
 .cita-agenda-fecha time {
-  color: #707076;
+  color: #52525b;
   font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
 
 .gestionar-citas .estado-cita {
   padding: 6px 10px;
-  border: 1px solid #dedee1;
+  border: 1px solid #a1a1aa;
   border-radius: 999px;
-  background: #f2f2f3;
-  color: #48484e;
+  background: #f4f4f5;
+  color: #18181b;
   font-size: 10px;
   font-weight: 700;
   white-space: nowrap;
@@ -14109,15 +14109,15 @@ PROFESIONALES
 
 .gestionar-citas .estado-cita.confirmada,
 .gestionar-citas .estado-cita.finalizada {
-  border-color: #c9c9cd;
-  background: #e7e7e9;
-  color: #222225;
+  border-color: #18181b;
+  background: #18181b;
+  color: #ffffff;
 }
 
 .gestionar-citas .estado-cita.cancelada {
-  border-color: #dedee1;
-  background: #f7f7f8;
-  color: #77777e;
+  border-color: #d4d4d8;
+  background: #f4f4f5;
+  color: #52525b;
 }
 
 .cita-agenda-detalles {
@@ -14132,13 +14132,13 @@ PROFESIONALES
   gap: 6px;
   margin: 0;
   padding: 12px;
-  border: 1px solid #ededee;
+  border: 1px solid #e4e4e7;
   border-radius: 12px;
-  background: #fafafa;
+  background: #f8f8f9;
 }
 
 .gestionar-citas .cita-agenda-detalles strong {
-  color: #85858b;
+  color: #636369;
   font-size: 9px;
   font-weight: 800;
   letter-spacing: .12em;
@@ -14147,7 +14147,7 @@ PROFESIONALES
 
 .gestionar-citas .cita-agenda-detalles span {
   overflow: hidden;
-  color: #303034;
+  color: #111113;
   font-size: 12px;
   font-weight: 650;
   text-overflow: ellipsis;
@@ -14160,19 +14160,19 @@ PROFESIONALES
     justify-content: space-between;
     gap: 12px;
     padding: 12px 14px;
-    border: 1px solid #e5e5e8;
+    border: 1px solid #d4d4d8;
     border-radius: 12px;
-    background: #f7f7f8;
+    background: #f4f4f5;
 }
 
 .cita-tiempo-servicio span {
-    color: #77777e;
+    color: #52525b;
     font-size: 11px;
     font-weight: 650;
 }
 
 .cita-tiempo-servicio strong {
-    color: #222225;
+    color: #09090b;
     font-size: 14px;
     font-variant-numeric: tabular-nums;
 }
@@ -14184,19 +14184,19 @@ PROFESIONALES
     max-width: 1440px;
     margin: 24px auto 0;
     padding: 24px;
-    border: 1px solid #e3e3e6;
+    border: 1px solid #d4d4d8;
     border-radius: 16px;
-    background: #fff;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, .045);
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .05);
 }
 
 .registrar-pago-panel-head {
     padding-bottom: 14px;
-    border-bottom: 1px solid #ededee;
+    border-bottom: 1px solid #e4e4e7;
 }
 
 .registrar-pago-panel-head span {
-    color: #77777e;
+    color: #52525b;
     font-size: 9px;
     font-weight: 800;
     letter-spacing: .16em;
@@ -14204,7 +14204,7 @@ PROFESIONALES
 
 .registrar-pago-panel-head h2 {
     margin: 7px 0 4px;
-    color: #202023;
+    color: #09090b;
     font-family: var(--font-display);
     font-size: 22px;
 }
@@ -14212,7 +14212,7 @@ PROFESIONALES
 .registrar-pago-panel-head p,
 .registrar-pago-estado {
     margin: 0;
-    color: #77777e;
+    color: #52525b;
     font-size: 12px;
 }
 
@@ -14220,10 +14220,10 @@ PROFESIONALES
 .registrar-pago-form > button {
     min-height: 38px;
     padding: 8px 13px;
-    border: 1px solid #d5d5d9;
+    border: 1px solid #a1a1aa;
     border-radius: 9px;
-    background: #f5f5f6;
-    color: #303034;
+    background: #f4f4f5;
+    color: #111113;
     font: inherit;
     font-size: 11px;
     font-weight: 700;
@@ -14234,21 +14234,21 @@ PROFESIONALES
     display: grid;
     gap: 12px;
     padding: 12px;
-    border: 1px solid #e5e5e8;
+    border: 1px solid #d4d4d8;
     border-radius: 11px;
-    background: #fafafa;
+    background: #f8f8f9;
 }
 
 .registrar-pago-servicio,
 .registrar-pago-mensaje {
     margin: 0;
-    color: #55555b;
+    color: #3f3f46;
     font-size: 12px;
 }
 
 .registrar-pago-titulo {
     margin: 0;
-    color: #27272b;
+    color: #09090b;
     font-size: 14px;
     font-weight: 750;
 }
@@ -14256,7 +14256,7 @@ PROFESIONALES
 .registrar-pago-form label {
     display: grid;
     gap: 6px;
-    color: #48484e;
+    color: #27272a;
     font-size: 11px;
     font-weight: 650;
 }
@@ -14266,17 +14266,18 @@ PROFESIONALES
     width: 100%;
     min-height: 38px;
     padding: 8px 10px;
-    border: 1px solid #dedee2;
+    border: 1px solid #a1a1aa;
     border-radius: 8px;
-    background: #fff;
-    color: #27272a;
+    background: #ffffff;
+    color: #09090b;
     font: inherit;
     font-size: 12px;
 }
 
 .registrar-pago-form > button {
-    background: #222225;
-    color: #fff;
+    border-color: #09090b;
+    background: #09090b;
+    color: #ffffff;
 }
 
 .registrar-pago-form > button:disabled {
@@ -14285,99 +14286,32 @@ PROFESIONALES
 }
 
 .registrar-pago-mensaje.error {
-    color: #992e2e;
+    color: #111113;
+    font-weight: 700;
+    text-decoration: underline;
 }
 
 .cita-tiempo-en-curso {
-    border-color: #c9c9cd;
-    background: #f1f1f2;
-}
-
-.registrar-pago-cita {
-    display: grid;
-    gap: 10px;
-}
-
-.registrar-pago-abrir,
-.registrar-pago-form > button {
-    min-height: 38px;
-    padding: 8px 13px;
-    border: 1px solid #d5d5d9;
-    border-radius: 9px;
-    background: #f5f5f6;
-    color: #303034;
-    font: inherit;
-    font-size: 11px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.registrar-pago-form {
-    display: grid;
-    gap: 12px;
-    padding: 12px;
-    border: 1px solid #e5e5e8;
-    border-radius: 11px;
-    background: #fafafa;
-}
-
-.registrar-pago-servicio,
-.registrar-pago-mensaje {
-    margin: 0;
-    color: #55555b;
-    font-size: 12px;
-}
-
-.registrar-pago-form label {
-    display: grid;
-    gap: 6px;
-    color: #48484e;
-    font-size: 11px;
-    font-weight: 650;
-}
-
-.registrar-pago-form input {
-    width: 100%;
-    min-height: 38px;
-    padding: 8px 10px;
-    border: 1px solid #dedee2;
-    border-radius: 8px;
-    background: #fff;
-    color: #27272a;
-    font: inherit;
-    font-size: 12px;
-}
-
-.registrar-pago-form > button {
-    background: #222225;
-    color: #fff;
-}
-
-.registrar-pago-form > button:disabled {
-    opacity: .6;
-    cursor: wait;
-}
-
-.registrar-pago-mensaje.error {
-    color: #992e2e;
+    border-color: #71717a;
+    background: #e4e4e7;
 }
 
 .gestionar-citas .empleado-botones {
   display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-top: auto;
   padding-top: 15px;
-  border-top: 1px solid #ededee;
+  border-top: 1px solid #e4e4e7;
 }
 
 .gestionar-citas .empleado-botones button {
   min-height: 40px;
   padding: 8px 10px;
-  border: 1px solid #dedee1;
+  border: 1px solid #a1a1aa;
   border-radius: 10px;
-  background: #fff;
-  color: #414147;
+  background: #ffffff;
+  color: #18181b;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
@@ -14395,36 +14329,36 @@ PROFESIONALES
 }
 
 .gestionar-citas .empleado-botones .btn-confirmar {
-  border-color: #202023;
-  background: #202023;
-  color: #fff;
+  border-color: #09090b;
+  background: #09090b;
+  color: #ffffff;
 }
 
 .gestionar-citas .empleado-botones .btn-confirmar:hover {
-  border-color: #444449;
-  background: #444449;
-  color: #fff;
+  border-color: #27272a;
+  background: #27272a;
+  color: #ffffff;
 }
 
 .gestionar-citas .empleado-botones .btn-finalizar:hover {
-  border-color: #a6a6ac;
-  background: #ededee;
-  color: #202023;
+  border-color: #18181b;
+  background: #e4e4e7;
+  color: #09090b;
 }
 
 .gestionar-citas .empleado-botones .btn-cancelar {
-  color: #707076;
+  color: #52525b;
 }
 
 .gestionar-citas .empleado-botones .btn-cancelar:hover {
-  border-color: #a6a6ac;
-  background: #f1f1f2;
-  color: #252529;
+  border-color: #18181b;
+  background: #f4f4f5;
+  color: #09090b;
 }
 
 .gestionar-citas .empleado-botones button:focus-visible,
 .gestionar-citas > .menu-btn:focus-visible {
-  outline: 2px solid #55555b;
+  outline: 2px solid #09090b;
   outline-offset: 3px;
 }
 
@@ -14435,9 +14369,9 @@ PROFESIONALES
   place-content: center;
   justify-items: center;
   padding: 36px 20px;
-  border: 1px dashed #c9c9ce;
+  border: 1px dashed #a1a1aa;
   border-radius: 18px;
-  background: rgba(255, 255, 255, .62);
+  background: #f8f8f9;
   text-align: center;
 }
 
@@ -14446,23 +14380,23 @@ PROFESIONALES
   width: 48px;
   height: 48px;
   place-items: center;
-  border: 1px solid #dedee1;
+  border: 1px solid #d4d4d8;
   border-radius: 15px;
-  background: #f0f0f1;
-  color: #55555b;
+  background: #e4e4e7;
+  color: #18181b;
   font-size: 25px;
 }
 
 .gestionar-citas-vacio h2 {
   margin: 17px 0 6px;
-  color: #27272b;
+  color: #09090b;
   font-family: var(--font-display);
   font-size: 22px;
 }
 
 .gestionar-citas-vacio p {
   margin: 0;
-  color: #77777e;
+  color: #52525b;
   font-size: 13px;
 }
 
@@ -14470,7 +14404,6 @@ PROFESIONALES
   .gestionar-citas .empleado-lista {
     grid-template-columns: minmax(0, 1fr);
   }
-
 }
 
 @media (max-width: 520px) {
@@ -14485,8 +14418,6 @@ PROFESIONALES
     margin-bottom: 20px;
   }
 
-
-  
   .gestionar-citas-total {
     align-self: stretch;
   }
@@ -14501,9 +14432,9 @@ PROFESIONALES
     border-radius: 16px;
   }
 
-    .agenda-estado-panel-citas {
-        grid-template-columns: minmax(0, 1fr);
-    }
+  .agenda-estado-panel-citas {
+      grid-template-columns: minmax(0, 1fr);
+  }
 
   .cita-agenda-detalles {
     grid-template-columns: minmax(0, 1fr);
@@ -14524,26 +14455,24 @@ PROFESIONALES
 
 
 /* =========================================================
-   PANEL DE CLIENTE · DISEÑO EDITORIAL "MAISON"
-   Rediseño del panel /cliente. Usa los tokens de marca
-   (plum / gold / cream) y un namespace propio (pc-*) para
-   no chocar con las capas anteriores del dashboard.
+   PANEL DE CLIENTE · DISEÑO EDITORIAL MONOCROMÁTICO
+   Paleta en negro, blanco y escala de grises de alto contraste.
 ========================================================= */
 
 .dashboard.panel-cliente {
-    --pc-plum: #2B183F;
-    --pc-plum-soft: #4A2E6B;
-    --pc-ink: #1C1230;
-    --pc-gold: #D4AF37;
-    --pc-gold-light: #E8C766;
-    --pc-gold-deep: #B8902A;
-    --pc-cream: #F8F5EC;
-    --pc-lilac: #E8DDF5;
-    --pc-muted: #6B6478;
-    --pc-line: rgba(43, 24, 63, 0.10);
-    --pc-line-soft: rgba(43, 24, 63, 0.07);
+    --pc-plum: #09090b;
+    --pc-plum-soft: #27272a;
+    --pc-ink: #111113;
+    --pc-gold: #3f3f46;
+    --pc-gold-light: #ffffff;
+    --pc-gold-deep: #18181b;
+    --pc-cream: #f4f4f5;
+    --pc-lilac: #e4e4e7;
+    --pc-muted: #52525b;
+    --pc-line: rgba(9, 9, 11, 0.14);
+    --pc-line-soft: rgba(9, 9, 11, 0.10);
     --pc-radius: 22px;
-    --pc-shadow: 0 16px 40px rgba(43, 24, 63, 0.08);
+    --pc-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
     --pc-ease: cubic-bezier(.22, .61, .36, 1);
 
     display: grid;
@@ -14554,8 +14483,8 @@ PROFESIONALES
     padding: 0;
     gap: 0;
     background:
-        radial-gradient(900px 520px at 92% -14%, rgba(212, 175, 55, 0.17), transparent 64%),
-        radial-gradient(720px 520px at 2% 106%, rgba(74, 46, 107, 0.12), transparent 62%),
+        radial-gradient(900px 520px at 92% -14%, rgba(212, 212, 216, 0.45), transparent 64%),
+        radial-gradient(720px 520px at 2% 106%, rgba(161, 161, 170, 0.25), transparent 62%),
         var(--pc-cream);
     color: var(--pc-ink);
     font-family: var(--font-body);
@@ -14580,10 +14509,10 @@ PROFESIONALES
     padding: 28px 20px 22px;
     overflow-y: auto;
     border: 0;
-    border-right: 1px solid rgba(212, 175, 55, 0.22);
+    border-right: 1px solid #27272a;
     background:
-        radial-gradient(440px 320px at 108% 0%, rgba(212, 175, 55, 0.20), transparent 70%),
-        linear-gradient(180deg, #301C47 0%, #231330 58%, #1B0F26 100%);
+        radial-gradient(440px 320px at 108% 0%, rgba(255, 255, 255, 0.08), transparent 70%),
+        linear-gradient(180deg, #18181b 0%, #0f0f12 58%, #09090b 100%);
     color: #ffffff;
 }
 
@@ -14593,7 +14522,7 @@ PROFESIONALES
     align-items: center;
     gap: 12px;
     padding-bottom: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .panel-cliente .pc-rail-logo {
@@ -14603,9 +14532,9 @@ PROFESIONALES
     flex: none;
     place-items: center;
     overflow: hidden;
-    border: 1px solid rgba(212, 175, 55, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.4);
     border-radius: 50%;
-    background: var(--pc-cream);
+    background: #ffffff;
 }
 
 .panel-cliente .pc-rail-logo img {
@@ -14613,6 +14542,7 @@ PROFESIONALES
     height: 100%;
     padding: 5px;
     object-fit: contain;
+    filter: grayscale(1);
 }
 
 .panel-cliente .pc-rail-brand-text {
@@ -14634,7 +14564,7 @@ PROFESIONALES
 .panel-cliente .pc-rail-brand-text span {
     display: block;
     margin-top: 3px;
-    color: rgba(232, 199, 102, 0.92);
+    color: #d4d4d8;
     font-size: 9px;
     font-weight: 500;
     letter-spacing: .2em;
@@ -14651,7 +14581,7 @@ PROFESIONALES
 
 .panel-cliente .pc-nav-label {
     padding: 0 10px 8px;
-    color: rgba(255, 255, 255, 0.40);
+    color: #a1a1aa;
     font-size: 9px;
     font-weight: 600;
     letter-spacing: .2em;
@@ -14669,7 +14599,7 @@ PROFESIONALES
     border: 0;
     border-radius: 11px;
     background: transparent;
-    color: rgba(255, 255, 255, 0.76);
+    color: #d4d4d8;
     font: inherit;
     font-size: 13px;
     text-align: left;
@@ -14682,7 +14612,7 @@ PROFESIONALES
     height: 17px;
     flex: none;
     stroke-width: 1.6;
-    color: rgba(232, 199, 102, 0.82);
+    color: #a1a1aa;
 }
 
 .panel-cliente .pc-nav-item span {
@@ -14693,16 +14623,24 @@ PROFESIONALES
 }
 
 .panel-cliente .pc-nav-item:hover {
-    background: rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.10);
     color: #ffffff;
     transform: none;
     box-shadow: none;
 }
 
-.panel-cliente .pc-nav-item.is-active {
-    background: rgba(212, 175, 55, 0.16);
+.panel-cliente .pc-nav-item:hover svg {
     color: #ffffff;
-    font-weight: 500;
+}
+
+.panel-cliente .pc-nav-item.is-active {
+    background: #ffffff;
+    color: #09090b;
+    font-weight: 600;
+}
+
+.panel-cliente .pc-nav-item.is-active svg {
+    color: #09090b;
 }
 
 .panel-cliente .pc-nav-item.is-active::before {
@@ -14712,7 +14650,7 @@ PROFESIONALES
     width: 3px;
     height: 22px;
     border-radius: 0 3px 3px 0;
-    background: var(--pc-gold-light);
+    background: #ffffff;
     content: "";
     transform: translateY(-50%);
 }
@@ -14722,7 +14660,7 @@ PROFESIONALES
     flex-direction: column;
     gap: 9px;
     padding-top: 18px;
-    border-top: 1px solid rgba(255, 255, 255, 0.10);
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .panel-cliente .pc-user {
@@ -14731,9 +14669,9 @@ PROFESIONALES
     align-items: center;
     gap: 11px;
     padding: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.16);
     border-radius: 14px;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.06);
 }
 
 .panel-cliente .pc-user-avatar {
@@ -14743,8 +14681,8 @@ PROFESIONALES
     flex: none;
     place-items: center;
     border-radius: 50%;
-    background: linear-gradient(140deg, var(--pc-gold-light), var(--pc-gold-deep));
-    color: #2B183F;
+    background: linear-gradient(140deg, #ffffff, #d4d4d8);
+    color: #09090b;
     font-family: var(--font-display);
     font-size: 15px;
     font-weight: 700;
@@ -14767,7 +14705,7 @@ PROFESIONALES
 
 .panel-cliente .pc-user-info span {
     display: block;
-    color: rgba(255, 255, 255, 0.48);
+    color: #a1a1aa;
     font-size: 9px;
     letter-spacing: .14em;
     text-transform: uppercase;
@@ -14780,10 +14718,10 @@ PROFESIONALES
     justify-content: space-between;
     gap: 10px;
     padding: 9px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.22);
     border-radius: 11px;
     background: transparent;
-    color: rgba(255, 255, 255, 0.84);
+    color: #e4e4e7;
     font: inherit;
     font-size: 12px;
     cursor: pointer;
@@ -14798,12 +14736,13 @@ PROFESIONALES
 }
 
 .panel-cliente .pc-rail-link:hover {
-    border-color: rgba(212, 175, 55, 0.6);
-    background: rgba(212, 175, 55, 0.12);
-    color: #ffffff;
+    border-color: #ffffff;
+    background: #ffffff;
+    color: #09090b;
     transform: none;
     box-shadow: none;
 }
+
 /* ---------- ÁREA PRINCIPAL ---------- */
 
 .panel-cliente .pc-main {
@@ -14828,9 +14767,9 @@ PROFESIONALES
     display: inline-flex;
     align-items: center;
     gap: 9px;
-    color: var(--pc-gold-deep);
+    color: #3f3f46;
     font-size: 9.5px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: .24em;
     text-transform: uppercase;
 }
@@ -14838,13 +14777,13 @@ PROFESIONALES
 .panel-cliente .pc-eyebrow::before {
     width: 26px;
     height: 1px;
-    background: var(--pc-gold);
+    background: #09090b;
     content: "";
 }
 
 .panel-cliente .pc-topbar h1 {
     margin: 10px 0 0;
-    color: var(--pc-plum);
+    color: #09090b;
     font-family: var(--font-display);
     font-size: clamp(28px, 3.6vw, 42px);
     font-weight: 600;
@@ -14873,10 +14812,10 @@ PROFESIONALES
     align-items: center;
     gap: 8px;
     padding: 10px 14px;
-    border: 1px solid var(--pc-line);
+    border: 1px solid #d4d4d8;
     border-radius: var(--radius-pill, 999px);
-    background: rgba(255, 255, 255, .72);
-    color: var(--pc-plum);
+    background: #ffffff;
+    color: #09090b;
     font-size: 12px;
     font-weight: 500;
     white-space: nowrap;
@@ -14886,7 +14825,7 @@ PROFESIONALES
     width: 15px;
     height: 15px;
     flex: none;
-    color: var(--pc-gold-deep);
+    color: #18181b;
     stroke-width: 1.7;
 }
 
@@ -14897,9 +14836,9 @@ PROFESIONALES
     justify-content: center;
     gap: 8px;
     padding: 11px 20px;
-    border: 1px solid var(--pc-plum);
+    border: 1px solid #09090b;
     border-radius: var(--radius-pill, 999px);
-    background: var(--pc-plum);
+    background: #09090b;
     color: #ffffff;
     font: inherit;
     font-size: 12.5px;
@@ -14919,33 +14858,33 @@ PROFESIONALES
 }
 
 .panel-cliente .pc-btn:hover {
-    border-color: var(--pc-plum-soft);
-    background: var(--pc-plum-soft);
-    box-shadow: 0 10px 24px rgba(43, 24, 63, .22);
+    border-color: #27272a;
+    background: #27272a;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .2);
     transform: translateY(-2px);
 }
 
 .panel-cliente .pc-btn.is-gold {
-    border-color: var(--pc-gold-deep);
-    background: linear-gradient(135deg, var(--pc-gold-light), var(--pc-gold-deep));
-    color: #2B183F;
+    border-color: #09090b;
+    background: linear-gradient(135deg, #27272a, #09090b);
+    color: #ffffff;
 }
 
 .panel-cliente .pc-btn.is-gold:hover {
-    border-color: var(--pc-gold);
-    background: linear-gradient(135deg, #F0D485, var(--pc-gold));
-    box-shadow: 0 12px 26px rgba(184, 144, 42, .30);
+    border-color: #3f3f46;
+    background: linear-gradient(135deg, #3f3f46, #18181b);
+    box-shadow: 0 12px 26px rgba(0, 0, 0, .28);
 }
 
 .panel-cliente .pc-btn.is-ghost {
-    border-color: rgba(43, 24, 63, .2);
-    background: transparent;
-    color: var(--pc-plum);
+    border-color: #a1a1aa;
+    background: #ffffff;
+    color: #09090b;
 }
 
 .panel-cliente .pc-btn.is-ghost:hover {
-    border-color: var(--pc-plum);
-    background: rgba(43, 24, 63, .06);
+    border-color: #09090b;
+    background: #f4f4f5;
     box-shadow: none;
 }
 
@@ -14954,10 +14893,10 @@ PROFESIONALES
 .panel-cliente .pc-card {
     min-width: 0;
     padding: clamp(20px, 2.4vw, 28px);
-    border: 1px solid var(--pc-line-soft);
+    border: 1px solid #d4d4d8;
     border-radius: var(--pc-radius);
     background: #ffffff;
-    box-shadow: 0 12px 30px rgba(43, 24, 63, .06);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .06);
 }
 
 .panel-cliente .pc-card-head {
@@ -14971,7 +14910,7 @@ PROFESIONALES
 
 .panel-cliente .pc-card-title {
     margin: 6px 0 0;
-    color: var(--pc-plum);
+    color: #09090b;
     font-family: var(--font-display);
     font-size: clamp(19px, 2vw, 23px);
     font-weight: 600;
@@ -14985,11 +14924,12 @@ PROFESIONALES
     align-items: center;
     gap: 7px;
     padding: 7px 12px;
+    border: 1px solid #d4d4d8;
     border-radius: var(--radius-pill, 999px);
-    background: rgba(212, 175, 55, .14);
-    color: var(--pc-gold-deep);
+    background: #f4f4f5;
+    color: #18181b;
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: .12em;
     text-transform: uppercase;
     white-space: nowrap;
@@ -15004,12 +14944,12 @@ PROFESIONALES
     gap: clamp(20px, 3vw, 38px);
     padding: clamp(24px, 3vw, 36px);
     overflow: hidden;
-    border: 1px solid rgba(212, 175, 55, .28);
+    border: 1px solid #27272a;
     border-radius: var(--pc-radius);
     background:
-        radial-gradient(520px 320px at 96% -20%, rgba(212, 175, 55, .26), transparent 66%),
-        linear-gradient(135deg, #341E4C 0%, #26143A 55%, #1C0F2A 100%);
-    box-shadow: 0 22px 50px rgba(28, 15, 42, .26);
+        radial-gradient(520px 320px at 96% -20%, rgba(255, 255, 255, .14), transparent 66%),
+        linear-gradient(135deg, #27272a 0%, #141417 55%, #09090b 100%);
+    box-shadow: 0 22px 50px rgba(0, 0, 0, .26);
     color: #ffffff;
 }
 
@@ -15019,7 +14959,7 @@ PROFESIONALES
     left: 0;
     width: 100%;
     height: 3px;
-    background: linear-gradient(90deg, transparent, var(--pc-gold-light), transparent);
+    background: linear-gradient(90deg, transparent, #ffffff, transparent);
     content: "";
 }
 
@@ -15032,11 +14972,11 @@ PROFESIONALES
 }
 
 .panel-cliente .pc-next .pc-eyebrow {
-    color: rgba(232, 199, 102, .95);
+    color: #e4e4e7;
 }
 
 .panel-cliente .pc-next .pc-eyebrow::before {
-    background: rgba(232, 199, 102, .8);
+    background: #ffffff;
 }
 
 .panel-cliente .pc-next-title {
@@ -15063,7 +15003,7 @@ PROFESIONALES
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    color: rgba(255, 255, 255, .78);
+    color: #e4e4e7;
     font-size: 13px;
 }
 
@@ -15071,7 +15011,7 @@ PROFESIONALES
     width: 15px;
     height: 15px;
     flex: none;
-    color: rgba(232, 199, 102, .9);
+    color: #ffffff;
     stroke-width: 1.7;
 }
 
@@ -15083,24 +15023,25 @@ PROFESIONALES
 }
 
 .panel-cliente .pc-next .pc-btn {
-    border-color: rgba(255, 255, 255, .28);
-    background: rgba(255, 255, 255, .08);
+    border-color: rgba(255, 255, 255, .35);
+    background: rgba(255, 255, 255, .10);
     color: #ffffff;
 }
 
 .panel-cliente .pc-next .pc-btn.is-gold {
-    border-color: var(--pc-gold-deep);
-    background: linear-gradient(135deg, var(--pc-gold-light), var(--pc-gold-deep));
-    color: #2B183F;
+    border-color: #ffffff;
+    background: #ffffff;
+    color: #09090b;
 }
 
 .panel-cliente .pc-next .pc-btn:hover {
-    border-color: rgba(255, 255, 255, .55);
-    background: rgba(255, 255, 255, .16);
+    border-color: #ffffff;
+    background: rgba(255, 255, 255, .20);
 }
 
 .panel-cliente .pc-next .pc-btn.is-gold:hover {
-    background: linear-gradient(135deg, #F1D78D, var(--pc-gold));
+    background: #e4e4e7;
+    color: #09090b;
 }
 
 .panel-cliente .pc-next-date {
@@ -15111,22 +15052,23 @@ PROFESIONALES
     justify-content: center;
     gap: 4px;
     padding: 20px 14px;
-    border: 1px solid rgba(212, 175, 55, .38);
+    border: 1px solid #d4d4d8;
     border-radius: 18px;
-    background: rgba(248, 245, 236, .97);
-    color: var(--pc-plum);
+    background: #ffffff;
+    color: #09090b;
     text-align: center;
 }
 
 .panel-cliente .pc-next-weekday {
-    color: var(--pc-gold-deep);
+    color: #52525b;
     font-size: 9.5px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: .2em;
     text-transform: uppercase;
 }
 
 .panel-cliente .pc-next-day {
+    color: #09090b;
     font-family: var(--font-display);
     font-size: clamp(38px, 5vw, 52px);
     font-weight: 600;
@@ -15135,9 +15077,9 @@ PROFESIONALES
 }
 
 .panel-cliente .pc-next-month {
-    color: var(--pc-muted);
+    color: #52525b;
     font-size: 11px;
-    font-weight: 500;
+    font-weight: 600;
     letter-spacing: .16em;
     text-transform: uppercase;
 }
@@ -15145,10 +15087,10 @@ PROFESIONALES
 .panel-cliente .pc-next-time {
     margin-top: 8px;
     padding-top: 10px;
-    border-top: 1px solid rgba(43, 24, 63, .14);
-    color: var(--pc-plum);
+    border-top: 1px solid #d4d4d8;
+    color: #09090b;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: .06em;
 }
 
@@ -15157,6 +15099,7 @@ PROFESIONALES
     align-items: center;
     gap: 7px;
     padding: 6px 12px;
+    border: 1px solid rgba(255, 255, 255, .25);
     border-radius: var(--radius-pill, 999px);
     background: rgba(255, 255, 255, .14);
     color: #ffffff;
@@ -15177,28 +15120,33 @@ PROFESIONALES
 }
 
 .panel-cliente .pc-status.is-pendiente {
-    background: rgba(232, 199, 102, .18);
-    color: #F5DC9A;
+    border-color: #d4d4d8;
+    background: rgba(255, 255, 255, .16);
+    color: #f4f4f5;
 }
 
 .panel-cliente .pc-status.is-confirmada {
-    background: rgba(126, 217, 163, .18);
-    color: #A9E8C2;
+    border-color: #ffffff;
+    background: #ffffff;
+    color: #09090b;
 }
 
 .panel-cliente .pc-status.is-en_curso {
-    background: rgba(140, 178, 255, .18);
-    color: #B9CEFF;
+    border-color: #e4e4e7;
+    background: rgba(255, 255, 255, .24);
+    color: #ffffff;
 }
 
 .panel-cliente .pc-status.is-finalizada {
-    background: rgba(255, 255, 255, .14);
-    color: rgba(255, 255, 255, .82);
+    border-color: #71717a;
+    background: rgba(255, 255, 255, .10);
+    color: #d4d4d8;
 }
 
 .panel-cliente .pc-status.is-cancelada {
-    background: rgba(255, 143, 143, .18);
-    color: #FFB6B6;
+    border-color: #52525b;
+    background: #18181b;
+    color: #a1a1aa;
 }
 
 .panel-cliente .pc-next-empty {
@@ -15212,10 +15160,11 @@ PROFESIONALES
 .panel-cliente .pc-next-empty p {
     margin: 0;
     max-width: 46ch;
-    color: rgba(255, 255, 255, .74);
+    color: #e4e4e7;
     font-size: 13.5px;
     line-height: 1.7;
 }
+
 /* ---------- MÉTRICAS ---------- */
 
 .panel-cliente .pc-stats {
@@ -15232,10 +15181,10 @@ PROFESIONALES
     gap: 14px;
     padding: 20px 20px 18px;
     overflow: hidden;
-    border: 1px solid var(--pc-line-soft);
+    border: 1px solid #d4d4d8;
     border-radius: 18px;
     background: #ffffff;
-    box-shadow: 0 10px 26px rgba(43, 24, 63, .055);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .055);
     transition: transform .22s var(--pc-ease), box-shadow .22s var(--pc-ease),
         border-color .22s var(--pc-ease);
 }
@@ -15246,14 +15195,14 @@ PROFESIONALES
     left: 0;
     width: 100%;
     height: 2px;
-    background: linear-gradient(90deg, var(--pc-gold), rgba(212, 175, 55, 0));
+    background: linear-gradient(90deg, #09090b, rgba(9, 9, 11, 0));
     content: "";
-    opacity: .8;
+    opacity: .85;
 }
 
 .panel-cliente .pc-stat:hover {
-    border-color: rgba(212, 175, 55, .45);
-    box-shadow: 0 18px 36px rgba(43, 24, 63, .1);
+    border-color: #18181b;
+    box-shadow: 0 18px 36px rgba(0, 0, 0, .12);
     transform: translateY(-3px);
 }
 
@@ -15270,9 +15219,10 @@ PROFESIONALES
     height: 38px;
     flex: none;
     place-items: center;
+    border: 1px solid #d4d4d8;
     border-radius: 12px;
-    background: rgba(232, 221, 245, .72);
-    color: var(--pc-plum);
+    background: #f4f4f5;
+    color: #09090b;
 }
 
 .panel-cliente .pc-stat-icon svg {
@@ -15282,22 +15232,25 @@ PROFESIONALES
 }
 
 .panel-cliente .pc-stat.is-gold .pc-stat-icon {
-    background: rgba(212, 175, 55, .18);
-    color: var(--pc-gold-deep);
+    border-color: #09090b;
+    background: #09090b;
+    color: #ffffff;
 }
 
 .panel-cliente .pc-stat.is-green .pc-stat-icon {
-    background: rgba(21, 128, 61, .12);
-    color: #15803d;
+    border-color: #3f3f46;
+    background: #27272a;
+    color: #ffffff;
 }
 
 .panel-cliente .pc-stat.is-plum .pc-stat-icon {
-    background: rgba(43, 24, 63, .1);
-    color: var(--pc-plum);
+    border-color: #d4d4d8;
+    background: #e4e4e7;
+    color: #09090b;
 }
 
 .panel-cliente .pc-stat-value {
-    color: var(--pc-plum);
+    color: #09090b;
     font-family: var(--font-display);
     font-size: clamp(30px, 3.4vw, 38px);
     font-weight: 600;
@@ -15307,15 +15260,15 @@ PROFESIONALES
 
 .panel-cliente .pc-stat-label {
     margin: 5px 0 0;
-    color: var(--pc-muted);
+    color: #3f3f46;
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: .16em;
     text-transform: uppercase;
 }
 
 .panel-cliente .pc-stat-hint {
-    color: #8b8496;
+    color: #52525b;
     font-size: 12px;
     line-height: 1.5;
 }
@@ -15341,18 +15294,18 @@ PROFESIONALES
     margin-bottom: 20px;
     padding: 20px;
     overflow: hidden;
-    border: 1px solid rgba(212, 175, 55, .35);
+    border: 1px solid #a1a1aa;
     border-radius: 18px;
     background:
-        radial-gradient(300px 180px at 100% 0%, rgba(212, 175, 55, .22), transparent 70%),
-        linear-gradient(135deg, #FBF6E9 0%, #F8F5EC 100%);
+        radial-gradient(300px 180px at 100% 0%, rgba(0, 0, 0, .06), transparent 70%),
+        linear-gradient(135deg, #f4f4f5 0%, #e4e4e7 100%);
 }
 
 .panel-cliente .pc-points-label {
     display: block;
-    color: var(--pc-gold-deep);
+    color: #27272a;
     font-size: 9.5px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: .2em;
     text-transform: uppercase;
 }
@@ -15362,7 +15315,7 @@ PROFESIONALES
     align-items: baseline;
     gap: 8px;
     margin: 6px 0 0;
-    color: var(--pc-plum);
+    color: #09090b;
     font-family: var(--font-display);
     font-size: clamp(38px, 5vw, 52px);
     font-weight: 600;
@@ -15371,10 +15324,10 @@ PROFESIONALES
 }
 
 .panel-cliente .pc-points-value small {
-    color: var(--pc-muted);
+    color: #3f3f46;
     font-family: var(--font-body);
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: .16em;
     text-transform: uppercase;
 }
@@ -15386,9 +15339,9 @@ PROFESIONALES
     flex: none;
     place-items: center;
     border-radius: 50%;
-    background: linear-gradient(140deg, var(--pc-gold-light), var(--pc-gold-deep));
+    background: linear-gradient(140deg, #27272a, #09090b);
     color: #ffffff;
-    box-shadow: 0 10px 22px rgba(184, 144, 42, .32);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, .24);
 }
 
 .panel-cliente .pc-points-badge svg {
@@ -15408,13 +15361,13 @@ PROFESIONALES
     justify-content: space-between;
     gap: 8px;
     margin-bottom: 10px;
-    color: var(--pc-muted);
+    color: #52525b;
     font-size: 12px;
 }
 
 .panel-cliente .pc-progress-head strong {
-    color: var(--pc-plum);
-    font-weight: 600;
+    color: #09090b;
+    font-weight: 700;
 }
 
 .panel-cliente .pc-progress-track {
@@ -15422,14 +15375,14 @@ PROFESIONALES
     height: 8px;
     overflow: hidden;
     border-radius: var(--radius-pill, 999px);
-    background: rgba(43, 24, 63, .09);
+    background: #e4e4e7;
 }
 
 .panel-cliente .pc-progress-fill {
     display: block;
     height: 100%;
     border-radius: inherit;
-    background: linear-gradient(90deg, var(--pc-gold-deep), var(--pc-gold-light));
+    background: linear-gradient(90deg, #3f3f46, #09090b);
     transition: width .5s var(--pc-ease);
 }
 
@@ -15448,38 +15401,42 @@ PROFESIONALES
     flex-direction: column;
     gap: 3px;
     padding: 12px;
-    border: 1px solid var(--pc-line-soft);
+    border: 1px solid #d4d4d8;
     border-radius: 12px;
-    background: #FCFBF8;
+    background: #f8f8f9;
 }
 
 .panel-cliente .pc-tier.is-reached {
-    border-color: rgba(212, 175, 55, .5);
-    background: rgba(212, 175, 55, .1);
+    border-color: #09090b;
+    background: #18181b;
 }
 
 .panel-cliente .pc-tier strong {
-    color: var(--pc-plum);
+    color: #09090b;
     font-family: var(--font-display);
     font-size: 16px;
     font-weight: 600;
     line-height: 1.2;
 }
 
+.panel-cliente .pc-tier.is-reached strong {
+    color: #ffffff;
+}
+
 .panel-cliente .pc-tier span {
-    color: var(--pc-muted);
+    color: #52525b;
     font-size: 11px;
     line-height: 1.4;
 }
 
 .panel-cliente .pc-tier.is-reached span {
-    color: var(--pc-gold-deep);
+    color: #e4e4e7;
     font-weight: 600;
 }
 
 .panel-cliente .pc-note {
     margin: 16px 0 0;
-    color: #8b8496;
+    color: #52525b;
     font-size: 11.5px;
     line-height: 1.6;
 }
@@ -15491,7 +15448,7 @@ PROFESIONALES
     margin: 20px 0 0;
     padding: 0;
     list-style: none;
-    border-top: 1px solid var(--pc-line-soft);
+    border-top: 1px solid #e4e4e7;
 }
 
 .panel-cliente .pc-earn li {
@@ -15499,7 +15456,7 @@ PROFESIONALES
     align-items: flex-start;
     gap: 12px;
     padding: 14px 0;
-    border-bottom: 1px solid var(--pc-line-soft);
+    border-bottom: 1px solid #e4e4e7;
 }
 
 .panel-cliente .pc-earn li:last-child {
@@ -15513,9 +15470,10 @@ PROFESIONALES
     height: 34px;
     flex: none;
     place-items: center;
+    border: 1px solid #d4d4d8;
     border-radius: 10px;
-    background: rgba(232, 221, 245, .7);
-    color: var(--pc-plum);
+    background: #f4f4f5;
+    color: #09090b;
 }
 
 .panel-cliente .pc-earn-icon svg {
@@ -15530,7 +15488,7 @@ PROFESIONALES
 
 .panel-cliente .pc-earn-text strong {
     display: block;
-    color: var(--pc-plum);
+    color: #09090b;
     font-size: 13px;
     font-weight: 600;
 }
@@ -15538,7 +15496,7 @@ PROFESIONALES
 .panel-cliente .pc-earn-text span {
     display: block;
     margin-top: 2px;
-    color: var(--pc-muted);
+    color: #52525b;
     font-size: 12px;
     line-height: 1.55;
 }
@@ -15559,7 +15517,7 @@ PROFESIONALES
     align-items: center;
     gap: 12px;
     padding: 13px 0;
-    border-bottom: 1px solid var(--pc-line-soft);
+    border-bottom: 1px solid #e4e4e7;
 }
 
 .panel-cliente .pc-list-item:last-child {
@@ -15573,9 +15531,10 @@ PROFESIONALES
     height: 34px;
     flex: none;
     place-items: center;
+    border: 1px solid #d4d4d8;
     border-radius: 10px;
-    background: rgba(43, 24, 63, .07);
-    color: var(--pc-plum);
+    background: #f4f4f5;
+    color: #09090b;
 }
 
 .panel-cliente .pc-list-icon svg {
@@ -15592,7 +15551,7 @@ PROFESIONALES
 .panel-cliente .pc-list-body strong {
     display: block;
     overflow: hidden;
-    color: var(--pc-plum);
+    color: #09090b;
     font-size: 12.8px;
     font-weight: 600;
     line-height: 1.4;
@@ -15604,7 +15563,7 @@ PROFESIONALES
     display: block;
     overflow: hidden;
     margin-top: 2px;
-    color: var(--pc-muted);
+    color: #52525b;
     font-size: 11.5px;
     line-height: 1.45;
     text-overflow: ellipsis;
@@ -15615,24 +15574,24 @@ PROFESIONALES
     flex: none;
     font-family: var(--font-display);
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: -.01em;
 }
 
 .panel-cliente .pc-delta.is-plus {
-    color: #15803d;
+    color: #09090b;
 }
 
 .panel-cliente .pc-delta.is-minus {
-    color: #b4453a;
+    color: #52525b;
 }
 
 .panel-cliente .pc-empty {
     margin: 0;
     padding: 22px 0;
-    border-top: 1px solid var(--pc-line-soft);
-    border-bottom: 1px solid var(--pc-line-soft);
-    color: #8b8496;
+    border-top: 1px solid #e4e4e7;
+    border-bottom: 1px solid #e4e4e7;
+    color: #52525b;
     font-size: 12.5px;
     line-height: 1.65;
     text-align: center;
@@ -15653,10 +15612,10 @@ PROFESIONALES
     align-items: flex-start;
     gap: 13px;
     padding: 18px;
-    border: 1px solid var(--pc-line-soft);
+    border: 1px solid #d4d4d8;
     border-radius: 16px;
     background: #ffffff;
-    color: var(--pc-plum);
+    color: #09090b;
     font: inherit;
     text-align: left;
     cursor: pointer;
@@ -15665,8 +15624,8 @@ PROFESIONALES
 }
 
 .panel-cliente .pc-action:hover {
-    border-color: rgba(212, 175, 55, .55);
-    box-shadow: 0 14px 30px rgba(43, 24, 63, .09);
+    border-color: #09090b;
+    box-shadow: 0 14px 30px rgba(0, 0, 0, .1);
     transform: translateY(-2px);
 }
 
@@ -15676,9 +15635,10 @@ PROFESIONALES
     height: 38px;
     flex: none;
     place-items: center;
+    border: 1px solid #d4d4d8;
     border-radius: 11px;
-    background: rgba(212, 175, 55, .16);
-    color: var(--pc-gold-deep);
+    background: #f4f4f5;
+    color: #09090b;
 }
 
 .panel-cliente .pc-action-icon svg {
@@ -15687,13 +15647,19 @@ PROFESIONALES
     stroke-width: 1.7;
 }
 
+.panel-cliente .pc-action:hover .pc-action-icon {
+    border-color: #09090b;
+    background: #09090b;
+    color: #ffffff;
+}
+
 .panel-cliente .pc-action-text {
     min-width: 0;
 }
 
 .panel-cliente .pc-action-text strong {
     display: block;
-    color: var(--pc-plum);
+    color: #09090b;
     font-size: 13px;
     font-weight: 600;
     line-height: 1.35;
@@ -15702,10 +15668,11 @@ PROFESIONALES
 .panel-cliente .pc-action-text span {
     display: block;
     margin-top: 3px;
-    color: var(--pc-muted);
+    color: #52525b;
     font-size: 11.5px;
     line-height: 1.5;
 }
+
 /* ---------- RESEÑAS ---------- */
 
 .panel-cliente .pc-reviews {
@@ -15731,7 +15698,7 @@ PROFESIONALES
 
 .panel-cliente .pc-field label,
 .panel-cliente .pc-stars legend {
-    color: var(--pc-plum);
+    color: #09090b;
     font-size: 12px;
     font-weight: 600;
     letter-spacing: .02em;
@@ -15742,10 +15709,10 @@ PROFESIONALES
     width: 100%;
     min-width: 0;
     padding: 12px 14px;
-    border: 1px solid rgba(43, 24, 63, .16);
+    border: 1px solid #a1a1aa;
     border-radius: 12px;
-    background: #FCFBF8;
-    color: var(--pc-ink);
+    background: #f8f8f9;
+    color: #09090b;
     font: inherit;
     font-size: 13px;
     transition: border-color .2s var(--pc-ease), box-shadow .2s var(--pc-ease),
@@ -15765,10 +15732,10 @@ PROFESIONALES
 
 .panel-cliente .pc-field select:focus,
 .panel-cliente .pc-field textarea:focus {
-    border-color: var(--pc-gold);
+    border-color: #09090b;
     outline: 0;
     background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(212, 175, 55, .16);
+    box-shadow: 0 0 0 4px rgba(9, 9, 11, .12);
 }
 
 .panel-cliente .pc-stars {
@@ -15798,7 +15765,7 @@ PROFESIONALES
     border: 0;
     border-radius: 10px;
     background: transparent;
-    color: #C9C2D4;
+    color: #a1a1aa;
     font-size: 23px;
     line-height: 1;
     cursor: pointer;
@@ -15807,24 +15774,24 @@ PROFESIONALES
 }
 
 .panel-cliente .pc-stars-row button:hover {
-    background: rgba(212, 175, 55, .12);
-    color: var(--pc-gold-deep);
+    background: #e4e4e7;
+    color: #09090b;
     transform: translateY(-2px);
 }
 
 .panel-cliente .pc-stars-row button.is-on {
-    color: var(--pc-gold);
+    color: #09090b;
 }
 
 .panel-cliente .pc-stars-value {
     margin-left: 8px;
-    color: var(--pc-muted);
+    color: #52525b;
     font-size: 11.5px;
 }
 
 .panel-cliente .pc-counter {
     align-self: flex-end;
-    color: #9a93a5;
+    color: #52525b;
     font-size: 10.5px;
 }
 
@@ -15833,9 +15800,9 @@ PROFESIONALES
     align-items: flex-start;
     gap: 11px;
     padding: 12px 14px;
-    border: 1px solid rgba(21, 128, 61, .22);
+    border: 1px solid #71717a;
     border-radius: 12px;
-    background: rgba(21, 128, 61, .07);
+    background: #f4f4f5;
 }
 
 .panel-cliente .pc-selected svg {
@@ -15843,13 +15810,13 @@ PROFESIONALES
     height: 16px;
     flex: none;
     margin-top: 1px;
-    color: #15803d;
+    color: #09090b;
     stroke-width: 2.2;
 }
 
 .panel-cliente .pc-selected strong {
     display: block;
-    color: var(--pc-plum);
+    color: #09090b;
     font-size: 12.5px;
     font-weight: 600;
 }
@@ -15858,7 +15825,7 @@ PROFESIONALES
 .panel-cliente .pc-selected small {
     display: block;
     margin-top: 2px;
-    color: var(--pc-muted);
+    color: #3f3f46;
     font-size: 11.5px;
     line-height: 1.5;
 }
@@ -15870,9 +15837,9 @@ PROFESIONALES
     justify-content: center;
     gap: 8px;
     padding: 12px 20px;
-    border: 1px solid var(--pc-plum);
+    border: 1px solid #09090b;
     border-radius: var(--radius-pill, 999px);
-    background: var(--pc-plum);
+    background: #09090b;
     color: #ffffff;
     font: inherit;
     font-size: 12.5px;
@@ -15884,10 +15851,10 @@ PROFESIONALES
 }
 
 .panel-cliente .pc-submit:hover:not(:disabled) {
-    border-color: var(--pc-gold-deep);
-    background: linear-gradient(135deg, var(--pc-gold-light), var(--pc-gold-deep));
-    color: #2B183F;
-    box-shadow: 0 10px 24px rgba(184, 144, 42, .28);
+    border-color: #27272a;
+    background: #27272a;
+    color: #ffffff;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .24);
     transform: translateY(-2px);
 }
 
@@ -15900,7 +15867,7 @@ PROFESIONALES
 
 .panel-cliente .pc-hint {
     margin: 0;
-    color: #9a93a5;
+    color: #52525b;
     font-size: 11px;
     line-height: 1.55;
     text-align: center;
@@ -15917,9 +15884,9 @@ PROFESIONALES
 
 .panel-cliente .pc-review {
     padding: 15px 16px;
-    border: 1px solid var(--pc-line-soft);
+    border: 1px solid #d4d4d8;
     border-radius: 14px;
-    background: #FCFBF8;
+    background: #f8f8f9;
 }
 
 .panel-cliente .pc-review-top {
@@ -15932,18 +15899,18 @@ PROFESIONALES
 }
 
 .panel-cliente .pc-review-stars {
-    color: var(--pc-gold);
+    color: #09090b;
     font-size: 13px;
     letter-spacing: .12em;
 }
 
 .panel-cliente .pc-review-stars i {
-    color: #DAD4E0;
+    color: #a1a1aa;
     font-style: normal;
 }
 
 .panel-cliente .pc-review time {
-    color: #9a93a5;
+    color: #52525b;
     font-size: 10.5px;
     letter-spacing: .06em;
     text-transform: uppercase;
@@ -15951,7 +15918,7 @@ PROFESIONALES
 
 .panel-cliente .pc-review p {
     margin: 0 0 10px;
-    color: #3c3448;
+    color: #18181b;
     font-size: 12.8px;
     line-height: 1.65;
     overflow-wrap: anywhere;
@@ -15962,8 +15929,8 @@ PROFESIONALES
     align-items: center;
     gap: 8px;
     padding-top: 9px;
-    border-top: 1px solid var(--pc-line-soft);
-    color: var(--pc-muted);
+    border-top: 1px solid #e4e4e7;
+    color: #52525b;
     font-size: 11.5px;
 }
 
@@ -15971,12 +15938,12 @@ PROFESIONALES
     width: 13px;
     height: 13px;
     flex: none;
-    color: var(--pc-gold-deep);
+    color: #09090b;
     stroke-width: 1.8;
 }
 
 .panel-cliente .pc-review-by strong {
-    color: var(--pc-plum);
+    color: #09090b;
     font-weight: 600;
 }
 
@@ -16000,7 +15967,7 @@ PROFESIONALES
         gap: 16px;
         padding: 18px 18px 16px;
         border-right: 0;
-        border-bottom: 1px solid rgba(212, 175, 55, 0.28);
+        border-bottom: 1px solid #27272a;
     }
 
     .panel-cliente .pc-rail-brand {
@@ -16029,9 +15996,13 @@ PROFESIONALES
         flex: 0 0 auto;
         min-height: 40px;
         padding: 9px 13px;
-        border: 1px solid rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.22);
         border-radius: var(--radius-pill, 999px);
         font-size: 12px;
+    }
+
+    .panel-cliente .pc-nav-item.is-active {
+        border-color: #ffffff;
     }
 
     .panel-cliente .pc-nav-item.is-active::before {
@@ -16188,7 +16159,6 @@ PROFESIONALES
         transition-duration: .01ms !important;
     }
 }
-
 /* ==========================================================================
    PANEL EMPLEADO · PRODUCTOS · PEDIDOS · CATÁLOGO · ACCESO ADMIN
    Paleta: blanco · gris (zinc) · negro. Mismos selectores de tu archivo.
@@ -20517,4 +20487,29 @@ PROFESIONALES
 .navbar a:focus-visible {
     outline: 2px solid #ffffff;
     outline-offset: 4px;
+}
+
+/* Imágenes de las tarjetas de servicios */
+.cita-servicio-imagen {
+  display: block;
+  width: 100%;
+  height: 105px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+/* Evitar que las imágenes se salgan de las tarjetas */
+.cita-detail-card,
+.cita-category-card {
+  overflow: hidden;
+}
+.cita-servicio-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 10px;
+  margin-bottom: 10px;
 }
