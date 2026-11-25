@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, m, useReducedMotion } from 'motion/react';
+import { CalendarDays, Package, ReceiptText, ShoppingBag } from 'lucide-react';
 import { API_ROOT } from '../lib/api';
 import RegistrarPago from './RegistrarPago';
 import ReportesAdmin from './ReportesAdmin';
@@ -38,6 +39,14 @@ export function Admin() {
     const reduceMotion = useReducedMotion();
     const { logout } = useSession();
     const [cerrandoSesion, setCerrandoSesion] = useState(false);
+    const productoCompraSeleccionado = productos.find((producto) => String(producto.id) === productoId);
+    const totalCompraEstimado = (Number(cantidad) || 0) * (Number(precio_compra) || 0);
+
+    const formatoMoneda = (valor) => new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        maximumFractionDigits: 0
+    }).format(Number(valor) || 0);
 
     async function cerrarSesion() {
         if (cerrandoSesion) return;
@@ -46,7 +55,7 @@ export function Admin() {
             await logout();
             navigate('/');
         } catch (error) {
-            SetMessage(error.message || 'No se pudo cerrar la sesión.');
+            SetMessage('No pudimos cerrar tu sesión. Inténtalo de nuevo.');
         } finally {
             setCerrandoSesion(false);
         }
@@ -71,7 +80,7 @@ export function Admin() {
             }
 
         } catch {
-            SetMessage('Error de conexion con el servidor');
+            SetMessage('No pudimos completar la solicitud. Revisa tu conexión e inténtalo de nuevo.');
         }
     }
 
@@ -94,7 +103,7 @@ export function Admin() {
             }
 
         } catch {
-            SetMessage('Error de conexion con el servidor');
+            SetMessage('No pudimos completar la solicitud. Revisa tu conexión e inténtalo de nuevo.');
         }
     }
 
@@ -118,7 +127,7 @@ export function Admin() {
             }
 
         } catch {
-            SetMessage('Error de conexion con el servidor');
+            SetMessage('No pudimos completar la solicitud. Revisa tu conexión e inténtalo de nuevo.');
         }
     }
 
@@ -152,7 +161,7 @@ export function Admin() {
             SetCantidadesDescontar((actuales) => ({ ...actuales, [producto.id]: '' }));
             SetMessage(data.message);
         } catch {
-            SetMessage('Error de conexión al descontar el stock.');
+            SetMessage('No pudimos actualizar las existencias. Inténtalo de nuevo.');
         } finally {
             SetProductoDescontando(null);
         }
@@ -195,7 +204,7 @@ export function Admin() {
             }
 
         } catch {
-            SetMessage('Error de conexion con el servidor');
+            SetMessage('No pudimos completar la solicitud. Revisa tu conexión e inténtalo de nuevo.');
         }
     }
 
@@ -214,7 +223,7 @@ export function Admin() {
                 SetMessage(data.message);
             }
         }catch{
-            SetMessage('Error de conexion con el servidor');
+            SetMessage('No pudimos completar la solicitud. Revisa tu conexión e inténtalo de nuevo.');
         } finally {
             SetCargandoHistorial(false);
         }
@@ -243,7 +252,7 @@ export function Admin() {
                 SetMessage(data.message || 'No se pudieron cargar los perfiles.');
             }
         } catch {
-            SetMessage('Error de conexión al cargar los perfiles.');
+            SetMessage('No pudimos cargar los perfiles. Inténtalo de nuevo.');
         } finally {
             SetCargandoPerfiles(false);
         }
@@ -268,7 +277,7 @@ export function Admin() {
                 SetMessage(data.message || 'No se pudo abrir el perfil.');
             }
         } catch {
-            SetMessage('Error de conexión al abrir el perfil.');
+            SetMessage('No pudimos abrir el perfil. Inténtalo de nuevo.');
         }
     }
 
@@ -315,38 +324,21 @@ export function Admin() {
 
                 <div className="admin-topbar-text">
                     <AnimatePresence mode="wait" initial={false}>
-                        {mostrarBienvenida ? (
-                            <m.div
-                                key="admin-greeting"
-                                className="admin-welcome-message"
-                                initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12, filter: 'blur(4px)' }}
-                                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                                exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -10, filter: 'blur(4px)' }}
-                                transition={{ duration: reduceMotion ? 0.2 : 0.45, ease: [0.22, 0.61, 0.36, 1] }}
-                            >
-                                <h1 className="admin-saludo">
-                                    Hola, {admin ? admin.nombre : 'Admin'}
-                                    <span className="admin-saludo-emoji">👋</span>
-                                </h1>
-                                <p className="admin-subtitulo">
-                                    Aquí tienes el resumen de tu inventario y operaciones.
-                                </p>
-                            </m.div>
-                        ) : (
-                            <m.div
-                                key="admin-workspace"
-                                className="admin-welcome-message"
-                                initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12, filter: 'blur(4px)' }}
-                                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                                exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -10, filter: 'blur(4px)' }}
-                                transition={{ duration: reduceMotion ? 0.2 : 0.45, ease: [0.22, 0.61, 0.36, 1] }}
-                            >
-                                <h1 className="admin-saludo">Tu espacio de gestión</h1>
-                                <p className="admin-subtitulo">
-                                    Administra inventario, perfiles y operaciones desde un solo lugar.
-                                </p>
-                            </m.div>
-                        )}
+                        <m.div
+                            key="admin-workspace"
+                            className="admin-welcome-message"
+                            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12, filter: 'blur(4px)' }}
+                            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                            transition={{ duration: reduceMotion ? 0.2 : 0.45, ease: [0.22, 0.61, 0.36, 1] }}
+                        >
+                            <h1 className="admin-saludo">
+                                Bienvenid@, {admin?.nombre || 'Admin'}
+                                <span className="admin-saludo-emoji" aria-hidden="true">👋</span>
+                            </h1>
+                            <p className="admin-subtitulo">
+                                Tu espacio de gestión para inventario, perfiles y operaciones.
+                            </p>
+                        </m.div>
                     </AnimatePresence>
 
                 </div>
@@ -379,6 +371,9 @@ export function Admin() {
                 )}
 
                 <Link className="admin-home-link" to="/">Página principal</Link>
+                <button className="admin-home-link" type="button" onClick={() => navigate('/actualizar-datos')}>
+                    Actualizar mis datos
+                </button>
                 <button
                     className="admin-logout-button"
                     type="button"
@@ -566,131 +561,56 @@ export function Admin() {
             </section>
 
             <section className="admin-panel admin-panel-compra">
-
                 <div className="admin-panel-head">
                     <h2 className="admin-panel-title">
-                        <span className="admin-panel-icon">
-                            🛒
-                        </span>
+                        <span className="admin-panel-icon"><ShoppingBag aria-hidden="true" /></span>
                         Realizar compra
                     </h2>
+                    <span className="admin-compra-etiqueta">Entrada de inventario</span>
                 </div>
 
-                <div>
-
-                    <form className="admin-form" onSubmit={handleSubmit}>
-
-                        <label className="admin-label" htmlFor="producto">
-                            Producto
-                        </label>
-
-                        <select
-                            id="producto"
-                            className="admin-input"
-                            value={productoId}
-                            onChange={(e) =>
-                                SetProductoId(e.target.value)
-                            }
-                            required
-                        >
-
-                            <option value="">
-                                Seleccione un producto
-                            </option>
-
-                            {productos.map((producto) => (
-                                <option
-                                    key={producto.id}
-                                    value={producto.id}
-                                >
-                                    {producto.nombre}
-                                </option>
-                            ))}
-
-                        </select>
-
-                        <label className="admin-label" htmlFor="fecha-compra">
-                            Fecha de compra
-                        </label>
-
-                        <input
-                            id="fecha-compra"
-                            className="admin-input"
-                            type="date"
-                            value={fecha}
-                            onChange={(e) =>
-                                SetFecha(e.target.value)
-                            }
-                            required
-                        />
-
-                        <div className="admin-form-fila">
-
-                            <div className="admin-form-col">
-
-                                <label className="admin-label" htmlFor="cantidad-compra">
-                                    Cantidad
-                                </label>
-
-                                <input
-                                    id="cantidad-compra"
-                                    className="admin-input"
-                                    type="number"
-                                    placeholder="Cantidad"
-                                    value={cantidad}
-                                    onChange={(e) =>
-                                        SetCantidad(e.target.value)
-                                    }
-                                    min="1"
-                                    required
-                                />
-
-                                <span className="admin-help">
-                                    Mínimo 1
-                                </span>
-
-                            </div>
-
-                            <div className="admin-form-col">
-
-                                <label className="admin-label" htmlFor="precio-compra">
-                                    Precio de compra
-                                </label>
-
-                                <input
-                                    id="precio-compra"
-                                    className="admin-input"
-                                    type="number"
-                                    placeholder="Precio de compra"
-                                    value={precio_compra}
-                                    onChange={(e) =>
-                                        SetPrecioCompra(e.target.value)
-                                    }
-                                    min="0"
-                                    required
-                                />
-
-                                <span className="admin-help">
-                                    Mínimo 0
-                                </span>
-
-                            </div>
-
+                <div className="admin-compra-layout">
+                    <form className="admin-form admin-compra-form" onSubmit={handleSubmit}>
+                        <div className="admin-compra-campo admin-compra-producto">
+                            <label className="admin-label" htmlFor="producto">Producto</label>
+                            <select id="producto" className="admin-input" value={productoId} onChange={(e) => SetProductoId(e.target.value)} required>
+                                <option value="">Selecciona un producto</option>
+                                {productos.map((producto) => <option key={producto.id} value={producto.id}>{producto.nombre}</option>)}
+                            </select>
                         </div>
-
-                        <button
-                            className="admin-btn-comprar"
-                            type="submit"
-                        >
-                            Registrar compra
+                        <div className="admin-compra-campo">
+                            <label className="admin-label" htmlFor="fecha-compra">Fecha de compra</label>
+                            <div className="admin-compra-input-icono">
+                                <CalendarDays size={17} aria-hidden="true" />
+                                <input id="fecha-compra" className="admin-input" type="date" value={fecha} onChange={(e) => SetFecha(e.target.value)} required />
+                            </div>
+                        </div>
+                        <div className="admin-compra-campo">
+                            <label className="admin-label" htmlFor="cantidad-compra">Unidades</label>
+                            <input id="cantidad-compra" className="admin-input" type="number" placeholder="0" value={cantidad} onChange={(e) => SetCantidad(e.target.value)} min="1" step="1" required />
+                            <span className="admin-help">Cantidad recibida</span>
+                        </div>
+                        <div className="admin-compra-campo">
+                            <label className="admin-label" htmlFor="precio-compra">Costo por unidad</label>
+                            <div className="admin-compra-prefijo"><span>$</span><input id="precio-compra" className="admin-input" type="number" placeholder="0" value={precio_compra} onChange={(e) => SetPrecioCompra(e.target.value)} min="0" step="1" required /></div>
+                            <span className="admin-help">Valor en pesos colombianos</span>
+                        </div>
+                        <button className="admin-btn-comprar" type="submit" disabled={!productos.length}>
+                            <ReceiptText size={17} aria-hidden="true" /> Registrar compra
                         </button>
-
                     </form>
-                    
 
+                    <aside className="admin-compra-resumen" aria-live="polite">
+                        <div className="admin-compra-resumen-icono"><Package size={19} aria-hidden="true" /></div>
+                        <div className="admin-compra-resumen-titulo"><span>Resumen de compra</span><small>El inventario se actualizará al registrar</small></div>
+                        <div className="admin-compra-resumen-producto">
+                            <span>{productoCompraSeleccionado?.nombre || 'Selecciona un producto'}</span>
+                            <small>{productoCompraSeleccionado ? `${cantidad || 0} unidades · ${formatoMoneda(precio_compra)} c/u` : 'Elige un artículo del catálogo'}</small>
+                        </div>
+                        {productoCompraSeleccionado && <div className="admin-compra-stock">Stock actual <strong>{productoCompraSeleccionado.stock} unidades</strong></div>}
+                        <div className="admin-compra-total"><span>Total estimado</span><strong>{formatoMoneda(totalCompraEstimado)}</strong></div>
+                    </aside>
                 </div>
-
-
             </section>
 
             </div>
