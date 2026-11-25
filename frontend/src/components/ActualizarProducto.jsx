@@ -38,7 +38,7 @@ export  function ActualizarProducto() {
                 SetMessage(data.message);
             }
         } catch (error) {
-            SetMessage('Error de conexion con el servidor');
+            SetMessage('No pudimos guardar el producto. Revisa tu conexión e inténtalo de nuevo.');
         }
     }
 
