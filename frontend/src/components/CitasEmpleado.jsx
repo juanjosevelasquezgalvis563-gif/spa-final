@@ -32,6 +32,9 @@ function formatearDuracion(inicio, fin = Date.now(), mostrarSegundos = false) {
 export function CitasEmpleado() {
     const [empleado, SetEmpleado] = useState([]);
     const [message, SetMessage] = useState("");
+    const [citaPrecioPendiente, setCitaPrecioPendiente] = useState(null);
+    const [precioAcordado, setPrecioAcordado] = useState("");
+    const [guardandoFinalizacion, setGuardandoFinalizacion] = useState(false);
     const [cargando, SetCargando] = useState(true);
     const [errorCarga, SetErrorCarga] = useState(false);
     const [ahora, setAhora] = useState(Date.now());
@@ -73,7 +76,7 @@ export function CitasEmpleado() {
             if (!Array.isArray(data)) {
                 SetErrorCarga(true);
                 SetEmpleado([]);
-                SetMessage("La respuesta del servidor no contiene una lista de citas.");
+                SetMessage("No pudimos cargar tus citas. Inténtalo de nuevo.");
                 return;
             }
 
@@ -81,7 +84,7 @@ export function CitasEmpleado() {
         } catch (error) {
             SetErrorCarga(true);
             SetEmpleado([]);
-            SetMessage('Error de conexión con el servidor');
+                SetMessage('No pudimos completar la solicitud. Revisa tu conexión e inténtalo de nuevo.');
         } finally {
             SetCargando(false);
         }
@@ -130,7 +133,7 @@ export function CitasEmpleado() {
             }
 
         } catch (error) {
-            SetMessage('Error de conexión con el servidor');
+            SetMessage('No pudimos completar la solicitud. Revisa tu conexión e inténtalo de nuevo.');
         }
     }
 
@@ -154,24 +157,33 @@ export function CitasEmpleado() {
                 SetMessage(data.message || 'No se pudo comenzar el servicio.');
             }
         } catch (error) {
-            SetMessage('Error de conexión con el servidor');
+            SetMessage('No pudimos completar la solicitud. Revisa tu conexión e inténtalo de nuevo.');
         }
     }
 
-    async function finalizar(id) {
+    async function finalizar(id, precioServicio) {
+        if (guardandoFinalizacion) return;
+        setGuardandoFinalizacion(true);
         try {
+            const opciones = {
+                method: "PUT",
+                credentials: 'include',
+            };
+            if (precioServicio != null) {
+                opciones.headers = { "Content-Type": "application/json" };
+                opciones.body = JSON.stringify({ precio_servicio: precioServicio });
+            }
             const response = await fetch(
                 `${API_ROOT}/inser/empleado/finalizar/${id}`,
-                {
-                    method: "PUT",
-                    credentials: 'include',
-                }
+                opciones
             );
 
             const data = await response.json();
 
             if (response.ok) {
                 SetMessage(data.message);
+                setCitaPrecioPendiente(null);
+                setPrecioAcordado("");
                 await obtenerEmpleado();
                 const parametrosFinalizadas = new URLSearchParams({ filtro: 'finalizadas' });
                 if (perfilId) parametrosFinalizadas.set('perfilId', perfilId);
@@ -179,9 +191,31 @@ export function CitasEmpleado() {
             } else {
                 SetMessage(data.message);
             }
-        } catch (error) {
-            SetMessage('Error de conexión con el servidor');
+        } catch {
+            SetMessage('No pudimos completar la solicitud. Revisa tu conexión e inténtalo de nuevo.');
+        } finally {
+            setGuardandoFinalizacion(false);
         }
+    }
+
+    function solicitarPrecioParaFinalizar(cita) {
+        const precioFijo = Number(cita.Servicio?.precio);
+        if (Number.isFinite(precioFijo) && precioFijo > 0) {
+            void finalizar(cita.id);
+            return;
+        }
+        setCitaPrecioPendiente(cita);
+        setPrecioAcordado("");
+    }
+
+    function guardarPrecioYFinalizar(event) {
+        event.preventDefault();
+        const precio = Number(precioAcordado);
+        if (!Number.isFinite(precio) || precio <= 0) {
+            SetMessage("Ingresa el precio acordado con el cliente.");
+            return;
+        }
+        void finalizar(citaPrecioPendiente.id, Math.round(precio));
     }
 
     async function cancelar(id) {
@@ -204,7 +238,7 @@ export function CitasEmpleado() {
             }
 
         } catch (error) {
-            SetMessage('Error de conexión con el servidor');
+            SetMessage('No pudimos completar la solicitud. Revisa tu conexión e inténtalo de nuevo.');
         }
     }
 
@@ -295,7 +329,7 @@ export function CitasEmpleado() {
                         </button>
                         <button
                             className="btn-finalizar"
-                            onClick={() => finalizar(citas.id)}
+                            onClick={() => solicitarPrecioParaFinalizar(citas)}
                             disabled={citas.estado?.toLowerCase() !== 'en_curso'}
                         >
                             Finalizar
@@ -347,6 +381,37 @@ export function CitasEmpleado() {
             {message && (
                 <div className="mensaje-cita" role="status" aria-live="polite">
                     {message}
+                </div>
+            )}
+
+            {citaPrecioPendiente && (
+                <div className="cita-precio-modal-fondo">
+                    <section className="cita-precio-modal" role="dialog" aria-modal="true" aria-labelledby="cita-precio-modal-titulo">
+                        <span className="cita-precio-modal-etiqueta">Precio del servicio</span>
+                        <h2 id="cita-precio-modal-titulo">{citaPrecioPendiente.Servicio?.nombre}</h2>
+                        <p>Este servicio no tiene un precio fijo. Acuerda el valor con el cliente en el salón según el estado de su cabello o las necesidades del servicio y regístralo aquí para finalizar la cita.</p>
+                        <form onSubmit={guardarPrecioYFinalizar}>
+                            <label htmlFor="cita-precio-acordado">Precio acordado</label>
+                            <div className="cita-precio-modal-input">
+                                <span>$</span>
+                                <input
+                                    id="cita-precio-acordado"
+                                    type="number"
+                                    min="1"
+                                    step="1"
+                                    value={precioAcordado}
+                                    onChange={(event) => setPrecioAcordado(event.target.value)}
+                                    placeholder="0"
+                                    autoFocus
+                                    required
+                                />
+                            </div>
+                            <div className="cita-precio-modal-acciones">
+                                <button type="button" onClick={() => setCitaPrecioPendiente(null)} disabled={guardandoFinalizacion}>Volver a la cita</button>
+                                <button type="submit" disabled={guardandoFinalizacion}>{guardandoFinalizacion ? "Guardando…" : "Guardar precio y finalizar"}</button>
+                            </div>
+                        </form>
+                    </section>
                 </div>
             )}
 
