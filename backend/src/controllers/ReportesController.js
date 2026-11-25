@@ -174,7 +174,7 @@ export async function enviarReporteAhora(req, res) {
         return res.json({ message: "Reporte enviado correctamente.", reporte: datos });
     } catch (error) {
         console.error("Error al enviar el reporte:", error);
-        return res.status(500).json({ message: `No se pudo enviar el reporte: ${error.message}` });
+        return res.status(500).json({ message: "No pudimos enviar el reporte. Inténtalo de nuevo más tarde." });
     }
 }
 
