@@ -15,3 +15,4 @@ router.post("/mensual/generar", generarReporte);
 router.post("/mensual/enviar", enviarReporteAhora);
 
 export default router;
+
