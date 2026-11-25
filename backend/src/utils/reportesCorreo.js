@@ -101,3 +101,4 @@ export async function enviarReportePorCorreo(reporte, { destinatarios, estricto 
     console.log("[reportes] Correo aceptado por SMTP:", resultado.messageId);
     return true;
 }
+
