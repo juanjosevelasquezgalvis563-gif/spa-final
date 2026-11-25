@@ -114,7 +114,7 @@ export function ResetPassword() {
       }, 2000);
     } catch (error) {
       console.error(error);
-      showMessage("Error al conectar con el servidor");
+      showMessage("No pudimos cambiar tu contraseña. Revisa tu conexión e inténtalo de nuevo.");
     } finally {
       setLoading(false);
     }
