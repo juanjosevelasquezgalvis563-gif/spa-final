@@ -51,7 +51,7 @@ export function ForgotPassword() {
       setEmail("");
     } catch (error) {
       console.error(error);
-      showMessage("Error al conectar con el servidor");
+      showMessage("No pudimos enviar el enlace. Revisa tu conexión e inténtalo de nuevo.");
     } finally {
       setLoading(false);
     }
