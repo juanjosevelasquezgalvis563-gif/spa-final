@@ -68,7 +68,7 @@ export function Reprogramar() {
         SetMessage(data.message || "No se pudo reprogramar la cita.");
       }
     } catch {
-      SetMessage('Error de conexion con el servidor');
+      SetMessage('No pudimos reprogramar la cita. Revisa tu conexión e inténtalo de nuevo.');
     }
   }
 
