@@ -63,7 +63,7 @@ export async function login(req, res) {
 
     } catch (error) {
         return res.status(500).json({
-            message: error.message
+            message: "No pudimos iniciar sesión. Inténtalo de nuevo más tarde."
         });
     }
 }
