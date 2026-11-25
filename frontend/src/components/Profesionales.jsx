@@ -4,13 +4,7 @@ import empleado3 from "../assets/empleado3.jpg";
 
 
 const profesionales = [
-  {
-    nombre: "VALENTINA ALVAREZ",
-    cargo: "MANICURISTA",
-    descripcion:
-      "apasionada por el arte, la belleza y el cuidado de las uñas. Mi objetivo es resaltar la belleza de tus manos a través de diseños únicos, acabados impecables y servicios realizados con dedicación, creatividad y atención a cada detalle.",
-    imagen: empleado1,
-  },
+  
   {
     nombre: "MELANY ARANGO",
     cargo: "MANICURISTA",
@@ -30,7 +24,7 @@ const profesionales = [
     cargo: "ESTILISTA",
     descripcion:
       "La belleza está en los detalles y cada persona merece un estilo que la haga sentir única. Como estilista, me encanta crear looks modernos, innovadores y llenos de personalidad.",
-    imagen: empleado3,
+    imagen: empleado1,
   },
    {
     nombre: "JENNIFER CORREA",
