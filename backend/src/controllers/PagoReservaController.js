@@ -78,33 +78,6 @@ function obtenerUrlCheckout(pagoReserva) {
     return checkoutUrl.toString();
 }
 
-async function restaurarAbonos(pagoReserva, transaction) {
-    const usos = await AbonoReservaUso.findAll({
-        where: {
-            pago_reserva_id: pagoReserva.id,
-            restaurado_en: null
-        },
-        transaction,
-        lock: transaction.LOCK.UPDATE
-    });
-
-    for (const uso of usos) {
-        const abono = await AbonoReserva.findByPk(uso.abono_id, {
-            transaction,
-            lock: transaction.LOCK.UPDATE
-        });
-        if (!abono) {
-            throw new Error(`No se encontró el abono ${uso.abono_id} para restaurar.`);
-        }
-
-        abono.saldo += uso.monto;
-        abono.updated_at = new Date();
-        await abono.save({ transaction });
-        uso.restaurado_en = new Date();
-        await uso.save({ transaction });
-    }
-}
-
 async function expirarReservasUsuario(usuarioId, transaction) {
     const ahora = new Date();
     const reservasExpiradas = await PagoReserva.findAll({
@@ -121,43 +94,8 @@ async function expirarReservasUsuario(usuarioId, transaction) {
         reserva.estado = "expirado";
         reserva.updated_at = ahora;
         await reserva.save({ transaction });
-        await restaurarAbonos(reserva, transaction);
     }
 }
-
-async function crearAbonoPorPago(pagoReserva, transaction) {
-    if (pagoReserva.monto_pagado <= 0) return;
-
-    await AbonoReserva.findOrCreate({
-        where: { pago_reserva_id: pagoReserva.id },
-        defaults: {
-            usuario_id: pagoReserva.usuario_id,
-            pago_reserva_id: pagoReserva.id,
-            monto_original: pagoReserva.monto_pagado,
-            saldo: pagoReserva.monto_pagado,
-            created_at: new Date(),
-            updated_at: new Date()
-        },
-        transaction
-    });
-}
-
-async function crearAbonoPorCancelacion(cita, transaction) {
-    const pagoReserva = await PagoReserva.findOne({
-        where: {
-            cita_id: cita.id,
-            estado: "aprobado"
-        },
-        transaction,
-        lock: transaction.LOCK.UPDATE
-    });
-
-    if (!pagoReserva) return;
-
-    await crearAbonoPorPago(pagoReserva, transaction);
-    await restaurarAbonos(pagoReserva, transaction);
-}
-
 
 async function crearCitaDesdeReserva(pagoReserva, transaction) {
     let precioOriginal = Number(pagoReserva.precio_original);
@@ -397,24 +335,6 @@ export async function crearPagoReserva(req, res) {
                 return { error: "Este horario está reservado mientras se completa otro pago. Elige otro horario.", status: 409 };
             }
 
-            const abonos = tipoPago === "completo" ? [] : await AbonoReserva.findAll({
-                where: {
-                    usuario_id: usuarioId,
-                    saldo: { [Op.gt]: 0 }
-                },
-                order: [["id", "ASC"]],
-                transaction,
-                lock: transaction.LOCK.UPDATE
-            });
-            let creditoAplicado = 0;
-            const usosAbono = [];
-            for (const abono of abonos) {
-                const aplicar = Math.min(abono.saldo, montoReserva - creditoAplicado);
-                if (aplicar <= 0) break;
-                creditoAplicado += aplicar;
-                usosAbono.push({ abono, monto: aplicar });
-            }
-
             const pagoReserva = await PagoReserva.create({
                 usuario_id: usuarioId,
                 empleado_id: empleadoId,
@@ -426,28 +346,15 @@ export async function crearPagoReserva(req, res) {
                 descuento_valor: descuentoValor,
                 puntos_canje: puntosCanje,
                 monto_reserva: montoReserva,
-                monto_credito: creditoAplicado,
-                monto_pagado: montoReserva - creditoAplicado,
+                monto_credito: 0,
+                monto_pagado: montoReserva,
                 referencia: `JC${randomUUID().replace(/-/g, "").toUpperCase()}`,
                 
-                estado: (simulado || creditoAplicado === montoReserva) ? "aprobado" : "pendiente",
+                estado: simulado ? "aprobado" : "pendiente",
                 expira_en: expiraEn,
                 created_at: ahora,
                 updated_at: ahora
             }, { transaction });
-
-            for (const { abono, monto } of usosAbono) {
-                abono.saldo -= monto;
-                abono.updated_at = ahora;
-                await abono.save({ transaction });
-                await AbonoReservaUso.create({
-                    abono_id: abono.id,
-                    pago_reserva_id: pagoReserva.id,
-                    monto,
-                    restaurado_en: null,
-                    created_at: ahora
-                }, { transaction });
-            }
 
             if (pagoReserva.estado === "aprobado") {
                 const cita = await crearCitaDesdeReserva(pagoReserva, transaction);
@@ -467,7 +374,7 @@ export async function crearPagoReserva(req, res) {
             return res.status(201).json({
                 message: simulado
                     ? "Reserva pagada (pago simulado en modo de pruebas). Tu cita quedó pendiente de confirmación del profesional."
-                    : "Tu reserva quedó pagada con tu abono. Tu cita quedó pendiente de confirmación del profesional.",
+                    : "Tu reserva quedó pagada. Tu cita quedó pendiente de confirmación del profesional.",
                 referencia: pagoReserva.referencia,
                 estado: pagoReserva.estado,
                 monto_reserva: pagoReserva.monto_reserva,
@@ -537,7 +444,6 @@ export async function obtenerEstadoPagoReserva(req, res) {
                     pagoBloqueado.estado = "expirado";
                     pagoBloqueado.updated_at = new Date();
                     await pagoBloqueado.save({ transaction });
-                    await restaurarAbonos(pagoBloqueado, transaction);
                 }
             });
             await pagoReserva.reload();
@@ -569,19 +475,6 @@ export async function obtenerEstadoPagoReserva(req, res) {
         return res.status(500).json({ message: "No se pudo consultar el estado de la reserva." });
     }
 }
-
-export async function obtenerAbonosReserva(req, res) {
-    try {
-        const saldo = await AbonoReserva.sum("saldo", {
-            where: { usuario_id: req.user.id }
-        });
-        return res.json({ saldo_disponible: Number(saldo) || 0 });
-    } catch (error) {
-        console.error("No se pudo consultar el saldo de abonos:", error);
-        return res.status(500).json({ message: "No se pudo consultar el saldo disponible." });
-    }
-}
-
 
 export async function recibirEventoWompi(req, res) {
 
@@ -666,7 +559,6 @@ export async function recibirEventoWompi(req, res) {
                 if (pagoReserva.estado === "pendiente") {
                     pagoReserva.estado = nuevoEstado;
                     await pagoReserva.save({ transaction });
-                    await restaurarAbonos(pagoReserva, transaction);
                 }
                 return;
             }
@@ -698,10 +590,7 @@ export async function recibirEventoWompi(req, res) {
                 pagoReserva.estado = "aprobado_abono";
                 await pagoReserva.save({ transaction });
 
-                await crearAbonoPorPago(pagoReserva, transaction);
-                await restaurarAbonos(pagoReserva, transaction);
-
-                console.log("Pago aprobado después del vencimiento. Convertido en abono.");
+                console.log("Pago aprobado después del vencimiento; requiere atención manual.");
                 return;
             }
 
@@ -719,10 +608,7 @@ export async function recibirEventoWompi(req, res) {
                 pagoReserva.estado = "aprobado_abono";
                 await pagoReserva.save({ transaction });
 
-                await crearAbonoPorPago(pagoReserva, transaction);
-                await restaurarAbonos(pagoReserva, transaction);
-
-                console.log("Empleado no disponible. Pago convertido en abono.");
+                console.log("Empleado no disponible; el pago requiere atención manual.");
                 return;
             }
 
@@ -757,10 +643,7 @@ export async function recibirEventoWompi(req, res) {
                 pagoReserva.estado = "aprobado_abono";
                 await pagoReserva.save({ transaction });
 
-                await crearAbonoPorPago(pagoReserva, transaction);
-                await restaurarAbonos(pagoReserva, transaction);
-
-                console.log("Horario ocupado. Pago convertido en abono.");
+                console.log("Horario ocupado; el pago requiere atención manual.");
                 return;
             }
 
@@ -790,6 +673,3 @@ export async function recibirEventoWompi(req, res) {
 }
 
 
-export async function acreditarReservaCancelada(cita, transaction) {
-    await crearAbonoPorCancelacion(cita, transaction);
-}
