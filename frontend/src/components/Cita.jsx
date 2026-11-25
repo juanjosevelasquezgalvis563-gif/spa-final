@@ -2,6 +2,50 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Award } from "lucide-react";
 import { API_ROOT } from "../lib/api";
+import imagenMaquillaje from "../assets/servicio-maquillaje-social.jpeg";
+import imagenMaquillajeSinPestanas from "../assets/servicio-maquillaje-social-sin-pestanas.jpeg";
+import imagenLimpiezaFacial from "../assets/servicio-limpieza-facial.jpeg";
+import imagenDepilacionCejas from "../assets/servicio-depilacion-hilo-cejas.jpeg";
+import imagenDepilacionBigote from "../assets/servicio-depilacion-hilo-bigote.jpeg";
+import imagenCepillados from "../assets/servicio-cepillados.jpeg";
+import imagenLiftingPestanas from "../assets/servicio-lifting-pestanas.jpeg";
+import imagenLaminadoCejas from "../assets/servicio-laminado-cejas.jpeg";
+import imagenCorteMujer from "../assets/servicio-corte-mujer.jpeg";
+import imagenPorcelanizacion from "../assets/servicio-porcelanizacion-facial.jpeg";
+import imagenBalayage from "../assets/servicio-balayage.jpeg";
+import imagenTintura from "../assets/servicio-tintura-directa.jpeg";
+import imagenKeratina from "../assets/servicio-keratina-organica.jpeg";
+import imagenReconexion from "../assets/servicio-reconexion-molecular.jpeg";
+import imagenHidratacion from "../assets/servicio-terapia-hidratacion.jpeg";
+
+const imagenesDeServicios = [
+  { coincide: ["maquillaje social sin pestanas", "sin pestanas"], imagen: imagenMaquillajeSinPestanas, nombre: "Maquillaje social sin pestañas" },
+  { coincide: ["limpieza facial"], imagen: imagenLimpiezaFacial, nombre: "Limpieza facial" },
+  { coincide: ["depilacion", "hilo", "cejas"], imagen: imagenDepilacionCejas, nombre: "Depilación con hilo de cejas" },
+  { coincide: ["depilacion", "hilo", "bigote"], imagen: imagenDepilacionBigote, nombre: "Depilación con hilo de bigote" },
+  { coincide: ["cepillado"], imagen: imagenCepillados, nombre: "Cepillados" },
+  { coincide: ["lifting", "pestanas"], imagen: imagenLiftingPestanas, nombre: "Lifting de pestañas" },
+  { coincide: ["laminado", "cejas"], imagen: imagenLaminadoCejas, nombre: "Laminado de cejas" },
+  { coincide: ["corte", "mujer"], imagen: imagenCorteMujer, nombre: "Corte de mujer" },
+  { coincide: ["porcelanizacion", "facial"], imagen: imagenPorcelanizacion, nombre: "Porcelanización facial" },
+  { coincide: ["balayage"], imagen: imagenBalayage, nombre: "Balayage" },
+  { coincide: ["tintura directa"], imagen: imagenTintura, nombre: "Tintura directa" },
+  { coincide: ["keratina"], imagen: imagenKeratina, nombre: "Keratina orgánica" },
+  { coincide: ["reconexion molecular"], imagen: imagenReconexion, nombre: "Reconexión molecular" },
+  { coincide: ["terapia", "hidratacion"], imagen: imagenHidratacion, nombre: "Terapia de hidratación" },
+  { coincide: ["maquillaje social", "maquillaje"], imagen: imagenMaquillaje, nombre: "Maquillaje social" },
+];
+
+function imagenParaServicio(nombre = "") {
+  const nombreNormalizado = nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  if ((nombreNormalizado.includes("limpieza") || nombreNormalizado.includes("facial")) && !nombreNormalizado.includes("porcelanizacion")) {
+    return { imagen: imagenLimpiezaFacial, nombre: "Limpieza facial" };
+  }
+  if (nombreNormalizado.includes("recon") || nombreNormalizado.includes("molecular")) {
+    return { imagen: imagenReconexion, nombre: "Reconexión molecular" };
+  }
+  return imagenesDeServicios.find(({ coincide }) => coincide.every((parte) => nombreNormalizado.includes(parte))) || null;
+}
 
 function formatoPrecio(valor) {
   return `$${(Number(valor) || 0).toLocaleString("es-CO")}`;
@@ -35,7 +79,9 @@ export function Cita() {
   const servicioSeleccionado = servicios.find(
     (servicio) => String(servicio.id) === String(servicioId)
   );
-  const precioServicio = Math.round(Number(servicioSeleccionado?.precio) || 0);
+  const precioFijoServicio = Number(servicioSeleccionado?.precio);
+  const tienePrecioFijo = Number.isFinite(precioFijoServicio) && precioFijoServicio > 0;
+  const precioServicio = tienePrecioFijo ? Math.round(precioFijoServicio) : 0;
 
   // Descuento por puntos: se aplica el nivel más alto que el cliente tenga disponible.
   const nivelDescuento = fidelizacion.niveles.find(
@@ -110,6 +156,17 @@ export function Cita() {
         throw new Error(data.message || "No se pudo iniciar el pago de la reserva.");
       }
 
+      if (data.estado === "sin_pago") {
+        setResultadoPago(data);
+        SetFecha("");
+        SetHora("");
+        SetEmpleadoId("");
+        SetServicioId("");
+        setUsarDescuento(false);
+        setTipoPagoReserva("reserva");
+        return;
+      }
+
       if (data.checkout_url) {
         window.location.assign(data.checkout_url);
         return;
@@ -127,9 +184,9 @@ export function Cita() {
         return;
       }
 
-      throw new Error("La respuesta del servidor no contiene el enlace de pago.");
-    } catch (error) {
-      SetMessage(error.message || "Error de conexión al iniciar el pago.");
+      throw new Error("No pudimos abrir la opción de pago. Inténtalo de nuevo.");
+    } catch {
+      SetMessage("No pudimos iniciar el pago. Revisa tu conexión e inténtalo de nuevo.");
     } finally {
       setReservando(false);
     }
@@ -158,7 +215,7 @@ export function Cita() {
       }
 
     } catch {
-      SetMessage('Error de conexion con el servidor');
+      SetMessage('No pudimos cargar los servicios. Revisa tu conexión e inténtalo de nuevo.');
     } finally {
       SetCargandoServicios(false);
     }
@@ -202,7 +259,7 @@ async function obtenerEmpleados(servicioActual) {
     console.error("Error al cargar empleados:", error);
     SetEmpleados([]);
     SetEmpleadoId("");
-    SetMessage(error.message || "Error al cargar profesionales.");
+    SetMessage("No pudimos cargar la lista de profesionales. Inténtalo de nuevo.");
   }
 }
 
@@ -258,8 +315,8 @@ async function obtenerEmpleados(servicioActual) {
           // Los puntos del descuento se descuentan al aprobarse la reserva.
           void cargarFidelizacion();
         }
-      } catch (error) {
-        if (vigente) SetMessage(error.message || "No se pudo consultar el estado del pago.");
+      } catch {
+        if (vigente) SetMessage("No pudimos consultar el estado del pago. Inténtalo de nuevo.");
       }
     }
 
@@ -295,6 +352,9 @@ async function obtenerEmpleados(servicioActual) {
 
   const renderServicio = (servicio) => {
     const seleccionado = servicioId !== "" && Number(servicio.id) === Number(servicioId);
+    const imagenServicio = imagenParaServicio(servicio.nombre);
+    const precioServicio = Number(servicio.precio);
+    const servicioConPrecioFijo = Number.isFinite(precioServicio) && precioServicio > 0;
 
     return (
       <button
@@ -304,14 +364,19 @@ async function obtenerEmpleados(servicioActual) {
         aria-pressed={seleccionado}
         onClick={() => SetServicioId(String(servicio.id))}
       >
+        {imagenServicio && (
+          <span className="servicio-media cita-service-art">
+            <img className="servicio-image cita-service-art-image" src={imagenServicio.imagen} alt={imagenServicio.nombre} loading="lazy" />
+          </span>
+        )}
         <span className="servicio-info">
           <strong className={seleccionado ? "servicio-nombre-seleccionado" : ""}>
             {servicio.nombre}
           </strong>
-          <span className="cita-servicio-precio">
-            {servicio.precio != null && servicio.precio !== ""
-              ? `$${Number(servicio.precio).toLocaleString("es-CO")}`
-              : ""}
+          <span className={`cita-servicio-precio${servicioConPrecioFijo ? "" : " cita-servicio-precio-variable"}`}>
+            {servicioConPrecioFijo
+              ? `$${Math.round(precioServicio).toLocaleString("es-CO")}`
+              : "Precio a definir en el salón"}
           </span>
           <span className="cita-seleccionar-servicio">
             Seleccionar
@@ -328,7 +393,7 @@ async function obtenerEmpleados(servicioActual) {
 
         <span className="cita-eyebrow">
           <span className="cita-eyebrow-dot" />
-          Reserva en línea
+          {servicioSeleccionado && !tienePrecioFijo ? "Reserva de cita" : "Reserva en línea"}
         </span>
 
         <h1 className="cita-title">
@@ -336,10 +401,9 @@ async function obtenerEmpleados(servicioActual) {
         </h1>
 
         <p className="cita-subtitle">
-          Reserva tu cita pagando el 20 % del servicio. Tu reserva queda pagada
-          cuando Wompi aprueba el pago y la cita queda confirmada cuando el
-          profesional la acepta; te avisaremos por correo. El saldo se paga en
-          el salón al finalizar.
+          {servicioSeleccionado && !tienePrecioFijo
+            ? "El precio de este servicio se acordará en el salón según el estado de tu cabello. Puedes reservar tu cita sin pagar ahora."
+            : "Para servicios con precio fijo, reserva pagando el 20 %. Tu reserva queda pagada cuando se apruebe el pago y la cita queda confirmada cuando el profesional la acepta; te avisaremos por correo. El saldo se paga en el salón al finalizar."}
         </p>
 
       </div>
@@ -352,6 +416,7 @@ async function obtenerEmpleados(servicioActual) {
         >
           
           <strong>
+            {resultadoPago.estado === "sin_pago" && "Cita reservada"}
             {resultadoPago.estado === "pendiente" && "Verificando el pago de tu reserva"}
             {resultadoPago.estado === "aprobado" && "Pago aprobado"}
             {resultadoPago.estado === "aprobado_abono" && "Pago recibido; la cita necesita revisión"}
@@ -361,6 +426,7 @@ async function obtenerEmpleados(servicioActual) {
             {resultadoPago.estado === "expirado" && "La reserva de horario venció"}
           </strong>
           <p>
+            {resultadoPago.estado === "sin_pago" && resultadoPago.message}
             {resultadoPago.estado === "pendiente" && "Estamos esperando la confirmación segura de Wompi."}
             {resultadoPago.estado === "aprobado" && `Pago en línea recibido: ${formatoPrecio(resultadoPago.monto_pagado)}.${Number(resultadoPago.monto_credito) > 0 ? ` Crédito aplicado: ${formatoPrecio(resultadoPago.monto_credito)}.` : ""}${Number(resultadoPago.descuento_valor) > 0 ? ` Descuento aplicado: ${formatoPrecio(resultadoPago.descuento_valor)}.` : ""} ${Number(resultadoPago.saldo_pendiente) > 0 ? `Saldo que pagarás en el salón: ${formatoPrecio(resultadoPago.saldo_pendiente)}.` : "El servicio quedó pagado por completo en línea."} Tu cita está pendiente de confirmación del profesional; te avisaremos por correo cuando la confirme.`}
             {resultadoPago.estado === "aprobado_abono" && "El pago fue recibido, pero no se pudo confirmar la cita automáticamente. Contacta al salón para resolverlo."}
@@ -457,11 +523,13 @@ async function obtenerEmpleados(servicioActual) {
               >
                 Cambiar servicio
               </button>
-              <span className="cita-form-kicker">Información de reserva</span>
-              <h2 className="cita-form-titulo">Completa tu cita</h2>
-              <p className="cita-form-desc">
-                Servicio seleccionado: <strong>{servicioSeleccionado.nombre}</strong>
-              </p>
+              <div className="cita-form-intro">
+                <span className="cita-form-kicker">Información de reserva</span>
+                <h2 className="cita-form-titulo">Completa tu cita</h2>
+                <p className="cita-form-desc">
+                  Servicio seleccionado: <strong>{servicioSeleccionado.nombre}</strong>
+                </p>
+              </div>
 
               {descuentoPotencial > 0 && (
                 <section className="cita-opcion-descuento">
@@ -493,103 +561,122 @@ async function obtenerEmpleados(servicioActual) {
                   </p>
                 </section>
               )}
-
-              <div className="cita-reserva-resumen">
-                <div className="cita-reserva-servicio">
-                  <span>Precio del servicio</span>
-                  <strong>{formatoPrecio(precioServicio)}</strong>
-                </div>
-                <div className="cita-reserva-lineas">
-                  {descuentoAplicado > 0 && (
-                    <>
-                      <div className="cita-linea-descuento">
-                        <span>Descuento por fidelización ({nivelDescuento.porcentaje} %)</span>
-                        <strong className="cita-descuento-valor">−{formatoPrecio(descuentoAplicado)}</strong>
-                      </div>
-                      <div className="cita-linea-precio-con-descuento">
-                        <span>Precio con descuento aplicado</span>
-                        <strong>{formatoPrecio(precioConDescuento)}</strong>
-                      </div>
-                    </>
-                  )}
-                  <div className="cita-campo cita-tipo-pago">
-                    <label htmlFor="cita-tipo-pago">¿Cuánto deseas pagar en línea?</label>
-                    <select
-                      id="cita-tipo-pago"
-                      value={tipoPagoReserva}
-                      onChange={(event) => setTipoPagoReserva(event.target.value)}
-                    >
-                      <option value="reserva">Solo la reserva (20 %): {formatoPrecio(montoReserva)}</option>
-                      <option value="completo">El total del servicio: {formatoPrecio(precioConDescuento)}</option>
-                    </select>
-                  </div>
-                  <div className="cita-reserva-pago">
-                    <span>Pagas ahora en línea</span>
-                    <strong>{formatoPrecio(montoSeleccionado)}</strong>
-                  </div>
-                  <div>
-                    <span>Saldo a pagar en el salón</span>
-                    <strong>{formatoPrecio(saldoEnSalon)}</strong>
-                  </div>
-                </div>
-                <p className="cita-reserva-nota">
-                  Tu reserva queda pagada cuando se apruebe el pago. El profesional
-                  confirmará tu cita y te avisaremos por correo. Los puntos se
-                  descontarán automáticamente al aprobarse tu reserva.
-                </p>
-              </div>
             </div>
 
-            <form onSubmit={handleSubmit}>
-              <div className="cita-fila">
-                <div className="cita-campo">
-                  <label htmlFor="cita-fecha">Fecha</label>
-                  <input
-                    id="cita-fecha"
-                    type="date"
-                    value={fecha}
-                    onChange={(e) => SetFecha(e.target.value)}
-                  />
+            <div className="cita-form-content">
+              <form onSubmit={handleSubmit}>
+                <div className="cita-fila">
+                  <div className="cita-campo">
+                    <label htmlFor="cita-fecha">Fecha</label>
+                    <input
+                      id="cita-fecha"
+                      type="date"
+                      value={fecha}
+                      onChange={(e) => SetFecha(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="cita-campo">
+                    <label htmlFor="cita-hora">Hora</label>
+                    <input
+                      id="cita-hora"
+                      type="time"
+                      value={hora}
+                      onChange={(e) => SetHora(e.target.value)}
+                    />
+                  </div>
                 </div>
 
                 <div className="cita-campo">
-                  <label htmlFor="cita-hora">Hora</label>
-                  <input
-                    id="cita-hora"
-                    type="time"
-                    value={hora}
-                    onChange={(e) => SetHora(e.target.value)}
-                  />
+                  <label htmlFor="cita-empleado">{tipoProfesionalLabel()}</label>
+                  {empleados.length === 0 ? (
+                    <p className="cita-servicios-estado cita-alerta" role="alert">
+                      No hay profesionales disponibles para este servicio.
+                    </p>
+                  ) : (
+                    <select
+                      id="cita-empleado"
+                      value={empleadoId}
+                      onChange={(e) => SetEmpleadoId(e.target.value)}
+                    >
+                      <option value="">Seleccione un empleado</option>
+                      {empleados.map((empleado) => (
+                        <option key={empleado.id} value={String(empleado.id)}>
+                          {empleado.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
-              </div>
 
-              <div className="cita-campo">
-                <label htmlFor="cita-empleado">{tipoProfesionalLabel()}</label>
-                {empleados.length === 0 ? (
-                  <p className="cita-servicios-estado cita-alerta" role="alert">
-                    No hay profesionales disponibles para este servicio.
-                  </p>
-                ) : (
-                  <select
-                    id="cita-empleado"
-                    value={empleadoId}
-                    onChange={(e) => SetEmpleadoId(e.target.value)}
-                  >
-                    <option value="">Seleccione un empleado</option>
-                    {empleados.map((empleado) => (
-                      <option key={empleado.id} value={String(empleado.id)}>
-                        {empleado.nombre}
-                      </option>
-                    ))}
-                    
-                  </select>
-                )}
-              </div>
+                <button className="cita-boton" type="submit" disabled={reservando}>
+                  {reservando
+                    ? (tienePrecioFijo ? "Preparando el pago..." : "Reservando cita...")
+                    : !tienePrecioFijo
+                      ? "Reservar cita sin pagar"
+                      : tipoPagoReserva === "completo"
+                        ? "Pagar servicio completo"
+                        : "Pagar reserva y confirmar cita"}
+                </button>
+              </form>
 
-              <button className="cita-boton" type="submit" disabled={reservando}>
-                {reservando ? "Preparando el pago..." : tipoPagoReserva === "completo" ? "Pagar servicio completo" : "Pagar reserva y confirmar cita"}
-              </button>
-            </form>
+              <aside className="cita-payment-panel" aria-label="Resumen del pago">
+                <span className="cita-payment-kicker">{tienePrecioFijo ? "Resumen de pago" : "Precio del servicio"}</span>
+                <div className="cita-reserva-resumen">
+                  {tienePrecioFijo ? (
+                    <>
+                      <div className="cita-reserva-servicio">
+                        <span>Precio del servicio</span>
+                        <strong>{formatoPrecio(precioServicio)}</strong>
+                      </div>
+                      <div className="cita-reserva-lineas">
+                        {descuentoAplicado > 0 && (
+                          <>
+                            <div className="cita-linea-descuento">
+                              <span>Descuento por fidelización ({nivelDescuento.porcentaje} %)</span>
+                              <strong className="cita-descuento-valor">−{formatoPrecio(descuentoAplicado)}</strong>
+                            </div>
+                            <div className="cita-linea-precio-con-descuento">
+                              <span>Precio con descuento aplicado</span>
+                              <strong>{formatoPrecio(precioConDescuento)}</strong>
+                            </div>
+                          </>
+                        )}
+                        <div className="cita-campo cita-tipo-pago">
+                          <label htmlFor="cita-tipo-pago">¿Cuánto deseas pagar en línea?</label>
+                          <select
+                            id="cita-tipo-pago"
+                            value={tipoPagoReserva}
+                            onChange={(event) => setTipoPagoReserva(event.target.value)}
+                          >
+                            <option value="reserva">Solo la reserva (20 %): {formatoPrecio(montoReserva)}</option>
+                            <option value="completo">El total del servicio: {formatoPrecio(precioConDescuento)}</option>
+                          </select>
+                        </div>
+                        <div className="cita-reserva-pago">
+                          <span>Pagas ahora en línea</span>
+                          <strong>{formatoPrecio(montoSeleccionado)}</strong>
+                        </div>
+                        <div>
+                          <span>Saldo a pagar en el salón</span>
+                          <strong>{formatoPrecio(saldoEnSalon)}</strong>
+                        </div>
+                      </div>
+                      <p className="cita-reserva-nota">
+                        Tu reserva queda pagada cuando se apruebe el pago. El profesional
+                        confirmará tu cita y te avisaremos por correo. Los puntos se
+                        descontarán automáticamente al aprobarse tu reserva.
+                      </p>
+                    </>
+                  ) : (
+                    <div className="cita-precio-por-definir">
+                      <strong>Precio a definir en el salón</strong>
+                      <p>El valor se acordará en el salón según el estado de tu cabello o las necesidades del servicio. Puedes reservar tu cita sin pagar ahora.</p>
+                    </div>
+                  )}
+                </div>
+              </aside>
+            </div>
           </section>
         )}
       </div>
