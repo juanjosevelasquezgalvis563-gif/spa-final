@@ -34,7 +34,7 @@ function HistorialPagos() {
             }
 
         } catch {
-            setMensaje('Error de conexión con el servidor.');
+            setMensaje('No pudimos cargar el historial de pagos. Revisa tu conexión e inténtalo de nuevo.');
         } finally {
             setCargando(false);
         }
