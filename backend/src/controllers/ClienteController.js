@@ -7,7 +7,6 @@ import db from "../config/db.js";
 import { Op } from "sequelize";
 import { puedeRealizarServicio } from "../utils/servicios.js";
 import { normalizarHoraReserva, validarFechaHoraReserva } from "../utils/fechaHora.js";
-import { acreditarReservaCancelada } from "./PagoReservaController.js";
 
 export async function servicios(req, res) {
     try {
@@ -118,14 +117,13 @@ export async function cancelarSuCita(req, res) {
 
             cita.estado = 'cancelada';
             await cita.save({ transaction });
-            await acreditarReservaCancelada(cita, transaction);
-            return { message: 'Cita cancelada. El valor pagado se conservó como abono para una próxima reserva.' };
+            return { message: 'Cita cancelada.' };
         });
 
         if (resultado.error) return res.status(resultado.status).json({ message: resultado.error });
         return res.json({ message: resultado.message });
     } catch (error) {
-        console.error('Error al cancelar la cita y conservar el abono:', error);
+        console.error('Error al cancelar la cita:', error);
         return res.status(500).json({ message: "No se pudo cancelar la cita" });
     }
 
@@ -182,7 +180,7 @@ export async function actualizarCita(req, res) {
             });
             if (reservaPagada && Number(cita.servicio_id) !== Number(servicio.id)) {
                 return {
-                    error: 'Para cambiar el servicio, cancela esta cita y utiliza el abono para crear una nueva reserva.',
+                    error: 'Para cambiar el servicio, cancela esta cita y realiza una nueva reserva.',
                     status: 400
                 };
             }
