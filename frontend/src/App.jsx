@@ -114,6 +114,14 @@ function App() {
                   </RutaProtegida>
                 }
               />
+              <Route
+                path="/actualizar-datos"
+                element={
+                  <RutaProtegida>
+                    <ActualizarDatos />
+                  </RutaProtegida>
+                }
+              />
               <Route path="/login" element={<Login />} />
               <Route
                 path="/forgot-password"
