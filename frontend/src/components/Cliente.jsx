@@ -132,7 +132,7 @@ export function Cliente() {
       await logout();
       navigate("/");
     } catch (error) {
-      SetMessage(error.message || "No se pudo cerrar la sesión.");
+      SetMessage("No pudimos cerrar tu sesión. Inténtalo de nuevo.");
     }
   }
 
@@ -203,7 +203,7 @@ export function Cliente() {
       if (response.ok) SetCantidad(data);
       else SetMessage(data.message);
     } catch {
-      SetMessage("Error de conexión con el servidor");
+      SetMessage("No pudimos completar la solicitud. Revisa tu conexión e inténtalo de nuevo.");
     }
   }
 
@@ -218,7 +218,7 @@ export function Cliente() {
       if (response.ok) SetPendientes(data);
       else SetMessage(data.message);
     } catch {
-      SetMessage("Error de conexión con el servidor");
+      SetMessage("No pudimos completar la solicitud. Revisa tu conexión e inténtalo de nuevo.");
     }
   }
 
@@ -233,7 +233,7 @@ export function Cliente() {
       if (response.ok) SetConfirmadas(data);
       else SetMessage(data.message);
     } catch {
-      SetMessage("Error de conexión con el servidor");
+      SetMessage("No pudimos completar la solicitud. Revisa tu conexión e inténtalo de nuevo.");
     }
   }
 
@@ -248,7 +248,7 @@ export function Cliente() {
       if (response.ok) SetFinalizadas(data);
       else SetMessage(data.message);
     } catch {
-      SetMessage("Error de conexión con el servidor");
+      SetMessage("No pudimos completar la solicitud. Revisa tu conexión e inténtalo de nuevo.");
     }
   }
 
@@ -263,7 +263,7 @@ export function Cliente() {
       if (response.ok) SetRealizar(data);
       else SetMessage(data.message);
     } catch {
-      SetMessage("Error de conexión con el servidor");
+      SetMessage("No pudimos completar la solicitud. Revisa tu conexión e inténtalo de nuevo.");
     }
   }
 
@@ -278,7 +278,7 @@ export function Cliente() {
       if (response.ok) SetUltimasCitas(Array.isArray(data) ? data : []);
       else SetMessage(data.message);
     } catch {
-      SetMessage("Error de conexión con el servidor");
+      SetMessage("No pudimos completar la solicitud. Revisa tu conexión e inténtalo de nuevo.");
     }
   }
 
@@ -500,15 +500,6 @@ async function prepararCitasParaResena() {
 
           <button
             type="button"
-            className="pc-nav-item"
-            onClick={() => navegarPerfil("/cliente/productos")}
-          >
-            <Gift aria-hidden="true" />
-            <span>Productos</span>
-          </button>
-
-          <button
-            type="button"
             className={`pc-nav-item ${seccionActiva === "fidelizacion" ? "is-active" : ""}`}
             onClick={() => irASeccion("fidelizacion")}
           >
@@ -525,14 +516,16 @@ async function prepararCitasParaResena() {
             <span>Mis reseñas</span>
           </button>
 
-          <button
-            type="button"
-            className="pc-nav-item"
-            onClick={() => navegarPerfil("/perfil")}
-          >
-            <UserRound aria-hidden="true" />
-            <span>Mis datos</span>
-          </button>
+          {!perfilId && (
+            <button
+              type="button"
+              className="pc-nav-item"
+              onClick={() => navegarPerfil("/perfil")}
+            >
+              <UserRound aria-hidden="true" />
+              <span>Mis datos</span>
+            </button>
+          )}
         </nav>
 
         <div className="pc-rail-foot">
@@ -965,33 +958,21 @@ async function prepararCitasParaResena() {
                 </span>
               </button>
 
-              <button
-                type="button"
-                className="pc-action"
-                onClick={() => navegarPerfil("/cliente/productos")}
-              >
-                <span className="pc-action-icon" aria-hidden="true">
-                  <Gift />
-                </span>
-                <span className="pc-action-text">
-                  <strong>Catálogo de productos</strong>
-                  <span>Descubre el cuidado disponible en el salón</span>
-                </span>
-              </button>
-
-              <button
-                type="button"
-                className="pc-action"
-                onClick={() => navegarPerfil("/perfil")}
-              >
-                <span className="pc-action-icon" aria-hidden="true">
-                  <UserRound />
-                </span>
-                <span className="pc-action-text">
-                  <strong>Actualizar mis datos</strong>
-                  <span>Mantén tu información al día</span>
-                </span>
-              </button>
+              {!perfilId && (
+                <button
+                  type="button"
+                  className="pc-action"
+                  onClick={() => navegarPerfil("/perfil")}
+                >
+                  <span className="pc-action-icon" aria-hidden="true">
+                    <UserRound />
+                  </span>
+                  <span className="pc-action-text">
+                    <strong>Actualizar mis datos</strong>
+                    <span>Mantén tu información al día</span>
+                  </span>
+                </button>
+              )}
             </div>
           </section>
         </div>
