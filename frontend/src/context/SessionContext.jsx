@@ -213,6 +213,32 @@ export function SessionProvider({ children }) {
     };
   }, [publishSessionEvent, user]);
 
+  useEffect(() => {
+    if (!user) return undefined;
+
+    // Cierra la cookie de sesión cuando el documento deja de estar activo
+    // (por ejemplo, al cerrar la pestaña o la ventana del navegador).
+    // `pagehide` permite que la petición continúe mientras el navegador sale.
+    const cerrarAlSalir = (event) => {
+      if (event.persisted) return;
+
+      const cuerpo = new Blob([], { type: "text/plain" });
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(`${API_ROOT}/inser/logout`, cuerpo);
+        return;
+      }
+
+      void fetch(`${API_ROOT}/inser/logout`, {
+        method: "POST",
+        credentials: "include",
+        keepalive: true,
+      });
+    };
+
+    window.addEventListener("pagehide", cerrarAlSalir);
+    return () => window.removeEventListener("pagehide", cerrarAlSalir);
+  }, [user]);
+
   return (
     <SessionContext.Provider value={{ user, loading, setAuthenticatedUser, logout }}>
       {children}
