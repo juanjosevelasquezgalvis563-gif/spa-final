@@ -425,19 +425,17 @@ function resumirMovimientosPago(pagos, reservas, citaId) {
             montoOnlineEnPagos += online;
             montoLocal += local;
         } else if (pago.medio_pago === 'online') {
-            // Compatibilidad con movimientos online antiguos guardados antes
-            // de que el desglose monto_online/monto_local estuviera poblado.
+           
             montoOnlineEnPagos += dinero(pago.total_pago);
         } else {
-            // Los registros antiguos sin desglose se registraban en caja.
+            
             montoLocal += dinero(pago.total_pago);
         }
     }
 
     const creditoAplicado = reservasCita.reduce((suma, reserva) => suma + dinero(reserva.monto_credito), 0);
     const montoOnlineEnReservas = reservasCita.reduce((suma, reserva) => suma + montoOnlineReserva(reserva), 0);
-    // Las dos tablas pueden representar el mismo cobro online. Se toma el
-    // mayor agregado para recuperar datos antiguos sin duplicar el ingreso.
+   
     const montoOnline = Math.max(montoOnlineEnPagos, montoOnlineEnReservas);
     return { monto_online: dinero(montoOnline), monto_local: dinero(montoLocal), credito_aplicado: creditoAplicado };
 }
@@ -697,7 +695,7 @@ export async function historialPagos(req, res) {
             .map((reserva) => ({
                 id: 'reserva-' + reserva.id, cita_id: reserva.cita_id, fecha_pago: reserva.updated_at,
                 total_pago: montoOnlineReserva(reserva), monto_online: montoOnlineReserva(reserva), monto_local: 0,
-                estado_pago: reserva.estado === 'aprobado' ? 'pagada' : 'abono disponible',
+                estado_pago: reserva.estado === 'aprobado' ? 'pagada' : 'pago recibido sin cita',
                 tipo_pago: 'Reserva online (Wompi)',
                 credito_aplicado: reserva.estado === 'aprobado' ? dinero(reserva.monto_credito) : 0,
                 cita: {
