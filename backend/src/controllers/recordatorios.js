@@ -9,6 +9,7 @@ export async function procesarRecordatorios() {
             console.warn("Recordatorios omitidos: Gmail API no está configurada.");
             return;
         }
+        
 
         const citas = await Cita.findAll({
             where: {
