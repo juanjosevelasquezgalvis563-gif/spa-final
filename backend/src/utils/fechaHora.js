@@ -1,4 +1,4 @@
-function fechaActualBogota(ahora = new Date()) {
+export function fechaActualBogota(ahora = new Date()) {
     const partes = new Intl.DateTimeFormat("en-CA", {
         timeZone: "America/Bogota",
         year: "numeric",
@@ -7,6 +7,17 @@ function fechaActualBogota(ahora = new Date()) {
     }).formatToParts(ahora);
     const valores = Object.fromEntries(partes.map(({ type, value }) => [type, value]));
     return `${valores.year}-${valores.month}-${valores.day}`;
+}
+
+export function horarioAtencionValido(hora) {
+    const coincidencia = /^(?:([01]\d|2[0-3])):([0-5]\d)(?::([0-5]\d))?$/.exec(hora || "");
+    if (!coincidencia) return false;
+
+    const segundosDelDia = Number(coincidencia[1]) * 3600
+        + Number(coincidencia[2]) * 60
+        + Number(coincidencia[3] || 0);
+   
+    return segundosDelDia >= 8 * 3600 && segundosDelDia <= 17 * 3600;
 }
 
 export function validarFechaHoraReserva(fecha, hora, ahora = new Date()) {
@@ -22,6 +33,7 @@ export function validarFechaHoraReserva(fecha, hora, ahora = new Date()) {
     if (!/^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/.test(hora || "")) {
         return false;
     }
+    if (!horarioAtencionValido(hora)) return false;
 
     if (fecha === fechaActualBogota(ahora)) {
         const partes = new Intl.DateTimeFormat("en-GB", {
