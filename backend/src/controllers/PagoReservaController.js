@@ -8,7 +8,7 @@ import Pago from "../models/pagos.js";
 import Servicio from "../models/servicios.js";
 import Usuario from "../models/Usuario.js";
 import { generarFirmaCheckout, verificarFirmaEventoWompi } from "../utils/wompi.js";
-import { puedeRealizarServicio } from "../utils/servicios.js";
+import { puedeRealizarServicio, whereEmpleadoElegible } from "../utils/servicios.js";
 import { horarioAtencionValido, normalizarHoraReserva, validarFechaHoraReserva } from "../utils/fechaHora.js";
 import { NIVELES_DESCUENTO, calcularSaldo } from "./FidelizacionController.js";
 
@@ -323,7 +323,7 @@ export async function crearPagoReserva(req, res) {
             await expirarReservasUsuario(usuarioId, transaction);
 
             const empleado = await Usuario.findOne({
-                where: { id: empleadoId, rol: "empleado" },
+                where: { id: empleadoId, ...whereEmpleadoElegible() },
                 transaction,
                 lock: transaction.LOCK.UPDATE
             });
@@ -718,7 +718,7 @@ export async function recibirEventoWompi(req, res) {
             const empleado = await Usuario.findOne({
                 where: {
                     id: pagoReserva.empleado_id,
-                    rol: "empleado"
+                    ...whereEmpleadoElegible()
                 },
                 transaction,
                 lock: transaction.LOCK.UPDATE
