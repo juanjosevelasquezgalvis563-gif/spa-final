@@ -1,8 +1,9 @@
-import Resena from "../models/reseña.js";
+﻿import Resena from "../models/reseña.js";
 import Cita from "../models/citas.js";
 import MovimientoPuntos from "../models/MovimientoPuntos.js";
 import Usuario from "../models/Usuario.js";
 import Servicio from "../models/servicios.js";
+import db from "../config/db.js";
 
 export async function crearResena(req, res) {
     try {
@@ -57,21 +58,24 @@ export async function crearResena(req, res) {
             });
         }
 
-        const nuevaResena = await Resena.create({
-            usuario_id: usuarioId,
-            cita_id,
-            calificacion,
-            comentario: comentario?.trim() || null
+        const nuevaResena = await db.transaction(async (transaction) => {
+            const resena = await Resena.create({
+                usuario_id: usuarioId,
+                cita_id,
+                calificacion,
+                comentario: comentario?.trim() || null
+            }, { transaction });
+
+            await MovimientoPuntos.create({
+                usuario_id: usuarioId,
+                resena_id: resena.id,
+                tipo: "acumulacion",
+                puntos: 5,
+                descripcion: "5 puntos por publicar una reseña válida"
+            }, { transaction });
+
+            return resena;
         });
-
-        await MovimientoPuntos.create({
-    usuario_id: usuarioId,
-    resena_id: nuevaResena.id,
-    tipo: "acumulacion",
-    puntos: 5,
-    descripcion: "5 puntos por publicar una reseña válida"
-});
-
        return res.status(201).json({
     message: "Reseña registrada correctamente",
     puntos_ganados: 5,
