@@ -1,8 +1,8 @@
 
 import crypto from "crypto";
 import bcrypt from "bcrypt";
-import nodemailer from "nodemailer";
 import { Op } from "sequelize";
+import { enviarEmailGmail, gmailApiConfigurado } from "../utils/gmailApi.js";
 
 import Usuario from "../models/Usuario.js";
 import PasswordReset from "../models/password_resets.js";
@@ -68,11 +68,9 @@ export async function forgotPassword(req, res) {
             });
         }
 
-        const EMAIL_USER = process.env.EMAIL_USER?.trim();
-        const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD?.replace(/\s/g, "");
         const FRONTEND_URL = process.env.FRONTEND_URL?.replace(/\/+$/, "");
 
-        if (!EMAIL_USER || !EMAIL_PASSWORD || !FRONTEND_URL) {
+        if (!gmailApiConfigurado() || !FRONTEND_URL) {
             console.error("Faltan variables de entorno para recuperación");
 
             return res.status(503).json({
@@ -106,23 +104,14 @@ export async function forgotPassword(req, res) {
         });
 
        
-        const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-                user: EMAIL_USER,
-                pass: EMAIL_PASSWORD
-            }
-        });
-
-        
         const enlace =
             `${FRONTEND_URL}/reset-password/${token}`;
 
        
-        const resultado = await transporter.sendMail({
-            from: `"JC Alta Peluquería" <${EMAIL_USER}>`,
+        await enviarEmailGmail({
             to: usuario.email,
             subject: "Recuperación de contraseña",
+            fromName: "JC Alta Peluquería",
             html: `
                 <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:25px;">
                     <h2>Recuperar contraseña</h2>
@@ -163,12 +152,6 @@ export async function forgotPassword(req, res) {
             `
         });
 
-        console.log(
-            "Correo aceptado por SMTP:",
-            resultado.messageId
-        );
-
-        
         await PasswordReset.destroy({
             where: {
                 usuario_id: usuario.id,
