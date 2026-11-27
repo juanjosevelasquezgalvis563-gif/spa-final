@@ -5,9 +5,9 @@ import { AnimatePresence, m, useReducedMotion } from 'motion/react';
 import { BarChart3, CalendarDays, CreditCard, History, LayoutDashboard, Package, ReceiptText, ShoppingBag, ShoppingCart, UserPlus, UsersRound, X } from 'lucide-react';
 import { API_ROOT } from '../lib/api';
 import RegistrarPago from './RegistrarPago';
-import ReportesAdmin from './reportesAdmin';
 import HistorialReportesAdmin from './HistorialReportesAdmin';
 import HistorialPagos from './HistorialPagos';
+import ReportesAdmin from './ReportesAdmin';
 import { useSession } from '../context/useSession';
 
 
