@@ -2,12 +2,12 @@
 const EMPLEADO_ESPECIALIDAD = {
     "melany arango": "manicurista",
     "juliana correa": "manicurista",
-    "valentina alvarez": "manicurista",
+    "mariangel": "ambas",
     "steven piedrahita": "estilista",
     "steven piedradita": "estilista",
     "stiven piedrahita": "estilista",
+    "stiven piedradita": "estilista",
     "evelyn nino": "estilista",
-    "jennifer correa": "estilista",
 };
 
 const SERVICIO_ESPECIALIDAD = {
@@ -90,14 +90,18 @@ function obtenerEspecialidadServicio(servicio) {
 export function puedeRealizarServicio(empleado, servicio) {
     const nombreEmpleado = normalizarTexto(empleado?.nombre || "");
 
-    const especialidadEmpleado = EMPLEADO_ESPECIALIDAD[nombreEmpleado];
+    const especialidadEmpleado = nombreEmpleado.split(" ").includes("mariangel")
+        ? "ambas"
+        : EMPLEADO_ESPECIALIDAD[nombreEmpleado];
 
   
     const especialidadServicio = obtenerEspecialidadServicio(servicio);
 
-    // La tabla usuarios no guarda una especialidad. Si el nombre del empleado
-    // o del servicio no está en el catálogo conocido, no se debe bloquear la cita.
-    if (!especialidadEmpleado || !especialidadServicio) return true;
-
-    return especialidadEmpleado === especialidadServicio;
+    // Los servicios no clasificados de los profesionales nombrados se tratan
+    // como servicios de estilista; los demás empleados no reciben servicios
+    // clasificados si no tienen una especialidad asignada.
+    if (!especialidadEmpleado) return !especialidadServicio;
+    const grupoServicio = especialidadServicio || "estilista";
+    if (especialidadEmpleado === "ambas") return true;
+    return especialidadEmpleado === grupoServicio;
 }
