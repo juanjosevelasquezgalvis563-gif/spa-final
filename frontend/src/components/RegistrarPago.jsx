@@ -11,7 +11,7 @@ function formatoCOP(valor) {
     return "$" + (Number(valor) || 0).toLocaleString("es-CO") + " COP";
 }
 
-export default function RegistrarPago({ rol }) {
+export default function RegistrarPago({ rol, empleadoId = null }) {
     const baseRuta = rol === "administrador" ? "administrador" : "empleado";
     const [citas, setCitas] = useState([]);
     const [montoPorCita, setMontoPorCita] = useState({});
@@ -28,7 +28,12 @@ export default function RegistrarPago({ rol }) {
             setEsError(false);
         }
         try {
-            const response = await fetch(API_ROOT + "/inser/" + baseRuta + "/citasFinalizadasPago", {
+            const params = new URLSearchParams();
+            if (empleadoId != null && String(empleadoId).trim()) {
+                params.set("empleado_id", String(empleadoId));
+            }
+            const query = params.toString();
+            const response = await fetch(API_ROOT + "/inser/" + baseRuta + "/citasFinalizadasPago" + (query ? `?${query}` : ""), {
                 credentials: "include",
                 signal
             });
@@ -38,12 +43,15 @@ export default function RegistrarPago({ rol }) {
             const pendientes = data.filter((cita) =>
                 cita.estado === "finalizada" &&
                 !cita.pago_completo &&
-                Number(cita.saldo_pendiente) > 0
+                (cita.precio_pendiente_por_definir || Number(cita.saldo_pendiente) > 0)
             );
             setCitas(pendientes);
             setMontoPorCita((actuales) => Object.fromEntries(pendientes.map((cita) => {
                 const saldo = Math.max(0, Number(cita.saldo_pendiente) || 0);
                 const anterior = Number(actuales[cita.id]);
+                if (cita.servicio_sin_precio_fijo) {
+                    return [cita.id, ""];
+                }
                 const monto = anterior > 0 && anterior <= saldo ? String(anterior) : (saldo > 0 ? String(saldo) : "");
                 return [cita.id, monto];
             })));
@@ -56,7 +64,7 @@ export default function RegistrarPago({ rol }) {
         } finally {
             if (!signal?.aborted) setCargando(false);
         }
-    }, [baseRuta]);
+    }, [baseRuta, empleadoId]);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -64,8 +72,18 @@ export default function RegistrarPago({ rol }) {
         return () => controller.abort();
     }, [obtenerCitas]);
 
+    useEffect(() => {
+        if (!mensaje) return undefined;
+        const temporizador = window.setTimeout(() => {
+            setMensaje("");
+            setEsError(false);
+        }, 4000);
+        return () => window.clearTimeout(temporizador);
+    }, [mensaje]);
+
     async function registrar(cita) {
         if (guardandoId !== null) return;
+        const precioPendientePorDefinir = Boolean(cita.precio_pendiente_por_definir);
         const saldoPendiente = Math.max(0, Number(cita.saldo_pendiente) || 0);
         const montoLocal = Number(montoPorCita[cita.id]);
         if (!fechaPago) {
@@ -73,8 +91,10 @@ export default function RegistrarPago({ rol }) {
             setEsError(true);
             return;
         }
-        if (!Number.isFinite(montoLocal) || montoLocal <= 0 || montoLocal > saldoPendiente) {
-            setMensaje("El monto local debe ser mayor que cero y no puede superar el saldo pendiente.");
+        if (!Number.isFinite(montoLocal) || montoLocal <= 0 || (!precioPendientePorDefinir && montoLocal > saldoPendiente)) {
+            setMensaje(precioPendientePorDefinir
+                ? "Ingresa el monto local que recibiste."
+                : "El monto local debe ser mayor que cero y no puede superar el saldo pendiente.");
             setEsError(true);
             return;
         }
@@ -90,7 +110,10 @@ export default function RegistrarPago({ rol }) {
                 body: JSON.stringify({
                     cita_id: Number(cita.id),
                     monto_local: montoLocal,
-                    fecha_pago: fechaPago
+                    fecha_pago: fechaPago,
+                    ...(empleadoId != null && String(empleadoId).trim()
+                        ? { empleado_id: Number(empleadoId) }
+                        : {})
                 })
             });
             const data = await response.json().catch(() => ({}));
@@ -98,8 +121,8 @@ export default function RegistrarPago({ rol }) {
 
             setMensaje(data.message || "Pago local registrado correctamente.");
             await obtenerCitas(undefined, false);
-        } catch {
-            setMensaje("No pudimos registrar el pago. Revisa tu conexión e inténtalo de nuevo.");
+        } catch (error) {
+            setMensaje(error.message || "No pudimos registrar el pago. Revisa tu conexión e inténtalo de nuevo.");
             setEsError(true);
         } finally {
             setGuardandoId(null);
@@ -112,7 +135,7 @@ export default function RegistrarPago({ rol }) {
                 <div>
                     <span>CAJA DEL SALÓN</span>
                     <h2>Registrar pagos</h2>
-                    <p>Las citas finalizadas aparecen aquí. Cada registro agrega un movimiento local independiente.</p>
+                    <p>Las citas finalizadas con pagos pendientes aparecen aquí. Registra el monto que recibiste en el local.</p>
                 </div>
             </header>
 
@@ -142,11 +165,12 @@ export default function RegistrarPago({ rol }) {
             ) : (
                 <div className="registrar-pago-lista">
                     {citas.map((cita) => {
+                        const precioPendientePorDefinir = Boolean(cita.precio_pendiente_por_definir);
                         const precioOriginal = Number(cita.precio_original ?? cita.Servicio?.precio) || 0;
                         const descuento = Number(cita.descuento_valor) || 0;
                         const precioFinal = Number(cita.precio_final) || Math.max(0, precioOriginal - descuento);
                         const saldo = Math.max(0, Number(cita.saldo_pendiente) || 0);
-                        const pagada = saldo <= 0;
+                        const pagada = !precioPendientePorDefinir && saldo <= 0;
 
                         return (
                             <article className="registrar-pago-card" key={cita.id}>
@@ -165,17 +189,23 @@ export default function RegistrarPago({ rol }) {
                                     <div><strong>Empleado</strong><span>{cita.empleado?.nombre || "No disponible"}</span></div>
                                 </div>
 
+                                {cita.servicio_sin_precio_fijo && (
+                                    <p className="registrar-pago-nota">
+                                        Este servicio no tiene precio fijo. Registra aquí el monto local que recibiste.
+                                    </p>
+                                )}
+
                                 <div className="registrar-pago-desglose">
                                     <h4>Resumen de pagos</h4>
-                                    <div><span>Precio original del servicio</span><strong>{formatoCOP(precioOriginal)}</strong></div>
+                                    <div><span>Precio original del servicio</span><strong>{precioPendientePorDefinir ? "A definir" : formatoCOP(precioOriginal)}</strong></div>
                                     {descuento > 0 && (
                                         <div className="registrar-pago-descuento">
                                             <span>Descuento aplicado</span><strong>− {formatoCOP(descuento)}</strong>
                                         </div>
                                     )}
-                                    <div><span>Precio final</span><strong>{formatoCOP(precioFinal)}</strong></div>
+                                    <div><span>Precio final</span><strong>{precioPendientePorDefinir ? "A definir" : formatoCOP(precioFinal)}</strong></div>
                                     <div className="registrar-pago-medio-online"><span>Monto online recibido</span><strong>{formatoCOP(cita.monto_online)}</strong></div>
-                                    <div className="registrar-pago-medio-local"><span>Monto local pendiente por cobrar</span><strong>{formatoCOP(cita.monto_local)}</strong></div>
+                                    <div className="registrar-pago-medio-local"><span>{precioPendientePorDefinir ? "Monto local por registrar" : "Monto local pendiente por cobrar"}</span><strong>{precioPendientePorDefinir ? "—" : formatoCOP(cita.monto_local)}</strong></div>
                                     {Number(cita.monto_local_recibido) > 0 && (
                                         <div><span>Monto recibido en el local</span><strong>{formatoCOP(cita.monto_local_recibido)}</strong></div>
                                     )}
@@ -183,13 +213,17 @@ export default function RegistrarPago({ rol }) {
 
                                 {!pagada && (
                                     <div className="registrar-pago-accion">
-                                        <label htmlFor={"monto-local-" + cita.id}>Monto local recibido (COP)</label>
+                                        <label htmlFor={"monto-local-" + cita.id}>
+                                            {precioPendientePorDefinir || cita.servicio_sin_precio_fijo
+                                                ? "Registrar monto local recibido (COP)"
+                                                : "Monto local recibido (COP)"}
+                                        </label>
                                         <div>
                                             <input
                                                 id={"monto-local-" + cita.id}
                                                 type="number"
                                                 min="0.01"
-                                                max={saldo}
+                                                max={precioPendientePorDefinir ? undefined : saldo}
                                                 step="0.01"
                                                 value={montoPorCita[cita.id] || ""}
                                                 onChange={(event) => setMontoPorCita((actuales) => ({ ...actuales, [cita.id]: event.target.value }))}
@@ -199,7 +233,7 @@ export default function RegistrarPago({ rol }) {
                                                 type="button"
                                                 className="registrar-pago-boton"
                                                 onClick={() => registrar(cita)}
-                                                disabled={guardandoId !== null || Number(montoPorCita[cita.id]) <= 0 || Number(montoPorCita[cita.id]) > saldo}
+                                                disabled={guardandoId !== null || Number(montoPorCita[cita.id]) <= 0 || (!precioPendientePorDefinir && Number(montoPorCita[cita.id]) > saldo)}
                                             >
                                                 {guardandoId === cita.id ? "Registrando…" : "Registrar pago local"}
                                             </button>
