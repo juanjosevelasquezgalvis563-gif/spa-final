@@ -6,6 +6,7 @@ import logo from "../assets/image.png";
 
 const CAMPOS_INICIALES = { nombre: "", telefono: "", email: "" };
 
+
 export function ActualizarDatos() {
   const [datos, setDatos] = useState(CAMPOS_INICIALES);
   const [rolUsuario, setRolUsuario] = useState("");
