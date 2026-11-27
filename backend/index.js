@@ -12,7 +12,7 @@ import { PRODUCT_IMAGES_DIR } from "./src/config/productImages.js";
 import authRoutes from "./src/routes/routes.js";
 import db from "./src/config/db.js";
 import { iniciarRecordatorios } from "./src/controllers/recordatorios.js";
-import { iniciarJobReportesQuincenales } from "./src/controllers/ReportesMensualesJob.js";
+import { iniciarJobReportesMensuales } from "./src/controllers/ReportesMensualesJob.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -148,7 +148,7 @@ try {
     });
 
     iniciarRecordatorios();
-    iniciarJobReportesQuincenales();
+    iniciarJobReportesMensuales();
 
     console.log("Recordatorios automáticos iniciados");
 
