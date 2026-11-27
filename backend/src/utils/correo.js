@@ -1,23 +1,16 @@
-import nodemailer from "nodemailer";
-
-let transporter = null;
+import { enviarEmailGmail, gmailApiConfigurado } from "./gmailApi.js";
 
 function obtenerTransporter() {
     const user = process.env.EMAIL_USER?.trim();
-    const pass = process.env.EMAIL_PASSWORD?.replace(/\s/g, "");
-
-    if (!user || !pass) return null;
-
-    if (!transporter) {
-        transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: { user, pass }
-        });
-    }
-    
-
-    
-    return { transporter, user };
+    if (!user || !gmailApiConfigurado()) return null;
+    return {
+        user,
+        transporter: {
+            sendMail: ({ to, subject, text, html, replyTo }) => enviarEmailGmail({
+                to, subject, text, html, replyTo, fromName: "JC Alta Peluquería"
+            })
+        }
+    };
 }
 
 export async function enviarCodigoActualizacion(email, codigo) {
@@ -184,7 +177,7 @@ export async function enviarCorreoCitaConfirmada({
     const config = obtenerTransporter();
 
     if (!config) {
-        console.error("Correo de cita no enviado: faltan EMAIL_USER o EMAIL_PASSWORD.");
+        console.error("Correo de cita no enviado: falta configurar Gmail API.");
         return false;
     }
 
