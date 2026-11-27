@@ -369,6 +369,9 @@ async function prepararCitasParaResena() {
       if (response.ok) {
         SetMessage(`${data.message}. Ganaste ${data.puntos_ganados ?? 5} puntos.`);
 
+        const citaResenadaId = Number(citaSeleccionada);
+        setCitasParaResena((citas) => citas.filter((cita) => Number(cita.id) !== citaResenadaId));
+
         setCitaSeleccionada("");
         setCalificacion(0);
         setComentario("");
