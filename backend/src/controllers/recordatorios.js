@@ -1,19 +1,15 @@
-import nodemailer from "nodemailer";
-
 import Cita from "../models/citas.js";
 import Usuario from "../models/Usuario.js";
 import RecordatorioCita from "../models/RecordatorioCita.js";
-
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD
-    }
-});
+import { enviarEmailGmail, gmailApiConfigurado } from "../utils/gmailApi.js";
 
 export async function procesarRecordatorios() {
     try {
+        if (!gmailApiConfigurado()) {
+            console.warn("Recordatorios omitidos: Gmail API no está configurada.");
+            return;
+        }
+
         const citas = await Cita.findAll({
             where: {
                 estado: "confirmada"
@@ -65,10 +61,10 @@ export async function procesarRecordatorios() {
                     continue;
                 }
 
-                await transporter.sendMail({
-                    from: `"VelureSpa" <${process.env.EMAIL_USER}>`,
+                await enviarEmailGmail({
                     to: cliente.email,
                     subject: "Recordatorio de tu cita - VelureSpa",
+                    fromName: "JC Alta Peluquería",
                     html: `
                         <h2>¡Hola, ${cliente.nombre || "cliente"}!</h2>
 
