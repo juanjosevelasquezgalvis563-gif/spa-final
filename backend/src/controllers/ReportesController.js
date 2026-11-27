@@ -10,6 +10,7 @@ import {
 } from "../utils/reportesMensuales.js";
 import { enviarReportePorCorreo } from "../utils/reportesCorreo.js";
 
+
 function soloAdministrador(req, res) {
     if (req.user?.rol !== "administrador") {
         res.status(403).json({ message: "No tienes permiso para consultar los reportes." });
