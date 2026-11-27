@@ -8,6 +8,7 @@ const Cita = db.define("Cita", {
         primaryKey: true,
         autoIncrement: true
     },
+    
 
     fecha: {
         type: DataTypes.DATEONLY,
