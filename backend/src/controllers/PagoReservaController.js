@@ -9,11 +9,12 @@ import Servicio from "../models/servicios.js";
 import Usuario from "../models/Usuario.js";
 import { generarFirmaCheckout, verificarFirmaEventoWompi } from "../utils/wompi.js";
 import { puedeRealizarServicio } from "../utils/servicios.js";
-import { normalizarHoraReserva, validarFechaHoraReserva } from "../utils/fechaHora.js";
+import { horarioAtencionValido, normalizarHoraReserva, validarFechaHoraReserva } from "../utils/fechaHora.js";
 import { NIVELES_DESCUENTO, calcularSaldo } from "./FidelizacionController.js";
 
 
 const DURACION_RESERVA_MINUTOS = 30;
+const DURACION_BLOQUE_CITA_MINUTOS = 60;
 const MONEDA = "COP";
 const ESTADOS_OCUPAN_HORARIO = ["pendiente", "confirmada", "en_curso"];
 const ESTADOS_TERMINALES = [
@@ -25,6 +26,93 @@ const ESTADOS_TERMINALES = [
     "aprobado_abono"
 ];
 const NIVELES_DE_MAYOR_A_MENOR = [15, 10, 5];
+
+function minutosDelDia(hora) {
+    const [horas, minutos] = String(hora || "").split(":").map(Number);
+    return horas * 60 + minutos;
+}
+
+function minutosActualesBogota() {
+    const partes = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "America/Bogota",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23"
+    }).formatToParts(new Date());
+    const valores = Object.fromEntries(partes.map(({ type, value }) => [type, value]));
+    return Number(valores.hour) * 60 + Number(valores.minute);
+}
+
+function fechaActualBogota() {
+    const partes = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Bogota",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+    }).formatToParts(new Date());
+    const valores = Object.fromEntries(partes.map(({ type, value }) => [type, value]));
+    return `${valores.year}-${valores.month}-${valores.day}`;
+}
+
+function hayCruceDeBloques(horaSolicitada, horaOcupada, citaEnCurso, fecha) {
+    const inicioSolicitado = minutosDelDia(horaSolicitada);
+    const finSolicitado = inicioSolicitado + DURACION_BLOQUE_CITA_MINUTOS;
+    let inicioOcupado = minutosDelDia(horaOcupada);
+    let finOcupado = inicioOcupado + DURACION_BLOQUE_CITA_MINUTOS;
+
+    // Si el empleado sigue atendiendo una cita de hoy, su bloque permanece ocupado
+    // hasta al menos una hora desde el momento actual.
+    const hoyBogota = fechaActualBogota();
+    if (citaEnCurso && fecha === hoyBogota) {
+        const ahora = minutosActualesBogota();
+        inicioOcupado = Math.min(inicioOcupado, ahora);
+        finOcupado = Math.max(finOcupado, ahora + DURACION_BLOQUE_CITA_MINUTOS);
+    }
+
+    return inicioSolicitado < finOcupado && inicioOcupado < finSolicitado;
+}
+
+async function buscarConflictoHorario({ empleadoId, fecha, hora, transaction, excluirCitaId, excluirReservaId }) {
+    const fechaInicio = `${fecha} 00:00:00`;
+    const fechaFin = new Date(`${fecha}T00:00:00.000Z`);
+    fechaFin.setUTCDate(fechaFin.getUTCDate() + 1);
+    const citas = await Cita.findAll({
+        where: {
+            empleado_id: empleadoId,
+            fecha: { [Op.gte]: fechaInicio, [Op.lt]: fechaFin.toISOString().slice(0, 10) },
+            estado: { [Op.in]: ESTADOS_OCUPAN_HORARIO },
+            ...(excluirCitaId ? { id: { [Op.ne]: excluirCitaId } } : {})
+        },
+        attributes: ["id", "hora", "estado"],
+        transaction,
+        lock: transaction.LOCK.UPDATE
+    });
+    const citasEnCurso = citas.filter((cita) => cita.estado === "en_curso");
+    const citaEnCurso = citasEnCurso.find((cita) =>
+        hayCruceDeBloques(hora, cita.hora, true, fecha)
+    );
+    if (citaEnCurso) return { citaEnCurso };
+
+    const cita = citas.find((item) => hayCruceDeBloques(hora, item.hora, false, fecha));
+    if (cita) return { cita };
+
+    const reservas = await PagoReserva.findAll({
+        where: {
+            empleado_id: empleadoId,
+            fecha_reserva: fecha,
+            estado: "pendiente",
+            expira_en: { [Op.gt]: new Date() },
+            ...(excluirReservaId ? { id: { [Op.ne]: excluirReservaId } } : {})
+        },
+        attributes: ["id", "hora_reserva"],
+        transaction,
+        lock: transaction.LOCK.UPDATE
+    });
+    const reserva = reservas.find((item) =>
+        hayCruceDeBloques(hora, item.hora_reserva, false, fecha)
+    );
+    return reserva ? { reserva } : null;
+}
 
 function pagosSimulados() {
     
@@ -165,20 +253,25 @@ async function registrarPagoOnlineCita(pagoReserva, cita, transaction, fechaPago
         : Math.max(0, (Number(pagoReserva.monto_reserva) || 0) - (Number(pagoReserva.monto_credito) || 0));
     if (montoOnline <= 0) return null;
 
-    const pagoExistente = await Pago.findOne({
-        where: { cita_id: cita.id, medio_pago: "online" },
+    const pagosCita = await Pago.findAll({
+        where: { cita_id: cita.id },
         transaction,
         lock: transaction.LOCK.UPDATE
     });
+    const pagoExistente = pagosCita.find((pago) =>
+        Number(pago.monto_online) > 0 || ["online", "mixto"].includes(pago.medio_pago)
+    );
     const montoLocalExistente = Number(pagoExistente?.monto_local) || 0;
     const datosPago = {
         usuario_id: pagoReserva.usuario_id,
         servicio_id: pagoReserva.servicio_id,
         cita_id: cita.id,
-        total_pago: montoOnline + montoLocalExistente,
+        total_pago: Number(cita.precio_final) > 0
+            ? Number(cita.precio_final)
+            : montoOnline + montoLocalExistente,
         monto_online: montoOnline,
         monto_local: montoLocalExistente,
-        medio_pago: "online",
+        medio_pago: montoLocalExistente > 0 ? "mixto" : "online",
         fecha_pago: fechaPago,
         estado_pago: "pagada"
     };
@@ -200,11 +293,25 @@ export async function crearPagoReserva(req, res) {
     const empleadoId = Number(req.body?.empleado_id);
     const servicioId = Number(req.body?.servicio_id);
     const aplicarDescuento = req.body?.aplicar_descuento === true;
+    const porcentajeDescuentoSolicitado = req.body?.porcentaje_descuento == null
+        ? null
+        : Number(req.body.porcentaje_descuento);
     const tipoPago = req.body?.tipo_pago === "completo" ? "completo" : "reserva";
+
+    if (!horarioAtencionValido(horaSolicitada)) {
+        return res.status(400).json({
+            message: "El spa atiende de 8:00 a. m. a 6:00 p. m. Las citas duran una hora; la última debe iniciar a las 5:00 p. m."
+        });
+    }
 
     if (!validarFechaHoraReserva(fecha, horaSolicitada) || !Number.isInteger(empleadoId)
         || empleadoId < 1 || !Number.isInteger(servicioId) || servicioId < 1) {
         return res.status(400).json({ message: "Ingresa una fecha, hora, empleado y servicio válidos." });
+    }
+
+    if (porcentajeDescuentoSolicitado !== null
+        && ![0, 5, 10, 15].includes(porcentajeDescuentoSolicitado)) {
+        return res.status(400).json({ message: "El porcentaje de descuento seleccionado no es v\u00e1lido." });
     }
 
     const hora = normalizarHoraReserva(horaSolicitada);
@@ -233,33 +340,15 @@ export async function crearPagoReserva(req, res) {
 
             const precioPesos = obtenerPrecioPesos(servicio);
             if (precioPesos === null) {
-                const citaEnCurso = await Cita.findOne({
-                    where: {
-                        fecha,
-                        hora,
-                        empleado_id: empleadoId,
-                        estado: { [Op.in]: ESTADOS_OCUPAN_HORARIO }
-                    },
-                    transaction,
-                    lock: transaction.LOCK.UPDATE
-                });
-                if (citaEnCurso) {
-                    return { error: "El empleado ya tiene una cita a esa hora. Elige otro horario.", status: 409 };
+                const conflicto = await buscarConflictoHorario({ empleadoId, fecha, hora, transaction });
+                if (conflicto?.citaEnCurso) {
+                    return { error: "El empleado tiene una cita en curso en este momento. Agenda a otra hora.", status: 409 };
                 }
-
-                const reservaActiva = await PagoReserva.findOne({
-                    where: {
-                        empleado_id: empleadoId,
-                        fecha_reserva: fecha,
-                        hora_reserva: hora,
-                        estado: "pendiente",
-                        expira_en: { [Op.gt]: ahora }
-                    },
-                    transaction,
-                    lock: transaction.LOCK.UPDATE
-                });
-                if (reservaActiva) {
-                    return { error: "Este horario está reservado mientras se completa otro pago. Elige otro horario.", status: 409 };
+                if (conflicto?.cita) {
+                    return { error: "El empleado ya tiene una cita en ese horario. Elige otra hora.", status: 409 };
+                }
+                if (conflicto?.reserva) {
+                    return { error: "Este horario se cruza con una reserva que está completando el pago. Elige otra hora.", status: 409 };
                 }
 
                 const cita = await Cita.create({
@@ -299,7 +388,10 @@ export async function crearPagoReserva(req, res) {
             let descuentoValor = 0;
             let puntosCanje = 0;
 
-            if (aplicarDescuento) {
+            const seleccionarDescuento = porcentajeDescuentoSolicitado === null
+                ? aplicarDescuento
+                : porcentajeDescuentoSolicitado > 0;
+            if (seleccionarDescuento) {
                 await Usuario.findByPk(usuarioId, {
                     transaction,
                     lock: transaction.LOCK.UPDATE
@@ -318,15 +410,16 @@ export async function crearPagoReserva(req, res) {
                 })) || 0;
 
                 const puntosLibres = saldo - puntosComprometidos;
-                const porcentaje = NIVELES_DE_MAYOR_A_MENOR.find(
-                    (nivel) => puntosLibres >= NIVELES_DESCUENTO[nivel].puntos
-                );
-
-                if (!porcentaje) {
-                    return { error: "No tienes puntos suficientes para aplicar un descuento.", status: 400 };
+                const porcentaje = porcentajeDescuentoSolicitado === null
+                    ? NIVELES_DE_MAYOR_A_MENOR.find(
+                        (nivel) => puntosLibres >= NIVELES_DESCUENTO[nivel].puntos
+                    )
+                    : porcentajeDescuentoSolicitado;
+                const nivel = porcentaje ? NIVELES_DESCUENTO[porcentaje] : null;
+                if (!nivel || puntosLibres < nivel.puntos) {
+                    return { error: "No tienes puntos suficientes para el porcentaje de descuento seleccionado.", status: 400 };
                 }
 
-                const nivel = NIVELES_DESCUENTO[porcentaje];
                 descuentoPorcentaje = porcentaje;
                 descuentoValor = Math.min(
                     Math.round(precioPesos * porcentaje / 100),
@@ -343,33 +436,15 @@ export async function crearPagoReserva(req, res) {
                 return { error: "El servicio no tiene un precio válido para calcular la reserva.", status: 400 };
             }
 
-            const citaEnCurso = await Cita.findOne({
-                where: {
-                    fecha,
-                    hora,
-                    empleado_id: empleadoId,
-                    estado: { [Op.in]: ESTADOS_OCUPAN_HORARIO }
-                },
-                transaction,
-                lock: transaction.LOCK.UPDATE
-            });
-            if (citaEnCurso) {
-                return { error: "El empleado ya tiene una cita a esa hora. Elige otro horario.", status: 409 };
+            const conflicto = await buscarConflictoHorario({ empleadoId, fecha, hora, transaction });
+            if (conflicto?.citaEnCurso) {
+                return { error: "El empleado tiene una cita en curso en este momento. Agenda a otra hora.", status: 409 };
             }
-
-            const reservaActiva = await PagoReserva.findOne({
-                where: {
-                    empleado_id: empleadoId,
-                    fecha_reserva: fecha,
-                    hora_reserva: hora,
-                    estado: "pendiente",
-                    expira_en: { [Op.gt]: ahora }
-                },
-                transaction,
-                lock: transaction.LOCK.UPDATE
-            });
-            if (reservaActiva) {
-                return { error: "Este horario está reservado mientras se completa otro pago. Elige otro horario.", status: 409 };
+            if (conflicto?.cita) {
+                return { error: "El empleado ya tiene una cita en ese horario. Elige otra hora.", status: 409 };
+            }
+            if (conflicto?.reserva) {
+                return { error: "Este horario se cruza con una reserva que está completando el pago. Elige otra hora.", status: 409 };
             }
 
             const pagoReserva = await PagoReserva.create({
@@ -658,37 +733,19 @@ export async function recibirEventoWompi(req, res) {
             }
 
           
-            const citaOcupada = await Cita.findOne({
-                where: {
-                    empleado_id: pagoReserva.empleado_id,
-                    fecha: pagoReserva.fecha_reserva,
-                    hora: pagoReserva.hora_reserva,
-                    estado: {
-                        [Op.in]: ESTADOS_OCUPAN_HORARIO
-                    }
-                },
+            const conflicto = await buscarConflictoHorario({
+                empleadoId: pagoReserva.empleado_id,
+                fecha: pagoReserva.fecha_reserva,
+                hora: pagoReserva.hora_reserva,
                 transaction,
-                lock: transaction.LOCK.UPDATE
+                excluirReservaId: pagoReserva.id
             });
 
-            const otraReservaActiva = await PagoReserva.findOne({
-                where: {
-                    id: { [Op.ne]: pagoReserva.id },
-                    empleado_id: pagoReserva.empleado_id,
-                    fecha_reserva: pagoReserva.fecha_reserva,
-                    hora_reserva: pagoReserva.hora_reserva,
-                    estado: "pendiente",
-                    expira_en: { [Op.gt]: ahora }
-                },
-                transaction,
-                lock: transaction.LOCK.UPDATE
-            });
-
-            if (citaOcupada || otraReservaActiva) {
+            if (conflicto) {
                 pagoReserva.estado = "aprobado_abono";
                 await pagoReserva.save({ transaction });
 
-                console.log("Horario ocupado; el pago requiere atención manual.");
+                console.log("Horario ocupado por cruce de citas; el pago requiere atención manual.");
                 return;
             }
 
