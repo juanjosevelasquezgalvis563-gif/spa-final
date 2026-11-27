@@ -43,8 +43,7 @@ async function leerJson(response) {
         return {};
     }
 }
-
-export default function ReportesAdmin({ periodoSolicitado = null, reporteHistorialId = null }) {
+ function ReportesAdmin({ periodoSolicitado = null, reporteHistorialId = null }) {
     const [periodo, setPeriodo] = useState(mesActual());
     useEffect(() => {
         const solicitado = typeof periodoSolicitado === 'string' ? periodoSolicitado : periodoSolicitado?.periodo;
@@ -530,3 +529,5 @@ function TablaTop({ titulo, columnas, filas, icono }) {
         </div>
     );
 }
+
+export default ReportesAdmin;
