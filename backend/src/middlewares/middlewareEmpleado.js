@@ -1,6 +1,7 @@
 
 import Usuario from "../models/Usuario.js";
 import { obtenerSesion } from "./session.js";
+import { esEmpleadoRetirado, esPerfilEmpleado, whereEmpleadoElegible } from "../utils/servicios.js";
 
 export async function middlewareEmpleado(req, res, next) {
     const decoded = obtenerSesion(req, res);
@@ -37,14 +38,13 @@ export async function middlewareEmpleado(req, res, next) {
             }
 
             const empleado = await Usuario.findOne({
-                attributes: ["id"],
-                where: {
-                    id: perfilActivo.id,
-                    rol: "empleado"
-                }
+                attributes: ["id", "nombre", "rol", "es_empleado"],
+                where: { id: perfilActivo.id, ...whereEmpleadoElegible() }
             });
 
-            if (!empleado) {
+            const perfilAdminPropio = empleado?.rol === "administrador"
+                && Number(decoded.id) === Number(empleado.id);
+            if (!empleado || esEmpleadoRetirado(empleado) || !esPerfilEmpleado(empleado) || (empleado.rol === "administrador" && !perfilAdminPropio)) {
                 return res.status(404).json({
                     message: "No se encontró el empleado seleccionado."
                 });
