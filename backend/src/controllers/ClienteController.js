@@ -6,7 +6,7 @@ import PagoReserva from '../models/PagoReserva.js';
 import Pago from '../models/pagos.js';
 import db from "../config/db.js";
 import { Op } from "sequelize";
-import { puedeRealizarServicio } from "../utils/servicios.js";
+import { esEmpleadoRetirado, puedeRealizarServicio, whereEmpleadoElegible } from "../utils/servicios.js";
 import { horarioAtencionValido, normalizarHoraReserva, validarFechaHoraReserva } from "../utils/fechaHora.js";
 
 export async function servicios(req, res) {
@@ -17,8 +17,8 @@ export async function servicios(req, res) {
             order: [['id', 'ASC']]
         });
         if (!Number.isInteger(empleadoId) || empleadoId <= 0) return res.json(servicio);
-        const empleado = await Usuario.findOne({ where: { id: empleadoId, rol: 'empleado' }, attributes: ['id', 'nombre'] });
-        if (!empleado) return res.status(404).json({ message: 'No encontramos el empleado asignado a la cita.' });
+        const empleado = await Usuario.findOne({ where: { id: empleadoId, ...whereEmpleadoElegible() }, attributes: ['id', 'nombre', 'rol', 'es_empleado'] });
+        if (!empleado || esEmpleadoRetirado(empleado)) return res.status(404).json({ message: 'No encontramos el empleado asignado a la cita.' });
         return res.json(servicio.filter((item) => puedeRealizarServicio(empleado, item)));
 
     } catch (error) {
@@ -31,10 +31,11 @@ export async function empleadosDisponibles(req, res) {
         const { servicio_id } = req.query;
 
         let empleados = await Usuario.findAll({
-            attributes: ['id', 'nombre'],
-            where: { rol: 'empleado' },
+            attributes: ['id', 'nombre', 'rol', 'es_empleado'],
+            where: whereEmpleadoElegible(),
             order: [['nombre', 'ASC']]
         });
+        empleados = empleados.filter((empleado) => !esEmpleadoRetirado(empleado));
 
         if (servicio_id) {
             const servicio = await Servicio.findOne({
@@ -156,7 +157,7 @@ export async function actualizarCita(req, res) {
 
         const resultado = await db.transaction(async (transaction) => {
             const empleado = await Usuario.findOne({
-                where: { id: empleado_id, rol: 'empleado' },
+                where: { id: empleado_id, ...whereEmpleadoElegible() },
                 transaction,
                 lock: transaction.LOCK.UPDATE
             });
