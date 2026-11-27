@@ -3,18 +3,23 @@ import Cita from '../models/citas.js';
 import Usuario from '../models/Usuario.js';
 import Resena from '../models/reseña.js';
 import PagoReserva from '../models/PagoReserva.js';
+import Pago from '../models/pagos.js';
 import db from "../config/db.js";
 import { Op } from "sequelize";
 import { puedeRealizarServicio } from "../utils/servicios.js";
-import { normalizarHoraReserva, validarFechaHoraReserva } from "../utils/fechaHora.js";
+import { horarioAtencionValido, normalizarHoraReserva, validarFechaHoraReserva } from "../utils/fechaHora.js";
 
 export async function servicios(req, res) {
     try {
+        const empleadoId = Number(req.query.empleado_id);
         const servicio = await Servicio.findAll({
             attributes: ['id', 'nombre', 'precio'],
             order: [['id', 'ASC']]
         });
-        res.json(servicio);
+        if (!Number.isInteger(empleadoId) || empleadoId <= 0) return res.json(servicio);
+        const empleado = await Usuario.findOne({ where: { id: empleadoId, rol: 'empleado' }, attributes: ['id', 'nombre'] });
+        if (!empleado) return res.status(404).json({ message: 'No encontramos el empleado asignado a la cita.' });
+        return res.json(servicio.filter((item) => puedeRealizarServicio(empleado, item)));
 
     } catch (error) {
         res.status(500).json({ message:'Error al obtener los servicios' });
@@ -135,6 +140,12 @@ export async function actualizarCita(req, res) {
         const id = req.params.id;
         const { fecha, hora, empleado_id, servicio_id } = req.body;
 
+        if (!horarioAtencionValido(hora)) {
+            return res.status(400).json({
+                message: "El spa atiende de 8:00 a. m. a 6:00 p. m. Las citas duran una hora; la última debe iniciar a las 5:00 p. m."
+            });
+        }
+
         if (
             !validarFechaHoraReserva(fecha, hora)
             || !empleado_id
@@ -244,6 +255,7 @@ export async function cantidadDeCitas(req, res) {
 
 export async function citasPendientes(req, res) {
     try {
+        res.set('Cache-Control', 'no-store, max-age=0');
         const usuarioId = req.user.id;
         const citasPendientes = await Cita.count({
             where: {
@@ -433,7 +445,25 @@ export async function citasParaDescuento(req, res) {
             ]
         });
 
-        return res.status(200).json(citas);
+        const citasConPrecio = citas.filter((cita) => Number(cita.Servicio?.precio) > 0);
+        if (citasConPrecio.length === 0) return res.status(200).json([]);
+
+        const idsCitas = citasConPrecio.map((cita) => cita.id);
+        const [pagosRegistrados, reservasAprobadas] = await Promise.all([
+            Pago.findAll({ where: { cita_id: { [Op.in]: idsCitas } }, attributes: ['cita_id'] }),
+            PagoReserva.findAll({
+                where: { cita_id: { [Op.in]: idsCitas }, estado: 'aprobado' },
+                attributes: ['cita_id']
+            })
+        ]);
+        const citasConPago = new Set([
+            ...pagosRegistrados.map((pago) => Number(pago.cita_id)),
+            ...reservasAprobadas.map((reserva) => Number(reserva.cita_id))
+        ]);
+
+        return res.status(200).json(
+            citasConPrecio.filter((cita) => !citasConPago.has(Number(cita.id)))
+        );
 
     } catch (error) {
         console.error("Error consultando citas para descuento:", error);
