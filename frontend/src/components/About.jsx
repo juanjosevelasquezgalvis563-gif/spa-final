@@ -24,7 +24,7 @@ function About() {
           <div className="about-divider"></div>
 
           <p className="about-intro">
-            Bienvenido a Velure SPA
+            Bienvenido a JC ALTA PELUQUERIA
           </p>
 
           <p className="about-description">
