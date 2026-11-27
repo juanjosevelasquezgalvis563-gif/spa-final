@@ -3,11 +3,31 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { API_ROOT } from '../lib/api';
 
 function obtenerFechaHoyKeyLocal(date = new Date()) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const partes = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Bogota',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).formatToParts(date);
+    const valores = Object.fromEntries(partes.map(({ type, value }) => [type, value]));
+    return `${valores.year}-${valores.month}-${valores.day}`;
+}
 
-    return `${year}-${month}-${day}`;
+function formatearHoraLocal(hora) {
+    const texto = String(hora || '');
+    const coincidencia = /(?:^|T)(\d{1,2}):([0-5]\d)/.exec(texto);
+    if (!coincidencia) return '--:--';
+    const horas24 = Number(coincidencia[1]);
+    const hora12 = horas24 % 12 || 12;
+    return `${hora12}:${coincidencia[2]} ${horas24 >= 12 ? 'p. m.' : 'a. m.'}`;
+}
+
+function formatearFechaSolicitud(fecha) {
+    const coincidencia = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(fecha || ''));
+    if (!coincidencia) return 'Fecha por definir';
+    return new Intl.DateTimeFormat('es-CO', {
+        day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC'
+    }).format(new Date(`${coincidencia[1]}-${coincidencia[2]}-${coincidencia[3]}T12:00:00Z`));
 }
 
 function formatearDuracion(inicio, fin = Date.now(), mostrarSegundos = false) {
@@ -31,9 +51,14 @@ function formatearDuracion(inicio, fin = Date.now(), mostrarSegundos = false) {
 
 export function CitasEmpleado() {
     const [empleado, SetEmpleado] = useState([]);
+    const [reprogramaciones, setReprogramaciones] = useState([]);
+    const [propuestas, setPropuestas] = useState({});
+    const [trabajandoSolicitud, setTrabajandoSolicitud] = useState(null);
     const [message, SetMessage] = useState("");
     const [citaPrecioPendiente, setCitaPrecioPendiente] = useState(null);
     const [precioAcordado, setPrecioAcordado] = useState("");
+    const [confirmandoId, setConfirmandoId] = useState(null);
+    const [reintentandoCorreoId, setReintentandoCorreoId] = useState(null);
     const [guardandoFinalizacion, setGuardandoFinalizacion] = useState(false);
     const [cargando, SetCargando] = useState(true);
     const [errorCarga, SetErrorCarga] = useState(false);
@@ -81,6 +106,13 @@ export function CitasEmpleado() {
             }
 
             SetEmpleado(data);
+            try {
+                const respuestaSolicitudes = await fetch(`${API_ROOT}/inser/empleado/reprogramaciones`, { credentials: 'include' });
+                const solicitudes = await respuestaSolicitudes.json().catch(() => []);
+                if (respuestaSolicitudes.ok && Array.isArray(solicitudes)) setReprogramaciones(solicitudes);
+            } catch {
+                setReprogramaciones([]);
+            }
         } catch (error) {
             SetErrorCarga(true);
             SetEmpleado([]);
@@ -90,9 +122,50 @@ export function CitasEmpleado() {
         }
     }
 
+    async function resolverReprogramacion(id, accion) {
+        setTrabajandoSolicitud(id);
+        try {
+            const propuesta = propuestas[id] || {};
+            const response = await fetch(`${API_ROOT}/inser/empleado/reprogramaciones/${id}/${accion}`, {
+                method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+                ...(accion === 'proponer' ? { body: JSON.stringify(propuesta) } : {})
+            });
+            const data = await response.json().catch(() => ({}));
+            SetMessage(data.message || (response.ok ? 'Solicitud actualizada.' : 'No se pudo actualizar la solicitud.'));
+            if (response.ok) await obtenerEmpleado();
+        } catch {
+            SetMessage('No pudimos completar la solicitud. Revisa tu conexión e inténtalo de nuevo.');
+        } finally {
+            setTrabajandoSolicitud(null);
+        }
+    }
+
     useEffect(() => {
         obtenerEmpleado();
     }, []);
+
+    const hayCorreoEnProceso = empleado.some((cita) => cita.correo_confirmacion_estado === 'pendiente');
+    useEffect(() => {
+        if (!hayCorreoEnProceso) return undefined;
+        let activo = true;
+        const consultarEstadoCorreo = async () => {
+            try {
+                const response = await fetch(`${API_ROOT}/inser/empleado`, {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+                const data = await response.json();
+                if (activo && response.ok && Array.isArray(data)) SetEmpleado(data);
+            } catch {
+               
+            }
+        };
+        const temporizador = window.setInterval(consultarEstadoCorreo, 2000);
+        return () => {
+            activo = false;
+            window.clearInterval(temporizador);
+        };
+    }, [hayCorreoEnProceso]);
 
     const hayCitaEnCurso = empleado.some((cita) => cita.estado?.toLowerCase() === 'en_curso');
 
@@ -113,26 +186,33 @@ export function CitasEmpleado() {
         return () => clearTimeout(temporizador);
     }, [message]);
 
-    async function comfirmar(id) {
+    async function comfirmar(id, reenviarCorreo = false) {
+        if (confirmandoId !== null) return;
+        setConfirmandoId(id);
+        if (reenviarCorreo) setReintentandoCorreoId(id);
         try {
-            const response = await fetch(
-                `${API_ROOT}/inser/empleado/comfirmar/${id}`,
-                {
-                    method: "PUT",
-                    credentials:'include',
-                }
-            );
+            const opciones = { method: "PUT", credentials: "include" };
+            if (reenviarCorreo) {
+                opciones.headers = { "Content-Type": "application/json" };
+                opciones.body = JSON.stringify({ reenviar_correo: true });
+            }
+            const response = await fetch(`${API_ROOT}/inser/empleado/comfirmar/${id}`, opciones);
 
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
 
             if (response.ok) {
                 SetMessage(data.message);
-                obtenerEmpleado();
+                await obtenerEmpleado();
             }else{
-                SetMessage(data.message);
+                SetMessage(data.message || "No se pudo confirmar la cita.");
+                await obtenerEmpleado();
             }
+            setConfirmandoId(null);
+            setReintentandoCorreoId(null);
 
-        } catch (error) {
+        } catch {
+            setConfirmandoId(null);
+            setReintentandoCorreoId(null);
             SetMessage('No pudimos completar la solicitud. Revisa tu conexión e inténtalo de nuevo.');
         }
     }
@@ -309,10 +389,23 @@ export function CitasEmpleado() {
                         <button
                             className="btn-confirmar"
                             onClick={() => comfirmar(citas.id)}
-                            disabled={citas.estado?.toLowerCase() !== 'pendiente'}
+                            disabled={confirmandoId !== null || citas.estado?.toLowerCase() !== 'pendiente'}
                         >
-                            Confirmar
+                            {confirmandoId === citas.id && reintentandoCorreoId === null ? "Confirmando…" : "Confirmar"}
                         </button>
+                        {citas.estado?.toLowerCase() === 'confirmada' && citas.correo_confirmacion_estado === 'pendiente' && (
+                            <span role="status">Enviando correo de confirmación…</span>
+                        )}
+                        {citas.estado?.toLowerCase() === 'confirmada' && citas.correo_confirmacion_estado === 'fallido' && (
+                            <button
+                                className="btn-confirmar"
+                                type="button"
+                                onClick={() => comfirmar(citas.id, true)}
+                                disabled={confirmandoId !== null}
+                            >
+                                {reintentandoCorreoId === citas.id ? "Reintentando envío…" : "Reintentar correo"}
+                            </button>
+                        )}
                         <button
                             className="btn-cancelar"
                             onClick={() => cancelar(citas.id)}
@@ -330,9 +423,9 @@ export function CitasEmpleado() {
                         <button
                             className="btn-finalizar"
                             onClick={() => solicitarPrecioParaFinalizar(citas)}
-                            disabled={citas.estado?.toLowerCase() !== 'en_curso'}
+                            disabled={guardandoFinalizacion || citas.estado?.toLowerCase() !== 'en_curso'}
                         >
-                            Finalizar
+                            {guardandoFinalizacion ? "Finalizando…" : "Finalizar"}
                         </button>
                     </div>
                 )}
@@ -382,6 +475,27 @@ export function CitasEmpleado() {
                 <div className="mensaje-cita" role="status" aria-live="polite">
                     {message}
                 </div>
+            )}
+
+            {reprogramaciones.length > 0 && (
+                <section className="empleado-card solicitudes-reprogramacion-panel" aria-labelledby="solicitudes-reprogramacion-titulo">
+                    <h2 id="solicitudes-reprogramacion-titulo">Solicitudes para reprogramar</h2>
+                    {reprogramaciones.map((solicitud) => (
+                        <article key={solicitud.id} className="cita-agenda-detalles solicitud-reprogramacion-card">
+                            <p><strong>Cliente</strong><span>{solicitud.cliente?.nombre || 'Cliente'}</span></p>
+                            <p><strong>Servicio</strong><span>{solicitud.servicio || 'Servicio'}</span></p>
+                            <p><strong>Horario solicitado</strong><span>{formatearFechaSolicitud(solicitud.fecha_solicitada)} · {formatearHoraLocal(solicitud.hora_solicitada)}</span></p>
+                            {solicitud.mensaje && <p className="solicitud-detalle-mensaje"><strong>Mensaje del cliente</strong><span>{solicitud.mensaje}</span></p>}
+                            {solicitud.estado === 'propuesta' ? (
+                                <p role="status">Recomendación enviada. La cita mantiene su horario actual; el cliente debe elegir otro horario y enviar una nueva solicitud.</p>
+                            ) : <div className="empleado-botones">
+                                <button type="button" className="btn-confirmar" disabled={trabajandoSolicitud !== null} onClick={() => resolverReprogramacion(solicitud.id, 'aceptar')}>Aceptar solicitud</button>
+                                <label>Recomendación para el cliente <textarea rows={3} maxLength={1000} placeholder="Escribe recomendaciones para que el cliente elija otro horario" value={propuestas[solicitud.id]?.mensaje || ''} onChange={(e) => setPropuestas((prev) => ({ ...prev, [solicitud.id]: { mensaje: e.target.value } }))} /></label>
+                                <button type="button" className="btn-confirmar" disabled={trabajandoSolicitud !== null || !propuestas[solicitud.id]?.mensaje?.trim()} onClick={() => resolverReprogramacion(solicitud.id, 'proponer')}>Enviar recomendación</button>
+                            </div>}
+                        </article>
+                    ))}
+                </section>
             )}
 
             {citaPrecioPendiente && (
