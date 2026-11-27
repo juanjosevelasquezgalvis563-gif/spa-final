@@ -13,6 +13,7 @@ const CARACTERES_ESPECIALES = "@#$%&*()_";
 
 
 
+
 function validarPassword(password) {
     let tieneMayuscula = false;
     let tieneMinuscula = false;
