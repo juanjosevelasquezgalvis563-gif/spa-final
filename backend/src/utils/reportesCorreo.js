@@ -1,5 +1,5 @@
-import nodemailer from "nodemailer";
 import Usuario from "../models/Usuario.js";
+import { enviarEmailGmail, gmailApiConfigurado } from "./gmailApi.js";
 
 const cop = (valor) =>
     new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 })
@@ -68,17 +68,14 @@ function construirHtml(r) {
 
 
 export async function enviarReportePorCorreo(reporte, { destinatarios, estricto = false } = {}) {
-    const EMAIL_USER = process.env.EMAIL_USER?.trim();
-    const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD?.replace(/\s/g, "");
-
     const fallar = (mensaje) => {
         if (estricto) throw new Error(mensaje);
         console.warn(`[reportes] ${mensaje}`);
         return false;
     };
 
-    if (!EMAIL_USER || !EMAIL_PASSWORD) {
-        return fallar("Faltan EMAIL_USER o EMAIL_PASSWORD en el .env.");
+    if (!gmailApiConfigurado()) {
+        return fallar("Falta configurar Gmail API en las variables de entorno.");
     }
 
     let lista = (destinatarios || []).filter(Boolean);
@@ -95,19 +92,14 @@ export async function enviarReportePorCorreo(reporte, { destinatarios, estricto 
     }
     if (!lista.length) return fallar("No hay destinatarios para enviar el reporte.");
 
-    const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: { user: EMAIL_USER, pass: EMAIL_PASSWORD }
-    });
-
-    const resultado = await transporter.sendMail({
-        from: `"JC Alta Peluquería" <${EMAIL_USER}>`,
+    const resultado = await enviarEmailGmail({
         to: lista.join(","),
-        subject: `Reporte y estadísticas - ${reporte.periodo.nombre_mes} ${reporte.periodo.anio}`,
+        subject: `Reporte y estadisticas - ${reporte.periodo.nombre_mes} ${reporte.periodo.anio}`,
+        fromName: "JC Alta Peluquería",
         html: construirHtml(reporte)
     });
 
-    console.log("[reportes] Correo aceptado por SMTP:", resultado.messageId);
+    console.log("[reportes] Correo aceptado por Gmail API:", resultado.id);
     return true;
 }
 
