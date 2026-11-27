@@ -34,6 +34,7 @@ function About() {
             encuentran para brindarte una experiencia especial.
           </p>
 
+
           <p className="about-description">
             Queremos que cada visita sea una pausa de la rutina,
             un momento para respirar, renovar tu energía y dedicarte
