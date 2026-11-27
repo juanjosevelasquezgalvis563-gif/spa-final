@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import logo from '../assets/image.png';
 import { AnimatePresence, m, useReducedMotion } from 'motion/react';
-import { CalendarDays, Package, ReceiptText, ShoppingBag } from 'lucide-react';
+import { BarChart3, CalendarDays, CreditCard, History, LayoutDashboard, Package, ReceiptText, ShoppingBag, ShoppingCart, UserPlus, UsersRound, X } from 'lucide-react';
 import { API_ROOT } from '../lib/api';
 import RegistrarPago from './RegistrarPago';
-import ReportesAdmin from './ReportesAdmin';
+import ReportesAdmin from './reportesAdmin';
+import HistorialReportesAdmin from './HistorialReportesAdmin';
 import HistorialPagos from './HistorialPagos';
 import { useSession } from '../context/useSession';
 
@@ -34,6 +36,15 @@ export function Admin() {
     const [perfiles, SetPerfiles] = useState([]);
     const [cargandoPerfiles, SetCargandoPerfiles] = useState(false);
     const [productoDescontando, SetProductoDescontando] = useState(null);
+    const [productoEliminando, SetProductoEliminando] = useState(null);
+    const [cuentaNueva, setCuentaNueva] = useState({ nombre: '', telefono: '', email: '', password: '', confirmarPassword: '', rol: 'empleado' });
+    const [guardandoCuenta, setGuardandoCuenta] = useState(false);
+    const [mostrarFormularioCuenta, setMostrarFormularioCuenta] = useState(false);
+    const [mensajeCuenta, setMensajeCuenta] = useState('');
+    const [periodoReporteSeleccionado, setPeriodoReporteSeleccionado] = useState(null);
+    const [mostrarHistorialReportes, setMostrarHistorialReportes] = useState(false);
+    const [reporteHistorialSeleccionado, setReporteHistorialSeleccionado] = useState(null);
+    const [seccionPendiente, setSeccionPendiente] = useState(null);
 
     const navigate = useNavigate();
     const reduceMotion = useReducedMotion();
@@ -41,6 +52,76 @@ export function Admin() {
     const [cerrandoSesion, setCerrandoSesion] = useState(false);
     const productoCompraSeleccionado = productos.find((producto) => String(producto.id) === productoId);
     const totalCompraEstimado = (Number(cantidad) || 0) * (Number(precio_compra) || 0);
+    const opcionesNavegacion = [
+        ['admin-inicio', 'Inicio', LayoutDashboard],
+        ['admin-inventario', 'Inventario', Package],
+        ['admin-compras', 'Registrar compra', ShoppingCart],
+        ['admin-registrar-pagos', 'Registrar pagos', CreditCard],
+        ['admin-historial-pagos', 'Historial de pagos', History],
+        ['admin-reportes', 'Reportes y estad\u00edsticas', BarChart3],
+        ['admin-reportes-historial', 'Historial de reportes', History],
+        ['admin-perfiles', 'Perfiles y citas', UsersRound],
+        ['admin-crear-usuarios', 'Registrar empleados y usuarios', UserPlus],
+        ['admin-compras-recientes', '\u00daltimas compras', ReceiptText]
+    ];
+
+    async function crearCuentaAdmin(event) {
+        event.preventDefault();
+        if (cuentaNueva.password !== cuentaNueva.confirmarPassword) {
+            setMensajeCuenta('Las contrasenas no coinciden.');
+            return;
+        }
+
+        setGuardandoCuenta(true);
+        try {
+            const response = await fetch(`${API_ROOT}/inser/administrador/usuarios`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nombre: cuentaNueva.nombre,
+                    telefono: cuentaNueva.telefono,
+                    email: cuentaNueva.email,
+                    password: cuentaNueva.password,
+                    rol: cuentaNueva.rol
+                })
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                setMensajeCuenta(data.message || 'No se pudo registrar la cuenta.');
+                return;
+            }
+
+            const rolCreado = cuentaNueva.rol;
+            SetMessage(data.message || 'Cuenta registrada correctamente.');
+            setMostrarFormularioCuenta(false);
+            setCuentaNueva({ nombre: '', telefono: '', email: '', password: '', confirmarPassword: '', rol: rolCreado });
+            SetRolPerfil(rolCreado);
+            await obtenerPerfiles(rolCreado);
+        } catch {
+            setMensajeCuenta('No pudimos registrar la cuenta. Revisa la conexion e intenta de nuevo.');
+        } finally {
+            setGuardandoCuenta(false);
+        }
+    }
+    function cerrarFormularioCuenta() {
+        setMostrarFormularioCuenta(false);
+        setMensajeCuenta('');
+        setCuentaNueva({ nombre: '', telefono: '', email: '', password: '', confirmarPassword: '', rol: 'empleado' });
+    }
+
+    function irASeccion(id) {
+        document.getElementById(id)?.scrollIntoView({
+            behavior: reduceMotion ? 'auto' : 'smooth',
+            block: 'start'
+        });
+    }
+
+    useEffect(() => {
+        if (mostrarHistorialReportes || !seccionPendiente) return;
+        irASeccion(seccionPendiente);
+        setSeccionPendiente(null);
+    }, [mostrarHistorialReportes, seccionPendiente]);
 
     const formatoMoneda = (valor) => new Intl.NumberFormat('es-CO', {
         style: 'currency',
@@ -48,6 +129,19 @@ export function Admin() {
         maximumFractionDigits: 0
     }).format(Number(valor) || 0);
 
+    useEffect(() => {
+        if (!mostrarFormularioCuenta) return undefined;
+        const anteriorOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        const cerrarConEscape = (event) => {
+            if (event.key === 'Escape' && !guardandoCuenta) cerrarFormularioCuenta();
+        };
+        window.addEventListener('keydown', cerrarConEscape);
+        return () => {
+            document.body.style.overflow = anteriorOverflow;
+            window.removeEventListener('keydown', cerrarConEscape);
+        };
+    }, [mostrarFormularioCuenta, guardandoCuenta]);
     async function cerrarSesion() {
         if (cerrandoSesion) return;
         setCerrandoSesion(true);
@@ -108,6 +202,8 @@ export function Admin() {
     }
 
     async function eliminarProducto(id) {
+        if (productoEliminando !== null) return;
+        SetProductoEliminando(id);
         try {
             const response = await fetch(
                 `${API_ROOT}/inser/administrador/productos/${id}`,
@@ -121,13 +217,15 @@ export function Admin() {
 
             if (response.ok) {
                 SetMessage(data.message);
-                obtenerProductos();
+                SetProductos((actuales) => actuales.filter((producto) => producto.id !== id));
             }else{
                 SetMessage(data.message);
             }
 
         } catch {
             SetMessage('No pudimos completar la solicitud. Revisa tu conexión e inténtalo de nuevo.');
+        } finally {
+            SetProductoEliminando(null);
         }
     }
 
@@ -310,9 +408,15 @@ export function Admin() {
     }, [message]);
 
     useEffect(() => {
+        if (!mensajeCuenta) return;
+        const temporizador = window.setTimeout(() => setMensajeCuenta(''), 4000);
+        return () => window.clearTimeout(temporizador);
+    }, [mensajeCuenta]);
+
+    useEffect(() => {
         const temporizador = window.setTimeout(() => {
             setMostrarBienvenida(false);
-        }, 10000);
+        }, 4000);
 
         return () => window.clearTimeout(temporizador);
     }, []);
@@ -320,7 +424,7 @@ export function Admin() {
     return (
         <div className="admin-dashboard">
 
-            <header className="admin-topbar">
+            <header className="admin-topbar" id="admin-inicio">
 
                 <div className="admin-topbar-text">
                     <AnimatePresence mode="wait" initial={false}>
@@ -333,7 +437,7 @@ export function Admin() {
                         >
                             <h1 className="admin-saludo">
                                 Bienvenid@, {admin?.nombre || 'Admin'}
-                                <span className="admin-saludo-emoji" aria-hidden="true">👋</span>
+
                             </h1>
                             <p className="admin-subtitulo">
                                 Tu espacio de gestión para inventario, perfiles y operaciones.
@@ -345,8 +449,6 @@ export function Admin() {
 
                 {admin && (
                     <div className="admin-identity">
-                        <span className="admin-avatar">♛</span>
-
                         <div className="admin-identity-text">
                             <AnimatePresence initial={false}>
                                 {mostrarBienvenida && (
@@ -392,15 +494,64 @@ export function Admin() {
                 </p>
             )}
 
+            <div className="admin-workspace">
+                <nav className="admin-sidebar" aria-label="Opciones del panel de administración">
+                    <div className="pc-rail-brand">
+                        <span className="pc-rail-logo"><img src={logo} alt="JC Alta Peluqueria" /></span>
+                        <div className="pc-rail-brand-text">
+                            <strong>JC Alta Peluquer&iacute;a</strong>
+                            <span>Panel administrador</span>
+                        </div>
+                    </div>
+                    <span className="admin-sidebar-kicker">NAVEGACIÓN</span>
+                    <strong className="admin-sidebar-title">Panel admin</strong>
+                    <div className="admin-sidebar-options">
+                        {opcionesNavegacion.map(([id, titulo, Icono]) => (
+                            <button key={id} type="button" className={mostrarHistorialReportes && id === 'admin-reportes-historial' ? 'activo' : ''} aria-current={mostrarHistorialReportes && id === 'admin-reportes-historial' ? 'page' : undefined} onClick={() => {
+                                if (id === "admin-crear-usuarios") {
+                                    setMostrarHistorialReportes(false);
+                                    setMensajeCuenta("");
+                                    setMostrarFormularioCuenta(true);
+                                } else if (id === "admin-reportes-historial") {
+                                    setReporteHistorialSeleccionado(null);
+                                    setMostrarHistorialReportes(true);
+                                    setSeccionPendiente(null);
+                                } else if (mostrarHistorialReportes) {
+                                    setReporteHistorialSeleccionado(null);
+                                    setSeccionPendiente(id);
+                                    setMostrarHistorialReportes(false);
+                                } else {
+                                    irASeccion(id);
+                                }
+                            }}>
+                                <span aria-hidden="true"><Icono size={16} strokeWidth={1.8} /></span>
+                                {titulo}
+                            </button>
+                        ))}
+                    </div>
+                </nav>
+
+                <main className="admin-workspace-content">
+                {mostrarHistorialReportes ? (
+                    <div className="admin-reportes-vista">
+                        {reporteHistorialSeleccionado ? (
+                            <>
+                                <button type="button" className="reportes-boton-secundario admin-reportes-volver" onClick={() => setReporteHistorialSeleccionado(null)}>Volver al historial</button>
+                                <ReportesAdmin reporteHistorialId={reporteHistorialSeleccionado} />
+                            </>
+                        ) : (
+                            <HistorialReportesAdmin onAbrirReporte={setReporteHistorialSeleccionado} />
+                        )}
+                    </div>
+                ) : (
+                    <>
             <div className="admin-grid">
 
-            <section className="admin-panel">
+            <section className="admin-panel" id="admin-inventario">
 
                 <div className="admin-panel-head">
                     <h2 className="admin-panel-title">
-                        <span className="admin-panel-icon">
-                            📦
-                        </span>
+                        <span className="admin-panel-icon"><Package size={17} aria-hidden="true" /></span>
                         Inventario de productos
                     </h2>
 
@@ -408,8 +559,8 @@ export function Admin() {
                         <span className="admin-total">
                             {productos.length} en catálogo
                         </span>
-                        <Link className="admin-productos-link" to="/admin/productos">
-                            Agregar productos
+                        <Link className="admin-productos-link" to="/admin/productos"><Package size={15} aria-hidden="true" />
+                            Gestionar productos
                         </Link>
                     </div>
                 </div>
@@ -513,11 +664,12 @@ export function Admin() {
                                                     className="admin-btn-eliminar"
                                                     title="Eliminar producto"
                                                     aria-label={`Eliminar ${producto.nombre}`}
+                                                    disabled={productoEliminando === producto.id}
                                                     onClick={() =>
                                                         eliminarProducto(producto.id)
                                                     }
                                                 >
-                                                    🗑️
+                                                    {productoEliminando === producto.id ? '…' : '🗑️'}
                                                 </button>
 
                                                 <div className="admin-stock-ajuste">
@@ -560,7 +712,7 @@ export function Admin() {
 
             </section>
 
-            <section className="admin-panel admin-panel-compra">
+            <section className="admin-panel admin-panel-compra" id="admin-compras">
                 <div className="admin-panel-head">
                     <h2 className="admin-panel-title">
                         <span className="admin-panel-icon"><ShoppingBag aria-hidden="true" /></span>
@@ -615,11 +767,11 @@ export function Admin() {
 
             </div>
 
-            <RegistrarPago rol="administrador" />
-            <HistorialPagos />
-            <ReportesAdmin />
+            <div id="admin-registrar-pagos" className="admin-anchor-section"><RegistrarPago rol="administrador" /></div>
+            <div id="admin-historial-pagos" className="admin-anchor-section"><HistorialPagos /></div>
+            <div id="admin-reportes" className="admin-anchor-section"><ReportesAdmin periodoSolicitado={periodoReporteSeleccionado} /></div>
 
-            <section className="admin-perfiles">
+            <section className="admin-perfiles" id="admin-perfiles">
                 <div className="admin-panel-head admin-perfiles-head">
                     <div>
                         <h2 className="admin-panel-title">
@@ -675,7 +827,7 @@ export function Admin() {
                 </div>
             </section>
 
-            <section className="admin-historial">
+            <section className="admin-historial" id="admin-compras-recientes">
 
                 <div className="admin-panel-head">
                     <h2 className="admin-panel-title">
@@ -780,6 +932,63 @@ export function Admin() {
                 ))}
 
             </section>
+                    </>
+                )}
+                </main>
+            </div>
+
+            {mostrarFormularioCuenta && (
+                <div className="admin-cuenta-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !guardandoCuenta) cerrarFormularioCuenta(); }}>
+                    <section className="admin-cuenta-dialog" role="dialog" aria-modal="true" aria-labelledby="admin-crear-usuarios-titulo">
+                        <header className="admin-cuenta-dialog-head">
+                            <div>
+                                <span className="admin-cuenta-kicker">GESTION DE ACCESOS</span>
+                                <h2 id="admin-crear-usuarios-titulo">Registrar empleados y usuarios</h2>
+                                <p>Crea una cuenta de empleado o de cliente desde el panel.</p>
+                            </div>
+                            <button className="admin-cuenta-close" type="button" onClick={cerrarFormularioCuenta} aria-label="Cerrar formulario" disabled={guardandoCuenta}><X size={18} /></button>
+                        </header>
+
+                        <form className="admin-cuenta-form" onSubmit={crearCuentaAdmin}>
+                            <label className="admin-cuenta-campo" htmlFor="admin-cuenta-rol">
+                                <span>Tipo de cuenta</span>
+                                <select id="admin-cuenta-rol" value={cuentaNueva.rol} onChange={(event) => setCuentaNueva((actual) => ({ ...actual, rol: event.target.value }))}>
+                                    <option value="empleado">Empleado</option>
+                                    <option value="cliente">Cliente / usuario</option>
+                                </select>
+                            </label>
+                            <label className="admin-cuenta-campo" htmlFor="admin-cuenta-nombre">
+                                <span>Nombre</span>
+                                <input id="admin-cuenta-nombre" type="text" minLength={5} maxLength={15} value={cuentaNueva.nombre} onChange={(event) => setCuentaNueva((actual) => ({ ...actual, nombre: event.target.value }))} autoComplete="name" required />
+                            </label>
+                            <label className="admin-cuenta-campo" htmlFor="admin-cuenta-telefono">
+                                <span>Tel&eacute;fono</span>
+                                <input id="admin-cuenta-telefono" type="tel" inputMode="numeric" pattern="[0-9]{10}" maxLength={10} value={cuentaNueva.telefono} onChange={(event) => setCuentaNueva((actual) => ({ ...actual, telefono: event.target.value }))} autoComplete="tel" required />
+                            </label>
+                            <label className="admin-cuenta-campo" htmlFor="admin-cuenta-email">
+                                <span>Correo electr&oacute;nico</span>
+                                <input id="admin-cuenta-email" type="email" maxLength={254} value={cuentaNueva.email} onChange={(event) => setCuentaNueva((actual) => ({ ...actual, email: event.target.value }))} autoComplete="email" required />
+                            </label>
+                            <label className="admin-cuenta-campo" htmlFor="admin-cuenta-password">
+                                <span>Contrase&ntilde;a inicial</span>
+                                <input id="admin-cuenta-password" type="password" minLength={8} maxLength={72} value={cuentaNueva.password} onChange={(event) => setCuentaNueva((actual) => ({ ...actual, password: event.target.value }))} autoComplete="new-password" required />
+                            </label>
+                            <label className="admin-cuenta-campo" htmlFor="admin-cuenta-confirmar">
+                                <span>Confirmar contrase&ntilde;a</span>
+                                <input id="admin-cuenta-confirmar" type="password" minLength={8} maxLength={72} value={cuentaNueva.confirmarPassword} onChange={(event) => setCuentaNueva((actual) => ({ ...actual, confirmarPassword: event.target.value }))} autoComplete="new-password" required />
+                            </label>
+                            <p className="admin-cuenta-ayuda">La contrase&ntilde;a debe incluir may&uacute;scula, min&uacute;scula, n&uacute;mero y s&iacute;mbolo. Comparte la clave inicial de forma segura.</p>
+                            {mensajeCuenta && <p className="admin-cuenta-error" role="alert">{mensajeCuenta}</p>}
+                            <div className="admin-cuenta-dialog-actions">
+                                <button className="admin-cuenta-cancel" type="button" onClick={cerrarFormularioCuenta} disabled={guardandoCuenta}>Cancelar</button>
+                                <button className="admin-cuenta-submit" type="submit" disabled={guardandoCuenta}>
+                                    <UserPlus size={16} aria-hidden="true" />{guardandoCuenta ? 'Registrando...' : 'Crear cuenta'}
+                                </button>
+                            </div>
+                        </form>
+                    </section>
+                </div>
+            )}
 
         </div>
     );
