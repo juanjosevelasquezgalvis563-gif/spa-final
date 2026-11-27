@@ -9,6 +9,7 @@ import { Op } from "sequelize";
 import { esEmpleadoRetirado, puedeRealizarServicio, whereEmpleadoElegible } from "../utils/servicios.js";
 import { horarioAtencionValido, normalizarHoraReserva, validarFechaHoraReserva } from "../utils/fechaHora.js";
 
+
 export async function servicios(req, res) {
     try {
         const empleadoId = Number(req.query.empleado_id);
