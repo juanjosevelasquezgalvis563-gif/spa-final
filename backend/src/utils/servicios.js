@@ -105,3 +105,4 @@ export function puedeRealizarServicio(empleado, servicio) {
     if (especialidadEmpleado === "ambas") return true;
     return especialidadEmpleado === grupoServicio;
 }
+
