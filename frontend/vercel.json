@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/inser/:path*",
+      "destination": "https://spa-final.onrender.com/inser/:path*"
+    },
+    {
+      "source": "/uploads/products/:path*",
+      "destination": "https://spa-final.onrender.com/uploads/products/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
