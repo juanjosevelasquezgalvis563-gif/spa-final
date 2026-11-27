@@ -13,6 +13,13 @@ const cop = (valor) =>
         maximumFractionDigits: 0
     }).format(Number(valor) || 0);
 
+function formatearFechaHoraReporte(valor) {
+    if (!valor) return 'Fecha no disponible';
+    const fecha = new Date(valor);
+    if (!Number.isFinite(fecha.getTime())) return 'Fecha no disponible';
+    return new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Bogota' }).format(fecha);
+}
+
 function mesActual() {
     const hoy = new Date();
     return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
@@ -37,19 +44,31 @@ async function leerJson(response) {
     }
 }
 
-export default function ReportesAdmin() {
+export default function ReportesAdmin({ periodoSolicitado = null, reporteHistorialId = null }) {
     const [periodo, setPeriodo] = useState(mesActual());
+    useEffect(() => {
+        const solicitado = typeof periodoSolicitado === 'string' ? periodoSolicitado : periodoSolicitado?.periodo;
+        if (solicitado && /^\d{4}-\d{2}$/.test(solicitado)) setPeriodo(solicitado);
+    }, [periodoSolicitado]);
     const [email, setEmail] = useState('');
     const [reporte, setReporte] = useState(null);
     const [enCurso, setEnCurso] = useState(false);
     const [enviadoEn, setEnviadoEn] = useState(null);
+    const [generadoEn, setGeneradoEn] = useState(null);
     const [historial, setHistorial] = useState([]);
+    const [cargandoHistorial, setCargandoHistorial] = useState(false);
+    const [errorHistorial, setErrorHistorial] = useState('');
     const [buscarHistorial, setBuscarHistorial] = useState('');
     const [buscarRankings, setBuscarRankings] = useState('');
-    const [vistaTendencia, setVistaTendencia] = useState('ingresos-utilidad');
     const [cargando, setCargando] = useState(false);
     const [enviando, setEnviando] = useState(false);
     const [estado, setEstado] = useState(null); // { tipo: 'ok' | 'error', texto }
+
+    useEffect(() => {
+        if (!estado) return undefined;
+        const temporizador = window.setTimeout(() => setEstado(null), 4000);
+        return () => window.clearTimeout(temporizador);
+    }, [estado]);
 
     useEffect(() => {
         const limpiarImpresion = () => document.body.classList.remove('imprimiendo-reporte');
@@ -60,16 +79,24 @@ export default function ReportesAdmin() {
     const imprimirReporte = () => {
         if (!reporte) return;
         document.body.classList.add('imprimiendo-reporte');
+        const tituloAnterior = document.title;
+        document.title = `Reporte-${reporte.periodo.anio}-${String(reporte.periodo.mes).padStart(2, '0')}`;
+        window.addEventListener('afterprint', () => { document.title = tituloAnterior; }, { once: true });
         window.print();
     };
 
     const cargarHistorial = useCallback(async () => {
+        setCargandoHistorial(true);
+        setErrorHistorial('');
         try {
             const response = await fetch(`${BASE}/historial`, { credentials: 'include' });
             const data = await leerJson(response);
-            if (response.ok && Array.isArray(data)) setHistorial(data);
+            if (!response.ok || !Array.isArray(data)) throw new Error(data.message || 'No se pudo cargar el historial de reportes.');
+            setHistorial(data);
         } catch {
-            // El historial es opcional; si falla no se bloquea la pantalla.
+            setErrorHistorial('No se pudo cargar el historial. Intenta actualizar el reporte.');
+        } finally {
+            setCargandoHistorial(false);
         }
     }, []);
 
@@ -77,12 +104,18 @@ export default function ReportesAdmin() {
         const { anio, mes } = separarPeriodo(periodo);
         setCargando(true);
         setEstado(null);
+        setReporte(null);
+        setGeneradoEn(null);
+        setEnviadoEn(null);
 
         try {
             const params = new URLSearchParams({ anio, mes });
             if (recalcular) params.set('recalcular', 'true');
+            const url = reporteHistorialId
+                ? `${BASE}/historial/${encodeURIComponent(reporteHistorialId)}`
+                : `${BASE}/mensual?${params}`;
 
-            const response = await fetch(`${BASE}/mensual?${params}`, {
+            const response = await fetch(url, {
                 credentials: 'include',
                 signal
             });
@@ -94,9 +127,13 @@ export default function ReportesAdmin() {
                 return;
             }
 
+            if (reporteHistorialId && data.reporte?.periodo?.anio && data.reporte?.periodo?.mes) {
+                setPeriodo(`${data.reporte.periodo.anio}-${String(data.reporte.periodo.mes).padStart(2, '0')}`);
+            }
             setReporte(data.reporte);
             setEnCurso(Boolean(data.en_curso));
             setEnviadoEn(data.enviado_en);
+            setGeneradoEn(data.generado_en || data.reporte?.meta?.generado_en || null);
             cargarHistorial();
         } catch (error) {
             if (error.name === 'AbortError') return;
@@ -105,7 +142,7 @@ export default function ReportesAdmin() {
         } finally {
             if (!signal?.aborted) setCargando(false);
         }
-    }, [periodo, cargarHistorial]);
+    }, [periodo, cargarHistorial, reporteHistorialId]);
 
     
     useEffect(() => {
@@ -120,7 +157,9 @@ export default function ReportesAdmin() {
         setEstado(null);
 
         try {
-            const response = await fetch(`${BASE}/mensual/enviar`, {
+            const response = await fetch(reporteHistorialId
+                ? `${BASE}/historial/${encodeURIComponent(reporteHistorialId)}/enviar`
+                : `${BASE}/mensual/enviar`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
@@ -136,7 +175,8 @@ export default function ReportesAdmin() {
                 ? { tipo: 'ok', texto: data.message || 'Reporte enviado correctamente.' }
                 : { tipo: 'error', texto: data.message || 'No se pudo enviar el reporte.' });
             if (response.ok) {
-                setEnviadoEn(new Date().toISOString());
+                setEnviadoEn(data.enviado_en || new Date().toISOString());
+                setGeneradoEn(data.generado_en || generadoEn);
                 cargarHistorial();
             }
         } catch {
@@ -166,7 +206,7 @@ export default function ReportesAdmin() {
     };
 
     const tendencia = useMemo(() => {
-        const actual = reporte ? { anio: reporte.periodo.anio, mes: reporte.periodo.mes, nombre_mes: reporte.periodo.nombre_mes, ingresos: reporte.balance.ingresos, egresos: reporte.balance.egresos, utilidad: reporte.balance.utilidad } : null;
+        const actual = reporte ? { anio: reporte.periodo.anio, mes: reporte.periodo.mes, nombre_mes: reporte.periodo.nombre_mes, ingresos: reporte.balance.ingresos, egresos: reporte.compras.total, resultado_despues_compras: reporte.balance.resultado_despues_compras } : null;
         return [...historial.filter((item) => `${item.anio}-${String(item.mes).padStart(2, '0')}` !== periodo), ...(actual ? [actual] : [])]
             .sort((a, b) => a.anio - b.anio || a.mes - b.mes).slice(-6);
     }, [historial, reporte, periodo]);
@@ -183,11 +223,11 @@ export default function ReportesAdmin() {
             ['Indicador', 'Valor'], ['Ingresos totales', reporte.balance.ingresos],
             ['Ingresos en línea', reporte.ingresos.online?.total ?? reporte.ingresos.reservas_wompi.total],
             ['Ingresos locales', reporte.ingresos.local?.total ?? reporte.ingresos.saldo_salon.total],
-            ['Compras de inventario', reporte.balance.egresos], ['Utilidad', reporte.balance.utilidad],
+            ['Compras de inventario', reporte.compras.total], ['Ingresos menos compras (no es utilidad neta)', reporte.balance.resultado_despues_compras],
             ['Citas registradas', reporte.citas.total], [], ['Tipo', 'Nombre', 'Cantidad', 'Valor'],
-            ...reporte.top_clientes.map((item) => ['Cliente', item.nombre, item.citas_finalizadas, item.total_gastado]),
-            ...reporte.top_empleados.map((item) => ['Empleado', item.nombre, item.solicitudes, item.facturado]),
-            ...reporte.top_servicios.map((item) => ['Servicio', item.nombre, item.solicitudes, item.facturado]),
+            ...reporte.top_clientes.map((item) => ['Cliente recurrente', item.nombre, item.citas_finalizadas, '']),
+            ...reporte.top_empleados.map((item) => ['Empleado', item.nombre, item.solicitudes, item.finalizadas]),
+            ...reporte.top_servicios.map((item) => ['Servicio', item.nombre, item.solicitudes, item.finalizadas]),
             [], ['Productos más comprados', 'Unidades', 'Gasto'],
             ...reporte.compras.top_productos.map((item) => ['Producto', item.nombre, item.unidades, item.gasto]),
             [], ['Estado de cita', 'Cantidad'],
@@ -207,7 +247,6 @@ export default function ReportesAdmin() {
     const citasFinalizadas = Number(reporte?.citas?.por_estado?.finalizada || 0);
     const citasCanceladas = Number(reporte?.citas?.por_estado?.cancelada || reporte?.citas?.por_estado?.canceladas || 0);
     const porcentajeFinalizacion = totalEstadoCitas ? (citasFinalizadas / totalEstadoCitas) * 100 : 0;
-    const ticketPromedio = citasFinalizadas ? Number(reporte?.ingresos?.total || 0) / citasFinalizadas : 0;
     let acumuladoCitas = 0;
     const coloresCitas = ['#18181b', '#a77b50', '#d6c2ad', '#a1a1aa', '#e4e4e7'];
     const gradienteCitas = estadoCitas.map(([, cantidad], indice) => {
@@ -221,7 +260,7 @@ export default function ReportesAdmin() {
             <div className="reportes-impresion-marca">
                 <img src={logo} alt="JC Alta Peluquería" />
                 <div><strong>JC Alta Peluquería</strong><span>Informe de gestión</span></div>
-                {reporte && <time>{reporte.periodo.nombre_mes} {reporte.periodo.anio}</time>}
+                {reporte && <time>{reporte.periodo.nombre_mes} {reporte.periodo.anio}{generadoEn && <><br />Generado: {formatearFechaHoraReporte(generadoEn)}</>}</time>}
             </div>
             <div className="admin-panel-head">
                 <h2 className="admin-panel-title">
@@ -238,7 +277,7 @@ export default function ReportesAdmin() {
 
             <div className="reportes-controles">
                 <div className="reportes-navegacion-meses" role="group" aria-label="Navegar entre meses">
-                    <button type="button" className="reportes-boton-secundario reportes-flecha-mes" onClick={irMesAnterior} disabled={cargando} aria-label="Mes anterior">
+                    <button type="button" className="reportes-boton-secundario reportes-flecha-mes" onClick={irMesAnterior} disabled={cargando || Boolean(reporteHistorialId)} aria-label="Mes anterior">
                         <ChevronLeft size={17} aria-hidden="true" />
                     </button>
                     <div className="reportes-campo">
@@ -249,13 +288,14 @@ export default function ReportesAdmin() {
                             type="month"
                             value={periodo}
                             max={mesActual()}
+                            disabled={Boolean(reporteHistorialId)}
                             onChange={(e) => e.target.value && setPeriodo(e.target.value)}
                         />
                     </div>
-                    <button type="button" className="reportes-boton-secundario reportes-flecha-mes" onClick={irMesSiguiente} disabled={cargando || periodo >= mesActual()} aria-label="Mes siguiente">
+                    <button type="button" className="reportes-boton-secundario reportes-flecha-mes" onClick={irMesSiguiente} disabled={cargando || periodo >= mesActual() || Boolean(reporteHistorialId)} aria-label="Mes siguiente">
                         <ChevronRight size={17} aria-hidden="true" />
                     </button>
-                    <button type="button" className="reportes-boton-secundario reportes-hoy" onClick={() => setPeriodo(mesActual())} disabled={cargando || periodo === mesActual()}>
+                    <button type="button" className="reportes-boton-secundario reportes-hoy" onClick={() => setPeriodo(mesActual())} disabled={cargando || periodo === mesActual() || Boolean(reporteHistorialId)}>
                         <CalendarDays size={16} aria-hidden="true" /> Mes actual
                     </button>
                 </div>
@@ -276,7 +316,7 @@ export default function ReportesAdmin() {
                     type="button"
                     className="pc-submit"
                     onClick={() => cargarReporte({ recalcular: true })}
-                    disabled={cargando}
+                    disabled={cargando || Boolean(reporteHistorialId)}
                 >
                     <RefreshCw size={16} aria-hidden="true" /> {cargando ? 'Cargando…' : 'Actualizar'}
                 </button>
@@ -299,6 +339,8 @@ export default function ReportesAdmin() {
                 </button>
             </div>
 
+            {generadoEn && <p className="reportes-generado-en">Reporte generado: {formatearFechaHoraReporte(generadoEn)}</p>}
+
             <p className="reportes-programacion">
                 Envía una copia de este reporte al correo que indiques cuando lo necesites.
             </p>
@@ -313,12 +355,6 @@ export default function ReportesAdmin() {
 
             {reporte && (
                 <>
-                    {reporte.meta.modo_pruebas && (
-                        <p className="reportes-aviso">
-                            Los pagos en línea (Wompi) están en modo de pruebas: los ingresos por reservas no son dinero real.
-                        </p>
-                    )}
-
                     <div className="reportes-tarjetas">
                         <div className="reportes-tarjeta reportes-tarjeta-fuerte">
                             <small>Ingresos totales</small>
@@ -326,38 +362,49 @@ export default function ReportesAdmin() {
                             <CambioMensual porcentaje={porcentajeCambio(reporte.ingresos.total, reporteAnterior?.ingresos)} />
                         </div>
                         <div className="reportes-tarjeta">
-                            <small>Ingresos online ({reporte.ingresos.online?.cantidad ?? reporte.ingresos.reservas_wompi.cantidad})</small>
-                            <strong>{cop(reporte.ingresos.online?.total ?? reporte.ingresos.reservas_wompi.total)}</strong>
+                            <small>Ingresos online ({reporte.ingresos.online.cantidad})</small>
+                            <strong>{cop(reporte.ingresos.online.total)}</strong>
                         </div>
                         <div className="reportes-tarjeta">
-                            <small>Ingresos locales ({reporte.ingresos.local?.cantidad ?? reporte.ingresos.saldo_salon.cantidad})</small>
-                            <strong>{cop(reporte.ingresos.local?.total ?? reporte.ingresos.saldo_salon.total)}</strong>
+                            <small>Ingresos locales ({reporte.ingresos.local.cantidad})</small>
+                            <strong>{cop(reporte.ingresos.local.total)}</strong>
                         </div>
                         <div className="reportes-tarjeta">
                             <small>Compras ({reporte.compras.cantidad_compras})</small>
                             <strong>{cop(reporte.compras.total)}</strong>
                         </div>
                         <div className="reportes-tarjeta reportes-tarjeta-fuerte">
-                            <small>Utilidad</small>
-                            <strong>{cop(reporte.balance.utilidad)}</strong>
-                            <CambioMensual porcentaje={porcentajeCambio(reporte.balance.utilidad, reporteAnterior?.utilidad)} />
+                            <small>Ingresos menos compras</small>
+                            <strong>{cop(reporte.balance.resultado_despues_compras)}</strong>
+                            <CambioMensual porcentaje={porcentajeCambio(reporte.balance.resultado_despues_compras, reporteAnterior?.resultado_despues_compras)} />
                         </div>
                     </div>
+                    <p className="reportes-nota">
+                        “Ingresos menos compras” solo resta las compras de inventario registradas. No representa utilidad neta porque no incluye nómina, arriendo ni otros gastos.
+                    </p>
+                    <section className="reportes-recomendaciones" aria-labelledby="reportes-recomendaciones-titulo">
+                        <div className="reportes-grafica-cabecera">
+                            <div><span className="reportes-section-kicker">LECTURA DEL PERÍODO</span><h3 id="reportes-recomendaciones-titulo">Sugerencias para el spa</h3></div>
+                        </div>
+                        <ul>
+                            {(reporte.recomendaciones || []).map((recomendacion, indice) => (
+                                <li key={recomendacion.tipo + indice}>
+                                    <strong>{recomendacion.titulo}</strong>
+                                    <span>{recomendacion.detalle}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </section>
 
                     <section className="reportes-visualizaciones" aria-label="Visualizaciones del período">
                         <div className="reportes-grafica reportes-grafica-tendencia">
                             <div className="reportes-grafica-cabecera">
                                 <div><span className="reportes-section-kicker">EVOLUCIÓN</span><h3>Últimos 6 meses</h3></div>
-                                <div className="reportes-grafica-opciones" role="group" aria-label="Métricas de tendencia">
-                                    <button type="button" className={vistaTendencia === 'ingresos-utilidad' ? 'activo' : ''} onClick={() => setVistaTendencia('ingresos-utilidad')}>Ingresos y utilidad</button>
-                                    <button type="button" className={vistaTendencia === 'ingresos-egresos' ? 'activo' : ''} onClick={() => setVistaTendencia('ingresos-egresos')}>Ingresos y compras</button>
-                                    <button type="button" className={vistaTendencia === 'utilidad' ? 'activo' : ''} onClick={() => setVistaTendencia('utilidad')}>Utilidad</button>
-                                </div>
-                                <span className="reportes-grafica-leyenda"><i /> {vistaTendencia === 'utilidad' ? 'Utilidad' : 'Ingresos'} {vistaTendencia !== 'utilidad' && <><i className={vistaTendencia === 'ingresos-egresos' ? 'leyenda-egresos' : 'leyenda-utilidad'} /> {vistaTendencia === 'ingresos-egresos' ? 'Compras' : 'Utilidad'}</>}</span>
+                                <span className="reportes-grafica-leyenda"><i /> Ingresos <i className="leyenda-egresos" /> Compras</span>
                             </div>
-                            {tendencia.length ? <div className="reportes-barras" role="img" aria-label={`Tendencia de ${vistaTendencia.replace('-', ' y ')} durante los últimos meses`}>
+                            {tendencia.length ? <div className="reportes-barras" role="img" aria-label="Tendencia mensual de ingresos y compras">
                                 {tendencia.map((item) => {
-                                    const series = vistaTendencia === 'ingresos-egresos' ? ['ingresos', 'egresos'] : vistaTendencia === 'utilidad' ? ['utilidad'] : ['ingresos', 'utilidad'];
+                                    const series = ["ingresos", "egresos"];
                                     const maximo = Math.max(...tendencia.flatMap((fila) => series.map((clave) => Number(fila[clave]) || 0)), 1);
                                     return <div className="reportes-mes-barra" key={`${item.anio}-${item.mes}`}>
                                         <div className="reportes-par-barras">
@@ -382,7 +429,7 @@ export default function ReportesAdmin() {
                             <small>Cliente más fiel</small>
                             <strong>{fiel ? fiel.nombre : 'Sin datos'}</strong>
                             {fiel && (
-                                <span>{fiel.citas_finalizadas} citas finalizadas · {cop(fiel.total_gastado)}</span>
+                                <span>{fiel.citas_finalizadas} citas finalizadas</span>
                             )}
                         </div>
                         <div className="reportes-tarjeta">
@@ -404,7 +451,7 @@ export default function ReportesAdmin() {
 
                     <div className="reportes-indicadores-citas">
                         <div><span>Finalización de citas</span><strong>{porcentajeFinalizacion.toFixed(0)}%</strong><div className="reportes-progreso"><i style={{ width: `${porcentajeFinalizacion}%` }} /></div><small>{citasFinalizadas} de {totalEstadoCitas} citas</small></div>
-                        <div><span>Ticket promedio por cita finalizada</span><strong>{cop(ticketPromedio)}</strong><small>Ingresos del período ÷ citas finalizadas</small></div>
+                        <div><span>Valor promedio del servicio finalizado</span><strong>{cop(reporte.citas.valor_promedio_servicio_finalizado)}</strong><small>Precio final registrado ÷ servicios finalizados; no representa recaudo.</small></div>
                         <div><span>Citas canceladas</span><strong>{citasCanceladas}</strong><small>{totalEstadoCitas ? `${((citasCanceladas / totalEstadoCitas) * 100).toFixed(0)}% del total registrado` : 'Sin citas en el período'}</small></div>
                     </div>
 
@@ -416,20 +463,20 @@ export default function ReportesAdmin() {
                         <TablaTop
                             icono={<Users size={17} />}
                             titulo="Top clientes"
-                            columnas={['Cliente', 'Citas', 'Gastado']}
-                            filas={filtrarRanking(reporte.top_clientes).map((c) => [c.nombre, c.citas_finalizadas, cop(c.total_gastado)])}
+                            columnas={['Cliente', 'Citas finalizadas']}
+                            filas={filtrarRanking(reporte.top_clientes).map((c) => [c.nombre, c.citas_finalizadas])}
                         />
                         <TablaTop
                             icono={<Users size={17} />}
                             titulo="Top empleados"
-                            columnas={['Empleado', 'Citas', 'Facturado']}
-                            filas={filtrarRanking(reporte.top_empleados).map((e) => [e.nombre, e.solicitudes, cop(e.facturado)])}
+                            columnas={['Empleado', 'Solicitudes', 'Finalizadas']}
+                            filas={filtrarRanking(reporte.top_empleados).map((e) => [e.nombre, e.solicitudes, e.finalizadas])}
                         />
                         <TablaTop
                             icono={<Scissors size={17} />}
                             titulo="Servicios más pedidos"
-                            columnas={['Servicio', 'Citas', 'Facturado']}
-                            filas={filtrarRanking(reporte.top_servicios).map((s) => [s.nombre, s.solicitudes, cop(s.facturado)])}
+                            columnas={['Servicio', 'Solicitudes', 'Finalizadas']}
+                            filas={filtrarRanking(reporte.top_servicios).map((s) => [s.nombre, s.solicitudes, s.finalizadas])}
                         />
                         <TablaTop
                             icono={<Package size={17} />}
@@ -445,49 +492,6 @@ export default function ReportesAdmin() {
                         </p>
                     )}
                 </>
-            )}
-
-            {historial.length > 0 && (
-                <div className="reportes-historial">
-                    <div className="reportes-historial-cabecera"><div><span className="reportes-section-kicker">CONSULTAS ANTERIORES</span><h3>Historial de reportes</h3></div><label className="reportes-busqueda"><Search size={16} aria-hidden="true" /><input aria-label="Buscar en historial" placeholder="Buscar mes, cliente o empleado" value={buscarHistorial} onChange={(event) => setBuscarHistorial(event.target.value)} />{buscarHistorial && <button type="button" aria-label="Limpiar búsqueda" onClick={() => setBuscarHistorial('')}><X size={15} /></button>}</label></div>
-                    <div className="admin-tabla-wrap">
-                        <table className="admin-tabla">
-                            <thead>
-                                <tr>
-                                    <th>Mes</th>
-                                    <th>Ingresos</th>
-                                    <th>Compras</th>
-                                    <th>Utilidad</th>
-                                    <th>Cliente más fiel</th>
-                                    <th>Empleado más solicitado</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {historialFiltrado.map((h) => (
-                                    <tr key={h.id} className="admin-fila">
-                                        <td>{h.nombre_mes} {h.anio}</td>
-                                        <td>{cop(h.ingresos)}</td>
-                                        <td>{cop(h.egresos)}</td>
-                                        <td>{cop(h.utilidad)}</td>
-                                        <td>{h.cliente_mas_fiel || '—'}</td>
-                                        <td>{h.empleado_mas_solicitado || '—'}</td>
-                                        <td>
-                                            <button
-                                                type="button"
-                                                className="pc-submit"
-                                                onClick={() => setPeriodo(`${h.anio}-${String(h.mes).padStart(2, '0')}`)}
-                                            >
-                                                Ver
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                    {historialFiltrado.length === 0 && <p className="admin-vacio">No hay reportes que coincidan con “{buscarHistorial}”.</p>}
-                </div>
             )}
         </section>
     );
