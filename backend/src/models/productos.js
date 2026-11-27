@@ -31,6 +31,11 @@ const Producto = db.define('Producto',{
     estado:{
         type: DataTypes.ENUM('en stock','stock bajo','sin stock'),
         allowNull: false    
+    },
+    activo: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true
     }
 },{
     tableName: 'productos',
