@@ -15,3 +15,4 @@ CREATE TABLE reprogramaciones (
     INDEX idx_reprogramaciones_cita_estado (cita_id, estado),
     INDEX idx_reprogramaciones_empleado_estado (empleado_id, estado)
 );
+
