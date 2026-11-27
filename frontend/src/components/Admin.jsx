@@ -10,6 +10,7 @@ import HistorialReportesAdmin from './HistorialReportesAdmin';
 import HistorialPagos from './HistorialPagos';
 import { useSession } from '../context/useSession';
 
+
 function urlImagenProducto(image) {
     if (!image) return "";
     if (/^(https?:|data:|blob:)/i.test(image)) return image;
