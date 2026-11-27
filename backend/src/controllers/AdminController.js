@@ -13,6 +13,7 @@ import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { PRODUCT_IMAGES_DIR } from "../config/productImages.js";
 import { Op } from 'sequelize';
+import { esEmpleadoRetirado } from "../utils/servicios.js";
 
 const ROLES_PERFIL_ADMIN = ['empleado', 'cliente'];
 
@@ -82,11 +83,14 @@ export async function perfilesAdmin(req, res) {
             return res.status(400).json({ message: 'El rol solicitado no se puede consultar desde este panel.' });
         }
 
-        const usuarios = await Usuario.findAll({
-            attributes: ['id', 'nombre', 'telefono', 'email', 'rol'],
-            where: { rol },
+        let usuarios = await Usuario.findAll({
+            attributes: ['id', 'nombre', 'telefono', 'email', 'rol', 'es_empleado'],
+            where: rol === 'empleado'
+                ? { [Op.or]: [{ rol: 'empleado' }, { rol: 'administrador', es_empleado: true }] }
+                : { rol },
             order: [['nombre', 'ASC']]
         });
+        if (rol === 'empleado') usuarios = usuarios.filter((usuario) => !esEmpleadoRetirado(usuario));
 
         const perfiles = await Promise.all(usuarios.map(async (usuario) => {
             const campoId = rol === 'empleado' ? 'empleado_id' : 'usuario_id';
@@ -121,12 +125,18 @@ export async function activarPerfilAdmin(req, res) {
         }
 
         const perfil = await Usuario.findOne({
-            attributes: ['id'],
-            where: { id, rol }
+            attributes: ['id', 'nombre', 'rol', 'es_empleado'],
+            where: rol === 'empleado'
+                ? { id, [Op.or]: [{ rol: 'empleado' }, { rol: 'administrador', es_empleado: true }] }
+                : { id, rol }
         });
 
-        if (!perfil) {
+        if (!perfil || esEmpleadoRetirado(perfil)) {
             return res.status(404).json({ message: 'No se encontró el perfil seleccionado.' });
+        }
+
+        if (perfil.rol === 'administrador' && Number(perfil.id) !== Number(req.user.id)) {
+            return res.status(403).json({ message: 'Solo puedes entrar como empleada con tu propia cuenta.' });
         }
 
         res.cookie('adminPerfil', JSON.stringify({ id: perfil.id, rol }), adminProfileCookieOptions);
@@ -141,7 +151,7 @@ export async function admin(req, res) {
         const adminId = req.user.id;
 
         const admin = await Usuario.findOne({
-            attributes: ['id', 'nombre', 'rol'],
+            attributes: ['id', 'nombre', 'rol', 'es_empleado'],
             where: {
                 id: adminId
             }
@@ -681,6 +691,12 @@ export async function registrarPago(req, res) {
         return res.status(201).json({ message: 'Pago local registrado correctamente.', pago });
     } catch (error) {
         console.error('Error al registrar el pago local:', error);
+        const mensajeSql = String(error.original?.sqlMessage || error.message || '');
+        if (/medio_pago/i.test(mensajeSql) && /(truncated|enum|incorrect|data too long)/i.test(mensajeSql)) {
+            return res.status(503).json({
+                message: 'La base de datos necesita habilitar el medio de pago mixto. Ejecuta la migración 20261125_pagos_medio_mixto.sql.'
+            });
+        }
         return res.status(error.status || 500).json({ message: error.status ? error.message : 'No se pudo registrar el pago.' });
     }
 }
