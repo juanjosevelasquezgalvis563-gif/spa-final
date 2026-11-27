@@ -409,7 +409,7 @@ export async function actualizarDatos(req, res) {
             }
         });
 
-        if (emailExistente && emailExistente.id !== usuarioId) {
+        if (emailExistente && Number(emailExistente.id) !== Number(usuarioId)) {
             return res.status(400).json({
                 message: "El correo electrónico ya está en uso por otro usuario."
             });
