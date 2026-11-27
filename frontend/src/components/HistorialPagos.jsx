@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { API_ROOT } from '../lib/api';
 
 const formatoCOP = (valor) => '$' + (Number(valor) || 0).toLocaleString('es-CO') + ' COP';
@@ -10,6 +10,12 @@ function HistorialPagos() {
     const [visible, setVisible] = useState(false);
     const [cargado, setCargado] = useState(false);
     const [mensaje, setMensaje] = useState('');
+
+    useEffect(() => {
+        if (!mensaje) return undefined;
+        const temporizador = window.setTimeout(() => setMensaje(''), 4000);
+        return () => window.clearTimeout(temporizador);
+    }, [mensaje]);
 
     async function obtenerHistorialPagos() {
         setCargando(true);
