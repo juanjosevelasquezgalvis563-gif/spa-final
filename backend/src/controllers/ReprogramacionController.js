@@ -245,3 +245,4 @@ export async function listarPropuestasCliente(req, res) {
         return res.status(500).json({ message: "No se pudieron consultar las propuestas." });
     }
 }
+
