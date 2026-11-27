@@ -45,7 +45,9 @@ function formatearDuracion(inicio, fin = Date.now(), mostrarSegundos = false) {
     const segundos = totalSegundos % 60;
     const duracion = horas > 0 ? `${horas} h ${minutos} min` : `${minutos} min`;
 
-    return mostrarSegundos ? `${duracion} ${segundos} s` : duracion;
+    return mostrarSegundos
+        ? `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`
+        : duracion;
 }
 
 
@@ -232,6 +234,12 @@ export function CitasEmpleado() {
             if (response.ok) {
                 SetMessage(data.message);
                 setAhora(Date.now());
+                const inicioAtencion = data.inicio_atencion || new Date().toISOString();
+                SetEmpleado((citasActuales) => citasActuales.map((cita) =>
+                    Number(cita.id) === Number(id)
+                        ? { ...cita, estado: 'en_curso', inicio_atencion: inicioAtencion, fin_atencion: null }
+                        : cita
+                ));
                 await obtenerEmpleado();
             } else {
                 SetMessage(data.message || 'No se pudo comenzar el servicio.');
