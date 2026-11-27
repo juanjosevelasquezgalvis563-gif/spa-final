@@ -34,6 +34,7 @@ const server = createServer(async (request, response) => {
   if (url.pathname !== "/oauth2callback") {
     response.writeHead(404).end("No encontrado");
     return;
+    
   }
 
   const returnedState = url.searchParams.get("state") ?? "";
