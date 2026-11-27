@@ -9,3 +9,5 @@ export const PRODUCT_IMAGES_DIR = process.env.PRODUCT_IMAGES_DIR
     ? path.resolve(process.env.PRODUCT_IMAGES_DIR)
     : defaultProductImagesDir;
 
+
+    
