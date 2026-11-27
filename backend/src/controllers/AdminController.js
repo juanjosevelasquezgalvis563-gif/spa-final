@@ -833,3 +833,4 @@ export async function historialPagos(req, res) {
         return res.status(500).json({ message: 'No se pudo cargar el historial de pagos.' });
     }
 }
+
