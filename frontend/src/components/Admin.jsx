@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import logo from '../assets/image.png';
 import { AnimatePresence, m, useReducedMotion } from 'motion/react';
-import { BarChart3, CalendarDays, CreditCard, History, LayoutDashboard, Package, ReceiptText, ShoppingBag, ShoppingCart, UserPlus, UsersRound, X } from 'lucide-react';
+import { BarChart3, BriefcaseBusiness, CalendarDays, CreditCard, History, LayoutDashboard, Package, ReceiptText, ShoppingBag, ShoppingCart, UserPlus, UsersRound, X } from 'lucide-react';
 import { API_ROOT } from '../lib/api';
 import RegistrarPago from './RegistrarPago';
 import HistorialReportesAdmin from './HistorialReportesAdmin';
@@ -389,6 +389,26 @@ export function Admin() {
         });
     }
 
+    async function entrarComoEmpleada() {
+        if (!admin?.id || !admin?.es_empleado) return;
+        try {
+            const response = await fetch(`${API_ROOT}/inser/administrador/perfil-activo`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: admin.id, rol: 'empleado' })
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                SetMessage(data.message || 'No se pudo abrir el panel de empleada.');
+                return;
+            }
+            navigate(`/empleado?perfilId=${admin.id}`);
+        } catch {
+            SetMessage('No pudimos abrir el panel de empleada. Inténtalo de nuevo.');
+        }
+    }
+
     useEffect(() => {
         void Promise.resolve().then(() => {
             obtenerAdmin();
@@ -529,6 +549,12 @@ export function Admin() {
                                 {titulo}
                             </button>
                         ))}
+                        {admin?.es_empleado && (
+                            <button type="button" onClick={entrarComoEmpleada}>
+                                <span aria-hidden="true"><BriefcaseBusiness size={16} strokeWidth={1.8} /></span>
+                                Entrar como empleada
+                            </button>
+                        )}
                     </div>
                 </nav>
 
