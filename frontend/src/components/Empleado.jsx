@@ -5,6 +5,7 @@ import { API_ROOT } from "../lib/api";
 import logo from "../assets/image.png";
 import { useSession } from "../context/useSession";
 import RegistrarPago from "./RegistrarPago";
+import { ArrowUpRight, CalendarDays, ClipboardList, LogOut, MessageSquareText, UserRound } from "lucide-react";
 
 const API_URL = `${API_ROOT}/inser/empleado`;
 
@@ -34,11 +35,14 @@ function obtenerFechaKey(fecha) {
 }
 
 function obtenerFechaHoyKeyLocal(date = new Date()) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-
-    return `${year}-${month}-${day}`;
+    const partes = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Bogota",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+    }).formatToParts(date);
+    const valores = Object.fromEntries(partes.map(({ type, value }) => [type, value]));
+    return `${valores.year}-${valores.month}-${valores.day}`;
 }
 
 function formatearFecha(fecha) {
@@ -59,9 +63,13 @@ function formatearHora(hora) {
 
 export function Empleado() {
     const [resumen, setResumen] = useState(null);
+    const [resenas, setResenas] = useState([]);
+    const [cargandoResenas, setCargandoResenas] = useState(true);
+    const [errorResenas, setErrorResenas] = useState('');
     const [cargando, setCargando] = useState(true);
     const [message, setMessage] = useState("");
     const [nombreEmpleado, setNombreEmpleado] = useState("");
+    const [idEmpleado, setIdEmpleado] = useState(null);
     const [mostrarBienvenida, setMostrarBienvenida] = useState(true);
 
     const navigate = useNavigate();
@@ -69,7 +77,12 @@ export function Empleado() {
     const { logout } = useSession();
     const reduceMotion = useReducedMotion();
     const perfilId = new URLSearchParams(location.search).get("perfilId");
+    const idEmpleadoPanel = Number(perfilId || idEmpleado);
+    const resenasDelEmpleado = Number.isInteger(idEmpleadoPanel) && idEmpleadoPanel > 0
+        ? resenas.filter((resena) => Number(resena.cita?.empleado_id) === idEmpleadoPanel)
+        : [];
     const perfilPath = (path) => perfilId ? `${path}?perfilId=${encodeURIComponent(perfilId)}` : path;
+    const irAResenas = () => document.getElementById("empleado-resenas")?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
     const abrirGestionCitas = (filtro) => {
         const parametros = new URLSearchParams({ filtro });
         if (perfilId) parametros.set("perfilId", perfilId);
@@ -87,7 +100,8 @@ export function Empleado() {
         weekday: "long",
         day: "numeric",
         month: "long",
-        year: "numeric"
+        year: "numeric",
+        timeZone: "America/Bogota"
     }).format(fechaActual);
 
     const cargarPanel = useCallback(async () => {
@@ -127,10 +141,45 @@ export function Empleado() {
         }
     }, [hoyKey]);
 
+    const cargarResenas = useCallback(async () => {
+        try {
+            const response = await fetch(`${API_URL}/resenas`, {
+                method: 'GET',
+                credentials: 'include',
+                cache: 'no-store'
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.message || 'No se pudieron cargar las reseñas.');
+            if (!Array.isArray(data.resenas)) throw new Error('Respuesta de reseñas no válida.');
+            setResenas(data.resenas);
+            setErrorResenas('');
+        } catch {
+            setErrorResenas('No se pudieron cargar las reseñas en este momento.');
+        } finally {
+            setCargandoResenas(false);
+        }
+    }, []);
+
     useEffect(() => {
         const temporizador = window.setTimeout(cargarPanel, 0);
         return () => window.clearTimeout(temporizador);
     }, [cargarPanel]);
+
+    useEffect(() => {
+        const refrescarResenas = () => {
+            if (document.visibilityState === 'visible') void cargarResenas();
+        };
+        const inicializador = window.setTimeout(cargarResenas, 0);
+        const temporizador = window.setInterval(refrescarResenas, 30000);
+        window.addEventListener('focus', refrescarResenas);
+        document.addEventListener('visibilitychange', refrescarResenas);
+        return () => {
+            window.clearTimeout(inicializador);
+            window.clearInterval(temporizador);
+            window.removeEventListener('focus', refrescarResenas);
+            document.removeEventListener('visibilitychange', refrescarResenas);
+        };
+    }, [cargarResenas]);
 
     useEffect(() => {
         let vigente = true;
@@ -146,7 +195,10 @@ export function Empleado() {
                     throw new Error(data.message || "No se pudo cargar el nombre del empleado.");
                 }
 
-                if (vigente) setNombreEmpleado(data.user?.nombre || "");
+                if (vigente) {
+                    setNombreEmpleado(data.user?.nombre || "");
+                    if (!perfilId) setIdEmpleado(Number(data.user?.id) || null);
+                }
             } catch {
                 if (vigente) {
                     setMessage("No pudimos cargar tu información. Inténtalo de nuevo.");
@@ -158,15 +210,21 @@ export function Empleado() {
         return () => {
             vigente = false;
         };
-    }, []);
+    }, [perfilId]);
 
     useEffect(() => {
         const temporizador = window.setTimeout(() => {
             setMostrarBienvenida(false);
-        }, 10000);
+        }, 4000);
 
         return () => window.clearTimeout(temporizador);
     }, []);
+
+    useEffect(() => {
+        if (!message) return undefined;
+        const temporizador = window.setTimeout(() => setMessage(""), 4000);
+        return () => window.clearTimeout(temporizador);
+    }, [message]);
 
     async function cerrarSesion() {
         if (perfilId) {
@@ -183,53 +241,50 @@ export function Empleado() {
     }
 
     return (
-        <div className="layout-dashboard empleado-dashboard">
-            <aside className="sidebar">
-                <div className="empleado-sidebar-brand">
-                    <img className="empleado-sidebar-logo" src={logo} alt="JC Alta Peluquería" />
+        <div className="layout-dashboard dashboard panel-cliente empleado-dashboard">
+            <aside className="pc-rail">
+                <div className="pc-rail-brand">
+                    <span className="pc-rail-logo"><img src={logo} alt="JC Alta Peluquería" /></span>
+                    <div className="pc-rail-brand-text">
+                        <strong>JC Alta Peluquería</strong>
+                        <span>Panel del empleado</span>
+                    </div>
                 </div>
 
-                <nav className="sidebar-menu" aria-label="Navegación del empleado">
-                    <button
-                        className="empleado-menu-active"
-                        type="button"
-                        onClick={() => navigate(perfilPath("/empleado"))}
-                    >
-                        <span className="empleado-menu-indicator" aria-hidden="true">01</span>
-                        Resumen
+                <nav className="pc-nav" aria-label="Navegación del empleado">
+                    <span className="pc-nav-label">Mi espacio</span>
+                    <button className="pc-nav-item is-active" type="button" onClick={() => navigate(perfilPath("/empleado"))}>
+                        <CalendarDays aria-hidden="true" /><span>Resumen</span>
                     </button>
-                    <button
-                        type="button"
-                        onClick={() => abrirGestionCitas("pendientes")}
-                    >
-                        <span className="empleado-menu-indicator" aria-hidden="true">02</span>
-                        Gestionar mis citas
+                    <button className="pc-nav-item" type="button" onClick={() => abrirGestionCitas("pendientes")}>
+                        <ClipboardList aria-hidden="true" /><span>Gestionar mis citas</span>
                     </button>
-                    <button type="button" onClick={() => navigate("/")}>
-                        <span className="empleado-menu-indicator" aria-hidden="true">03</span>
-                        Ir a la página principal
+                    <button className="pc-nav-item" type="button" onClick={irAResenas}>
+                        <MessageSquareText aria-hidden="true" /><span>{"Rese\u00f1as"}</span>
                     </button>
                     {!perfilId && (
-                        <button
-                            type="button"
-                            onClick={() => navigate("/actualizar-datos-empleado")}
-                        >
-                            <span className="empleado-menu-indicator" aria-hidden="true">04</span>
-                            Actualizar datos
+                        <button className="pc-nav-item" type="button" onClick={() => navigate("/actualizar-datos-empleado")}>
+                            <UserRound aria-hidden="true" /><span>Actualizar datos</span>
                         </button>
                     )}
-                    <button type="button" onClick={cerrarSesion}>
-                        <span className="empleado-menu-indicator" aria-hidden="true">{perfilId ? "04" : "05"}</span>
-                        {perfilId ? "Volver al panel administrador" : "Cerrar sesión"}
-                    </button>
                 </nav>
 
-                <div className="empleado-sidebar-footer">
-                    <span className="empleado-online-dot" aria-hidden="true" />
-                    <span>Espacio de trabajo</span>
+                <div className="pc-rail-foot">
+                    <div className="pc-user">
+                        <span className="pc-user-avatar" aria-hidden="true">{(nombreEmpleado || "Empleado").trim().charAt(0).toUpperCase()}</span>
+                        <div className="pc-user-info">
+                            <strong title={nombreEmpleado}>{nombreEmpleado || "Empleado"}</strong>
+                            <span>Equipo JC Alta</span>
+                        </div>
+                    </div>
+                    <button type="button" className="pc-rail-link" onClick={() => navigate("/")}>
+                        Ir a la página principal <ArrowUpRight aria-hidden="true" />
+                    </button>
+                    <button type="button" className="pc-rail-link" onClick={cerrarSesion}>
+                        {perfilId ? "Volver al panel administrador" : "Cerrar sesión"}<LogOut aria-hidden="true" />
+                    </button>
                 </div>
             </aside>
-
             <main className="main-content">
                 <section className="empleado-welcome">
                     <div className="empleado-welcome-copy">
@@ -328,7 +383,7 @@ export function Empleado() {
                     </article>
                 </section>
 
-                <RegistrarPago rol={perfilId ? "administrador" : "empleado"} />
+                <RegistrarPago rol={perfilId ? "administrador" : "empleado"} empleadoId={perfilId} />
 
                 <section className="empleado-feature-grid">
                     <article className="empleado-next-card">
@@ -426,6 +481,51 @@ export function Empleado() {
                         </div>
                     )}
                     
+                </section>
+
+                <section className="empleado-resenas-card" id="empleado-resenas" aria-labelledby="empleado-resenas-titulo">
+                    <div className="empleado-section-heading">
+                        <div>
+                            <span className="empleado-section-kicker">OPINIONES DE TUS CLIENTES</span>
+                            <h3 id="empleado-resenas-titulo">Reseñas de tus servicios</h3>
+                        </div>
+                        {!cargandoResenas && !errorResenas && (
+                            <div className="empleado-resenas-resumen">
+                                <strong>{resenasDelEmpleado.length
+                                    ? (resenasDelEmpleado.reduce((suma, resena) => suma + Number(resena.calificacion || 0), 0) / resenasDelEmpleado.length).toFixed(1)
+                                    : '—'}</strong>
+                                <span>{resenasDelEmpleado.length} {resenasDelEmpleado.length === 1 ? 'reseña' : 'reseñas'}</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {cargandoResenas || !(Number.isInteger(idEmpleadoPanel) && idEmpleadoPanel > 0) ? (
+                        <p className="empleado-resenas-estado" role="status">Cargando reseñas…</p>
+                    ) : errorResenas ? (
+                        <p className="empleado-resenas-estado" role="status">{errorResenas}</p>
+                    ) : resenasDelEmpleado.length === 0 ? (
+                        <p className="empleado-resenas-estado">Aún no tienes reseñas publicadas.</p>
+                    ) : (
+                        <div className="empleado-resenas-lista">
+                            {resenasDelEmpleado.map((resena) => (
+                                <article className="empleado-resena" key={resena.id}>
+                                    <div className="empleado-resena-cabecera">
+                                        <div className="empleado-resena-estrellas" aria-label={`${resena.calificacion} de 5 estrellas`}>
+                                            {'★'.repeat(Number(resena.calificacion) || 0)}
+                                            <span>{'★'.repeat(Math.max(0, 5 - (Number(resena.calificacion) || 0)))}</span>
+                                        </div>
+                                        <time dateTime={resena.fecha_creacion}>
+                                            {resena.fecha_creacion ? new Date(resena.fecha_creacion).toLocaleDateString('es-CO') : ''}
+                                        </time>
+                                    </div>
+                                    <p>{resena.comentario || 'El cliente dejó una calificación sin comentario.'}</p>
+                                    <span className="empleado-resena-servicio">
+                                        {resena.cita?.Servicio?.nombre || 'Servicio'}
+                                    </span>
+                                </article>
+                            ))}
+                        </div>
+                    )}
                 </section>
             </main>
         </div>
