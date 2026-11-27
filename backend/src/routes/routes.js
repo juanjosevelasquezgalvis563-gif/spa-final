@@ -14,7 +14,7 @@ import {middleware} from "../middlewares/middleware.js";
 
 
 
-import {empleado} from "../controllers/EmpleadoController.js";
+import {empleado, resenasEmpleado} from "../controllers/EmpleadoController.js";
 import { middlewareEmpleado } from "../middlewares/middlewareEmpleado.js";
 import { comfirmarCita } from "../controllers/EmpleadoController.js";
 import { comenzarCita } from "../controllers/EmpleadoController.js";
@@ -41,9 +41,11 @@ import { obtenerResenas } from "../controllers/ReseñaController.js";
 import { obtenerFidelizacion,canjearDescuento } from "../controllers/FidelizacionController.js";
 import { obtenerCitasParaResena } from "../controllers/ClienteController.js";
 import { citasParaDescuento } from "../controllers/ClienteController.js";
+import { solicitarReprogramacion, listarReprogramacionesEmpleado, aceptarReprogramacion, proponerReprogramacion, aceptarPropuestaCliente, listarPropuestasCliente } from "../controllers/ReprogramacionController.js";
 
 
 import {admin} from "../controllers/AdminController.js";
+import { crearUsuarioAdmin } from "../controllers/AdminController.js";
 import {middlewareAdmin} from "../middlewares/middlewareAdmin.js";
 import { productosAdmin } from "../controllers/AdminController.js";
 import { productosCatalogo } from "../controllers/AdminController.js";
@@ -188,7 +190,9 @@ router.post('/cliente', middlewareCliente, carritoActionLimiter, crearPagoReserv
 router.get('/cliente',middlewareCliente, obtenerCliente);
 router.get('/cliente/reserva/:referencia', middlewareCliente, obtenerEstadoPagoReserva);
 router.put('/cliente/cancelar/:id',middlewareCliente,cancelarSuCita);
-router.put('/cliente/actualizar/:id',middlewareCliente,actualizarCita);
+router.put('/cliente/actualizar/:id',middlewareCliente,solicitarReprogramacion);
+router.get('/cliente/reprogramaciones',middlewareCliente,listarPropuestasCliente);
+router.put('/cliente/reprogramaciones/:id/aceptar',middlewareCliente,aceptarPropuestaCliente);
 router.get('/cliente/cantidadCitas',middlewareCliente,cantidadDeCitas);
 router.get('/cliente/citasPendientes',middlewareCliente,citasPendientes);
 router.get('/cliente/citasComfirmadas',middlewareCliente,citasConfirmadas);
@@ -220,6 +224,10 @@ router.get(
 
 
 router.get('/empleado',middlewareEmpleado,empleado);
+router.get('/empleado/resenas',middlewareEmpleado,resenasEmpleado);
+router.get('/empleado/reprogramaciones',middlewareEmpleado,listarReprogramacionesEmpleado);
+router.put('/empleado/reprogramaciones/:id/aceptar',middlewareEmpleado,aceptarReprogramacion);
+router.put('/empleado/reprogramaciones/:id/proponer',middlewareEmpleado,proponerReprogramacion);
 router.put('/empleado/comfirmar/:id',middlewareEmpleado,comfirmarCita);
 router.put('/empleado/comenzar/:id',middlewareEmpleado,comenzarCita);
 router.put('/empleado/finalizar/:id',middlewareEmpleado,finalizarCita);
@@ -232,6 +240,7 @@ router.get('/empleado/citasFinalizadasPago', middlewareEmpleado, citasFinalizada
 router.post('/empleado/registrarPago', middlewareEmpleado, registrarPago);
 
 router.get('/administrador',middlewareAdmin,admin);
+router.post('/administrador/usuarios', middlewareAdmin, crearUsuarioAdmin);
 router.get('/administrador/perfiles',middlewareAdmin,perfilesAdmin);
 router.post('/administrador/perfil-activo',middlewareAdmin,activarPerfilAdmin);
 router.get('/administrador/productos',middlewareAdmin,productosAdmin);
