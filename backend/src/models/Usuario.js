@@ -31,6 +31,12 @@ const Usuario = db.define("Usuario", {
     rol: {
         type: DataTypes.ENUM("cliente", "empleado", "administrador"),
         allowNull: false
+    },
+
+    es_empleado: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
     }
 }, {
     tableName: "usuarios",
