@@ -43,3 +43,4 @@ const Producto = db.define('Producto',{
 });
 
 export default Producto;
+
