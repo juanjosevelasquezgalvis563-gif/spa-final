@@ -48,7 +48,7 @@ function App() {
   useEffect(() => {
     if (!validationAlert) return;
 
-    const timer = setTimeout(() => setValidationAlert(null), 6000);
+    const timer = setTimeout(() => setValidationAlert(null), 4000);
     return () => clearTimeout(timer);
   }, [validationAlert]);
 
