@@ -27,9 +27,9 @@ const MESES = [
 const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
 
 const NIVELES_FIDELIDAD = [
-  { puntos: 300, descuento: 5 },
-  { puntos: 600, descuento: 10 },
-  { puntos: 900, descuento: 15 },
+  { puntos: 300, descuento: 5, descuentoMaximo: 6000 },
+  { puntos: 600, descuento: 10, descuentoMaximo: 12000 },
+  { puntos: 900, descuento: 15, descuentoMaximo: 18000 },
 ];
 
 const ETIQUETAS_ESTADO = {
@@ -91,12 +91,9 @@ export function Cliente() {
   const [fidelizacion, setFidelizacion] = useState({
     saldo_puntos: 0,
     descuentoDisponible: 0,
-    descuentoMaximo: 15000,
+    descuentoMaximo: 0,
     historial: [],
   });
-  const [citasParaDescuento, setCitasParaDescuento] = useState([]);
-  const [citaSeleccionadaDescuento, setCitaSeleccionadaDescuento] = useState("");
-  const [cargandoCitasDescuento, setCargandoCitasDescuento] = useState(false);
 
   const [citasParaResena, setCitasParaResena] = useState([]);
   const [citaSeleccionada, setCitaSeleccionada] = useState("");
@@ -104,7 +101,6 @@ export function Cliente() {
   const [comentario, setComentario] = useState("");
   const [resenas, setResenas] = useState([]);
   const [publicandoResena, setPublicandoResena] = useState(false);
-  const [canjeandoDescuento, setCanjeandoDescuento] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -164,34 +160,6 @@ export function Cliente() {
     }
   }, [perfilId]);
 
-  async function obtenerCitasParaDescuento() {
-    try {
-      setCargandoCitasDescuento(true);
-
-      const response = await fetch(
-        `${API_ROOT}/inser/cliente/citasParaDescuento`,
-        {
-          credentials: "include"
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        SetMessage(data.message || "No se pudieron consultar las citas.");
-        return;
-      }
-
-      setCitasParaDescuento(Array.isArray(data) ? data : []);
-
-    } catch (error) {
-      console.error("Error al consultar citas para descuento:", error);
-      SetMessage("Error al consultar las citas disponibles.");
-    } finally {
-      setCargandoCitasDescuento(false);
-    }
-  }
-
   async function cantidadCitas() {
     try {
       const response = await fetch(
@@ -211,7 +179,7 @@ export function Cliente() {
     try {
       const response = await fetch(
         `${API_ROOT}/inser/cliente/citasPendientes`,
-        { credentials: "include" }
+        { credentials: "include", cache: "no-store" }
       );
       const data = await response.json();
 
@@ -295,7 +263,7 @@ export function Cliente() {
         setFidelizacion({
           saldo_puntos: Number(data.saldo_puntos) || 0,
           descuentoDisponible: Number(data.descuentoDisponible) || 0,
-          descuentoMaximo: Number(data.descuentoMaximo) || 15000,
+          descuentoMaximo: Number(data.descuentoMaximo) || 0,
           historial: Array.isArray(data.historial) ? data.historial : [],
         });
       } else {
@@ -429,8 +397,21 @@ async function prepararCitasParaResena() {
     ultimasCitas();
     obtenerFidelizacion();
     obtenerResenas();
-    obtenerCitasParaDescuento();
     prepararCitasParaResena();
+    const refrescarContadoresCitas = () => {
+      if (document.visibilityState === "visible") {
+        void cantidadCitas();
+        void citasPendientes();
+      }
+    };
+    const temporizadorContadores = window.setInterval(refrescarContadoresCitas, 15000);
+    window.addEventListener("focus", refrescarContadoresCitas);
+    document.addEventListener("visibilitychange", refrescarContadoresCitas);
+    return () => {
+      window.clearInterval(temporizadorContadores);
+      window.removeEventListener("focus", refrescarContadoresCitas);
+      document.removeEventListener("visibilitychange", refrescarContadoresCitas);
+    };
   }, [obtenerNombreCliente]);
 
   useEffect(() => {
@@ -803,6 +784,7 @@ async function prepararCitasParaResena() {
               <strong>15% = $18.000 COP</strong>. El canje se coordina con el salón al reservar.
             </p>
 
+
             <ul className="pc-earn">
               <li>
                 <span className="pc-earn-icon" aria-hidden="true">
@@ -811,7 +793,7 @@ async function prepararCitasParaResena() {
                 <div className="pc-earn-text">
                   <strong>Finaliza tus servicios</strong>
                   <span>
-                    Acumula puntos según el valor del servicio que disfrutes.
+                    Gana 1 punto por cada $3.000 del precio original del servicio finalizado.
                   </span>
                 </div>
               </li>
