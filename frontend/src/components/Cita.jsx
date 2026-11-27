@@ -17,6 +17,54 @@ import imagenTintura from "../assets/servicio-tintura-directa.jpeg";
 import imagenKeratina from "../assets/servicio-keratina-organica.jpeg";
 import imagenReconexion from "../assets/servicio-reconexion-molecular.jpeg";
 import imagenHidratacion from "../assets/servicio-terapia-hidratacion.jpeg";
+import imagenUnas from "../assets/uñas.jpeg";
+import imagenManicureTradicional from "../assets/Manicure-tradicional-cabello.jpeg";
+import imagenManicureSemiDama from "../assets/Manicure-semi-dama.jpg";
+import imagenManicureSemiCaballero from "../assets/Manicure-semi-caballero.jpg";
+import imagenPedicureTradicionalDama from "../assets/Pedicure-tradicional-dama.jpg";
+import imagenPedicureTradicionalCaballero from "../assets/Pedicure-tradicional-cabello.jpg";
+import imagenPedicureSemiDama from "../assets/Pedicure-semi-dama.jpg";
+import imagenPedicureSemiCaballero from "../assets/pedicure-semi-caballero.jpg";
+import imagenEsculpidas from "../assets/Esculpidas.jpg";
+import imagenForradoPoly from "../assets/Forrado-poly.jpg";
+import imagenSoftGel from "../assets/Soft-gel-o-press.jpg";
+import imagenBuilderGel from "../assets/Builder-gel.jpg";
+import imagenBaseRubber from "../assets/Base-Rubber.jpg";
+import imagenDipping from "../assets/Dipping.jpg";
+import imagenPedispa from "../assets/pedispa.jpg";
+import imagenRetiroSemi from "../assets/retiro-semi.jpg";
+import imagenRetiroSistema from "../assets/retiro-sistema.jpg";
+
+const imagenesServiciosUnas = [
+  { coincide: ["manicure", "semi", "caballero"], imagen: imagenManicureSemiCaballero, nombre: "Manicure semipermanente para caballero" },
+  { coincide: ["manicure", "semi", "dama"], imagen: imagenManicureSemiDama, nombre: "Manicure semipermanente para dama" },
+  { coincide: ["manicure", "tradicional", "caballero"], imagen: imagenManicureTradicional, nombre: "Manicure tradicional" },
+  { coincide: ["manicure", "tradicional"], imagen: imagenManicureTradicional, nombre: "Manicure tradicional" },
+  { coincide: ["pedicure", "semi", "caballero"], imagen: imagenPedicureSemiCaballero, nombre: "Pedicure semipermanente para caballero" },
+  { coincide: ["pedicure", "semi", "dama"], imagen: imagenPedicureSemiDama, nombre: "Pedicure semipermanente para dama" },
+  { coincide: ["pedicure", "tradicional", "caballero"], imagen: imagenPedicureTradicionalCaballero, nombre: "Pedicure tradicional para caballero" },
+  { coincide: ["pedicure", "tradicional", "dama"], imagen: imagenPedicureTradicionalDama, nombre: "Pedicure tradicional para dama" },
+  { coincide: ["pedispa"], imagen: imagenPedispa, nombre: "Pedispa" },
+  { coincide: ["esculpida"], imagen: imagenEsculpidas, nombre: "Uñas esculpidas" },
+  { coincide: ["forrado", "poly"], imagen: imagenForradoPoly, nombre: "Forrado poly" },
+  { coincide: ["soft gel"], imagen: imagenSoftGel, nombre: "Soft gel o press" },
+  { coincide: ["builder"], imagen: imagenBuilderGel, nombre: "Builder gel" },
+  { coincide: ["base", "rubber"], imagen: imagenBaseRubber, nombre: "Base rubber" },
+  { coincide: ["dipping"], imagen: imagenDipping, nombre: "Dipping" },
+  { coincide: ["retiro", "semi"], imagen: imagenRetiroSemi, nombre: "Retiro semipermanente" },
+  { coincide: ["retiro", "sistema"], imagen: imagenRetiroSistema, nombre: "Retiro de sistema" },
+];
+
+const palabrasServicioUnas = ["unas", "manicure", "manicura", "pedicure", "pedispa", "dipping", "rubber", "builder", "soft gel", "esculpidas", "retiro", "poly", "press", "nail", "acrilica", "semipermanente"];
+
+function normalizarNombreServicio(nombre = "") {
+  return nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+function esServicioUnas(nombre = "") {
+  const normalizado = normalizarNombreServicio(nombre);
+  return palabrasServicioUnas.some((palabra) => normalizado.includes(palabra));
+}
 
 const imagenesDeServicios = [
   { coincide: ["maquillaje social sin pestanas", "sin pestanas"], imagen: imagenMaquillajeSinPestanas, nombre: "Maquillaje social sin pestañas" },
@@ -37,7 +85,12 @@ const imagenesDeServicios = [
 ];
 
 function imagenParaServicio(nombre = "") {
-  const nombreNormalizado = nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const nombreNormalizado = normalizarNombreServicio(nombre);
+  const imagenUnasEspecifica = imagenesServiciosUnas.find(({ coincide }) => coincide.every((parte) => nombreNormalizado.includes(parte)));
+  if (imagenUnasEspecifica) return imagenUnasEspecifica;
+  if (esServicioUnas(nombreNormalizado)) {
+    return { imagen: imagenUnas, nombre: "Servicio de uñas" };
+  }
   if ((nombreNormalizado.includes("limpieza") || nombreNormalizado.includes("facial")) && !nombreNormalizado.includes("porcelanizacion")) {
     return { imagen: imagenLimpiezaFacial, nombre: "Limpieza facial" };
   }
@@ -71,7 +124,7 @@ export function Cita() {
     descuentoDisponible: 0,
     niveles: [],
   });
-  const [usarDescuento, setUsarDescuento] = useState(false);
+  const [porcentajeDescuento, setPorcentajeDescuento] = useState(0);
   const [tipoPagoReserva, setTipoPagoReserva] = useState("reserva");
   const [searchParams] = useSearchParams();
   const referenciaPago = searchParams.get("reserva");
@@ -79,13 +132,21 @@ export function Cita() {
   const servicioSeleccionado = servicios.find(
     (servicio) => String(servicio.id) === String(servicioId)
   );
+  const imagenServicioSeleccionado = servicioSeleccionado ? imagenParaServicio(servicioSeleccionado.nombre) : null;
   const precioFijoServicio = Number(servicioSeleccionado?.precio);
   const tienePrecioFijo = Number.isFinite(precioFijoServicio) && precioFijoServicio > 0;
   const precioServicio = tienePrecioFijo ? Math.round(precioFijoServicio) : 0;
 
-  // Descuento por puntos: se aplica el nivel más alto que el cliente tenga disponible.
-  const nivelDescuento = fidelizacion.niveles.find(
-    (nivel) => Number(nivel.porcentaje) === Number(fidelizacion.descuentoDisponible)
+ 
+  const nivelesDescuentoDisponibles = fidelizacion.niveles.filter(
+    (nivel) => Number(nivel.puntos) <= Number(fidelizacion.saldo_puntos)
+  );
+  const nivelDescuento = nivelesDescuentoDisponibles.find(
+    (nivel) => Number(nivel.porcentaje) === Number(porcentajeDescuento)
+  );
+  const nivelDescuentoMaximo = nivelesDescuentoDisponibles.reduce(
+    (mayor, nivel) => Number(nivel.porcentaje) > Number(mayor?.porcentaje || 0) ? nivel : mayor,
+    null
   );
   const descuentoPotencial = nivelDescuento && precioServicio > 0
     ? Math.min(
@@ -93,7 +154,7 @@ export function Cita() {
         Number(nivelDescuento.descuentoMaximo) || 0
       )
     : 0;
-  const descuentoAplicado = usarDescuento ? descuentoPotencial : 0;
+  const descuentoAplicado = descuentoPotencial;
   const precioConDescuento = precioServicio - descuentoAplicado;
 
   // La reserva es el 20 % del precio con descuento.
@@ -116,6 +177,15 @@ export function Cita() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+
+    if (hora) {
+      const horaPartes = /^(?:[01]\d|2[0-3]):[0-5]\d$/.exec(hora);
+      const minutosHora = horaPartes ? Number(hora.slice(0, 2)) * 60 + Number(hora.slice(3, 5)) : -1;
+      if (minutosHora < 8 * 60 || minutosHora > 17 * 60) {
+        SetMessage("El spa atiende de 8:00 a. m. a 6:00 p. m. Las citas duran una hora; la última debe iniciar a las 5:00 p. m.");
+        return;
+      }
+    }
 
     if (!fecha || !hora || !empleadoId || !servicioId) {
       SetMessage("Completa fecha, hora, empleado y servicio para agendar la cita.");
@@ -144,7 +214,8 @@ export function Cita() {
             hora,
             empleado_id: empleadoId,
             servicio_id: servicioId,
-            aplicar_descuento: usarDescuento && descuentoPotencial > 0,
+            aplicar_descuento: tienePrecioFijo && porcentajeDescuento > 0 && descuentoPotencial > 0,
+            porcentaje_descuento: tienePrecioFijo ? Number(porcentajeDescuento) : 0,
             tipo_pago: tipoPagoReserva,
           }),
         }
@@ -162,7 +233,7 @@ export function Cita() {
         SetHora("");
         SetEmpleadoId("");
         SetServicioId("");
-        setUsarDescuento(false);
+        setPorcentajeDescuento(0);
         setTipoPagoReserva("reserva");
         return;
       }
@@ -178,15 +249,15 @@ export function Cita() {
         SetFecha("");
         SetHora("");
         SetEmpleadoId("");
-        setUsarDescuento(false);
+        setPorcentajeDescuento(0);
         setTipoPagoReserva("reserva");
         void cargarFidelizacion();
         return;
       }
 
       throw new Error("No pudimos abrir la opción de pago. Inténtalo de nuevo.");
-    } catch {
-      SetMessage("No pudimos iniciar el pago. Revisa tu conexión e inténtalo de nuevo.");
+    } catch (error) {
+      SetMessage(error.message || "No pudimos iniciar el pago. Revisa tu conexión e inténtalo de nuevo.");
     } finally {
       setReservando(false);
     }
@@ -264,7 +335,7 @@ async function obtenerEmpleados(servicioActual) {
 }
 
 
- 
+
   async function cargarFidelizacion() {
     try {
       const response = await fetch(`${API_ROOT}/inser/cliente/fidelizacion`, {
@@ -279,7 +350,7 @@ async function obtenerEmpleados(servicioActual) {
         niveles: Array.isArray(data.niveles) ? data.niveles : [],
       });
     } catch {
-     
+
     }
   }
 
@@ -312,7 +383,7 @@ async function obtenerEmpleados(servicioActual) {
         if (data.estado === "pendiente") {
           temporizador = window.setTimeout(consultarEstadoPago, 3000);
         } else if (data.estado === "aprobado") {
-          // Los puntos del descuento se descuentan al aprobarse la reserva.
+         
           void cargarFidelizacion();
         }
       } catch {
@@ -347,8 +418,8 @@ async function obtenerEmpleados(servicioActual) {
     return () => clearTimeout(temporizador);
   }, [message]);
 
-  const serviciosUnas = servicios.slice(0, 17);
-  const otrosServicios = servicios.slice(17);
+  const serviciosUnas = servicios.filter((servicio) => esServicioUnas(servicio.nombre));
+  const otrosServicios = servicios.filter((servicio) => !esServicioUnas(servicio.nombre));
 
   const renderServicio = (servicio) => {
     const seleccionado = servicioId !== "" && Number(servicio.id) === Number(servicioId);
@@ -414,7 +485,7 @@ async function obtenerEmpleados(servicioActual) {
           role="status"
           aria-live="polite"
         >
-          
+
           <strong>
             {resultadoPago.estado === "sin_pago" && "Cita reservada"}
             {resultadoPago.estado === "pendiente" && "Verificando el pago de tu reserva"}
@@ -454,7 +525,7 @@ async function obtenerEmpleados(servicioActual) {
               </span>
             </div>
 
-            {nivelDescuento && (
+            {nivelDescuentoMaximo && (
               <section className="cita-beneficio-fidelidad" role="status" aria-label="Descuento de fidelización disponible">
                 <div className="cita-beneficio-icono" aria-hidden="true">
                   <Award />
@@ -462,13 +533,9 @@ async function obtenerEmpleados(servicioActual) {
                 <div className="cita-beneficio-contenido">
                   <span className="cita-beneficio-etiqueta">Beneficio de fidelización disponible</span>
                   <h3 className="cita-beneficio-titulo">
-                    {nivelDescuento.porcentaje}% de descuento en tu servicio
+                    Puedes elegir un descuento de hasta {nivelDescuentoMaximo.porcentaje}%
                   </h3>
-                  <p className="cita-beneficio-detalle">
-                    Tienes <strong>{fidelizacion.saldo_puntos} puntos</strong>. Al aplicarlo ahorrarías{" "}
-                    <strong>{formatoPrecio(descuentoPotencial)}</strong> y se descontarán{" "}
-                    <strong>{nivelDescuento.puntos} puntos</strong> de tu saldo.
-                  </p>
+                  <p className="cita-beneficio-detalle">Tienes <strong>{fidelizacion.saldo_puntos} puntos</strong>. Elige el porcentaje disponible al reservar.</p>
                 </div>
               </section>
             )}
@@ -502,10 +569,10 @@ async function obtenerEmpleados(servicioActual) {
     </button>
   )}
 
- 
+
   {categoriaAbierta === "unas" && serviciosUnas.map(renderServicio)}
 
- 
+
   {categoriaAbierta !== "unas" && otrosServicios.map(renderServicio)}
 
 </div>
@@ -514,6 +581,7 @@ async function obtenerEmpleados(servicioActual) {
         )}
 
         {servicioSeleccionado && (
+          <>
           <section className="cita-formulario">
             <div className="cita-form-head">
               <button
@@ -524,47 +592,47 @@ async function obtenerEmpleados(servicioActual) {
                 Cambiar servicio
               </button>
               <div className="cita-form-intro">
-                <span className="cita-form-kicker">Información de reserva</span>
+                                {imagenServicioSeleccionado && (
+                  <img className="cita-servicio-elegido-imagen" src={imagenServicioSeleccionado.imagen} alt={imagenServicioSeleccionado.nombre} />
+                )}
+<span className="cita-form-kicker">Información de reserva</span>
                 <h2 className="cita-form-titulo">Completa tu cita</h2>
                 <p className="cita-form-desc">
                   Servicio seleccionado: <strong>{servicioSeleccionado.nombre}</strong>
                 </p>
               </div>
 
-              {descuentoPotencial > 0 && (
+              {tienePrecioFijo && nivelesDescuentoDisponibles.length > 0 && (
                 <section className="cita-opcion-descuento">
-                  <label
-                    className="cita-toggle-descuento"
-                    style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "0.75rem" }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={usarDescuento}
-                      onChange={(e) => setUsarDescuento(e.target.checked)}
-                      style={{
-                        width: "18px",
-                        height: "18px",
-                        accentColor: "#b45309",
-                      }}
-                    />
-                    <span className="cita-toggle-texto">
-                      <span className="cita-toggle-texto-principal">
-                        Aplicar descuento de fidelización {nivelDescuento.porcentaje}%
-                      </span>
-                      <span className="cita-toggle-texto-secundario">
-                        Ahorras {formatoPrecio(descuentoPotencial)} · Se descontarán {nivelDescuento.puntos} puntos
-                      </span>
-                    </span>
+                  <label className="cita-toggle-texto-principal" htmlFor="cita-descuento-puntos">
+                    Elige tu descuento por puntos
                   </label>
-                  <p className="cita-toggle-nota">
-                    El descuento se aplicará sobre el precio original al confirmar tu reserva.
-                  </p>
+                  <select
+                    id="cita-descuento-puntos"
+                    value={porcentajeDescuento}
+                    onChange={(event) => setPorcentajeDescuento(Number(event.target.value))}
+                  >
+                    <option value={0}>Sin descuento</option>
+                    {nivelesDescuentoDisponibles
+                      .slice()
+                      .sort((a, b) => Number(a.porcentaje) - Number(b.porcentaje))
+                      .map((nivel) => (
+                        <option key={nivel.porcentaje} value={nivel.porcentaje}>
+                          {nivel.porcentaje}% — usa {nivel.puntos} puntos
+                        </option>
+                      ))}
+                  </select>
+                  {nivelDescuento && (
+                    <p className="cita-toggle-nota">
+                      Ahorras {formatoPrecio(descuentoPotencial)} y se descuentan {nivelDescuento.puntos} puntos al aprobarse la reserva.
+                    </p>
+                  )}
                 </section>
               )}
             </div>
 
             <div className="cita-form-content">
-              <form onSubmit={handleSubmit}>
+              <form id="cita-reserva-form" onSubmit={handleSubmit}>
                 <div className="cita-fila">
                   <div className="cita-campo">
                     <label htmlFor="cita-fecha">Fecha</label>
@@ -581,6 +649,8 @@ async function obtenerEmpleados(servicioActual) {
                     <input
                       id="cita-hora"
                       type="time"
+                      min="08:00"
+                      max="17:00"
                       value={hora}
                       onChange={(e) => SetHora(e.target.value)}
                     />
@@ -609,18 +679,13 @@ async function obtenerEmpleados(servicioActual) {
                   )}
                 </div>
 
-                <button className="cita-boton" type="submit" disabled={reservando}>
-                  {reservando
-                    ? (tienePrecioFijo ? "Preparando el pago..." : "Reservando cita...")
-                    : !tienePrecioFijo
-                      ? "Reservar cita sin pagar"
-                      : tipoPagoReserva === "completo"
-                        ? "Pagar servicio completo"
-                        : "Pagar reserva y confirmar cita"}
-                </button>
+
               </form>
 
-              <aside className="cita-payment-panel" aria-label="Resumen del pago">
+
+            </div>
+          </section>
+          <aside className="cita-payment-panel" aria-label="Resumen del pago">
                 <span className="cita-payment-kicker">{tienePrecioFijo ? "Resumen de pago" : "Precio del servicio"}</span>
                 <div className="cita-reserva-resumen">
                   {tienePrecioFijo ? (
@@ -675,9 +740,17 @@ async function obtenerEmpleados(servicioActual) {
                     </div>
                   )}
                 </div>
+              <button className="cita-boton" form="cita-reserva-form" type="submit" disabled={reservando}>
+                  {reservando
+                    ? (tienePrecioFijo ? "Preparando el pago..." : "Reservando cita...")
+                    : !tienePrecioFijo
+                      ? "Reservar cita sin pagar"
+                      : tipoPagoReserva === "completo"
+                        ? "Pagar servicio completo"
+                        : "Pagar reserva y confirmar cita"}
+                </button>
               </aside>
-            </div>
-          </section>
+        </>
         )}
       </div>
 
