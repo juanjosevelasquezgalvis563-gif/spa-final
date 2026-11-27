@@ -1,7 +1,10 @@
 
+import { Op } from "sequelize";
+
 const EMPLEADO_ESPECIALIDAD = {
     "melany arango": "manicurista",
     "juliana correa": "manicurista",
+    "luz mariela": "ambas",
     "mariangel": "ambas",
     "steven piedrahita": "estilista",
     "steven piedradita": "estilista",
@@ -9,6 +12,25 @@ const EMPLEADO_ESPECIALIDAD = {
     "stiven piedradita": "estilista",
     "evelyn nino": "estilista",
 };
+
+export function whereEmpleadoElegible() {
+    return {
+        [Op.or]: [
+            { rol: "empleado" },
+            { rol: "administrador", es_empleado: true }
+        ]
+    };
+}
+
+export function esPerfilEmpleado(usuario) {
+    return usuario?.rol === "empleado"
+        || (usuario?.rol === "administrador" && Boolean(usuario?.es_empleado));
+}
+
+export function esEmpleadoRetirado(empleado) {
+    const nombre = normalizarTexto(empleado?.nombre || "");
+    return nombre === "jenifer correa" || nombre === "jennifer correa";
+}
 
 const SERVICIO_ESPECIALIDAD = {
     manicurista: [
@@ -89,6 +111,7 @@ function obtenerEspecialidadServicio(servicio) {
 
 export function puedeRealizarServicio(empleado, servicio) {
     const nombreEmpleado = normalizarTexto(empleado?.nombre || "");
+    if (esEmpleadoRetirado(empleado)) return false;
 
     const especialidadEmpleado = nombreEmpleado.split(" ").includes("mariangel")
         ? "ambas"
