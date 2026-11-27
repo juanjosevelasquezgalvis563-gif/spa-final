@@ -116,6 +116,8 @@
 
 .reprogramar-page .reprogramar-message {
   grid-column: 1 / -1;
+  width: 100%;
+  max-width: none;
   margin: 0;
   padding: 14px 16px;
   border: 1px solid #d4d4d8;
@@ -123,6 +125,10 @@
   background: #f4f4f5;
   color: #27272a;
   text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.55;
+  box-sizing: border-box;
 }
 
 @media (max-width: 900px) {
@@ -225,4 +231,119 @@
   .reprogramar-page .reprogramar-button {
     transition: none;
   }
+}
+
+/* Compact layout matching the login brand panel. */
+.reprogramar-page .reprogramar-layout {
+  width: min(100%, 1160px);
+  grid-template-columns: minmax(270px, .72fr) minmax(0, 1.28fr);
+  align-items: stretch;
+  gap: 14px;
+}
+
+.reprogramar-page .reprogramar-brand {
+  min-height: 390px;
+  padding: 25px;
+  border-radius: 18px;
+}
+
+.reprogramar-page .reprogramar-brand .auth-brand-copy {
+  padding: 24px 0;
+}
+
+.reprogramar-page .reprogramar-brand .auth-brand-copy h1 {
+  font-size: clamp(25px, 3vw, 34px);
+}
+
+.reprogramar-page .reprogramar-card {
+  width: 100%;
+  max-width: none;
+  padding: 25px;
+  border-radius: 18px;
+}
+
+.reprogramar-page .reprogramar-title {
+  font-size: clamp(24px, 3vw, 31px);
+}
+
+.reprogramar-page .reprogramar-description {
+  margin-bottom: 18px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.reprogramar-page .reprogramar-form {
+  gap: 12px;
+}
+
+.reprogramar-page .reprogramar-field {
+  gap: 6px;
+  font-size: 12px;
+}
+
+.reprogramar-page .cliente-input {
+  min-height: 42px;
+  padding: 9px 11px;
+  font-size: 13px;
+}
+
+.reprogramar-page textarea.cliente-input,
+.reprogramar-page .reprogramar-field:has(textarea) {
+  grid-column: 1 / -1;
+}
+
+.reprogramar-page textarea.cliente-input {
+  min-height: 68px;
+  resize: vertical;
+}
+
+.reprogramar-page .reprogramar-button {
+  min-height: 44px;
+  margin-top: 0;
+  font-size: 13px;
+}
+
+.reprogramar-propuestas {
+  display: grid;
+  gap: 9px;
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1px solid #e4e4e7;
+}
+
+.reprogramar-propuestas h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.reprogramar-propuesta {
+  padding: 11px;
+  border: 1px solid #e4e4e7;
+  border-radius: 9px;
+  background: #fafafa;
+  font-size: 12px;
+}
+
+.reprogramar-propuesta p { margin: 0 0 7px; }
+.reprogramar-propuesta .cliente-button { min-height: 38px; padding: 8px 12px; font-size: 12px; }
+
+@media (max-width: 800px) {
+  .reprogramar-page .reprogramar-layout {
+    width: min(100%, 520px);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .reprogramar-page .reprogramar-brand {
+    min-height: 0;
+    padding: 19px 22px;
+  }
+
+  .reprogramar-page .reprogramar-brand .auth-brand-copy {
+    margin: 16px 0 8px;
+    padding: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .reprogramar-page .reprogramar-card { padding: 22px 17px; }
 }
