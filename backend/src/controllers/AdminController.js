@@ -1,3 +1,4 @@
+import bcrypt from 'bcrypt';
 import Usuario from "../models/Usuario.js";
 import db from "../config/db.js";
 import Producto from "../models/productos.js";
@@ -15,6 +16,65 @@ import { Op } from 'sequelize';
 
 const ROLES_PERFIL_ADMIN = ['empleado', 'cliente'];
 
+const CORREO_ADMIN_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export async function crearUsuarioAdmin(req, res) {
+    const { nombre, telefono, email, password, rol } = req.body ?? {};
+
+    if (typeof nombre !== 'string' || typeof telefono !== 'string'
+        || typeof email !== 'string' || typeof password !== 'string'
+        || !['empleado', 'cliente'].includes(rol)) {
+        return res.status(400).json({ message: 'Completa los datos y selecciona empleado o cliente.' });
+    }
+
+    const nombreNormalizado = nombre.trim();
+    const telefonoNormalizado = telefono.trim();
+    const emailNormalizado = email.trim().toLowerCase();
+
+    if (nombreNormalizado.length < 5 || nombreNormalizado.length > 15) {
+        return res.status(400).json({ message: 'El nombre debe tener entre 5 y 15 caracteres.' });
+    }
+    if (!/^\d{10}$/.test(telefonoNormalizado)) {
+        return res.status(400).json({ message: 'El telefono debe tener exactamente 10 d\u00edgitos.' });
+    }
+    if (emailNormalizado.length > 254 || !CORREO_ADMIN_REGEX.test(emailNormalizado)) {
+        return res.status(400).json({ message: 'Ingresa un correo electr\u00f3nico v\u00e1lido.' });
+    }
+    if (password.length < 8 || Buffer.byteLength(password, 'utf8') > 72
+        || !/[A-Z]/.test(password) || !/[a-z]/.test(password)
+        || !/[0-9]/.test(password) || !/[@#$%&*()_]/.test(password)) {
+        return res.status(400).json({
+            message: 'La contrase\u00f1a debe tener 8 caracteres o m\u00e1s e incluir may\u00fascula, min\u00fascula, n\u00famero y un s\u00edmbolo (@#$%&*()_).'
+        });
+    }
+
+    try {
+        const existente = await Usuario.findOne({ where: { email: emailNormalizado } });
+        if (existente) {
+            return res.status(409).json({ message: 'Ese correo ya est\u00e1 registrado.' });
+        }
+
+        const passwordHash = await bcrypt.hash(password, 10);
+        const usuario = await Usuario.create({
+            nombre: nombreNormalizado,
+            telefono: telefonoNormalizado,
+            email: emailNormalizado,
+            password: passwordHash,
+            rol
+        });
+
+        return res.status(201).json({
+            message: rol === 'empleado' ? 'Empleado registrado correctamente.' : 'Usuario registrado correctamente.',
+            usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol }
+        });
+    } catch (error) {
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            return res.status(409).json({ message: 'Ese correo ya est\u00e1 registrado.' });
+        }
+        console.error('No se pudo crear la cuenta desde el panel administrador:', error);
+        return res.status(500).json({ message: 'No se pudo registrar la cuenta. Int\u00e9ntalo de nuevo.' });
+    }
+}
 export async function perfilesAdmin(req, res) {
     try {
         const rol = req.query.rol || 'empleado';
@@ -102,6 +162,7 @@ export async function productosAdmin(req, res) {
 
         const productos = await Producto.findAll({
             attributes: ['id', 'image', 'nombre', 'precio', 'stock', 'estado'],
+            where: { activo: true },
 
         });
         for (let i = 0; i < productos.length; i++) {
@@ -127,6 +188,7 @@ export async function productosCatalogo(req, res) {
     try {
         const productos = await Producto.findAll({
             attributes: ['id', 'image', 'nombre', 'precio', 'stock'],
+            where: { activo: true },
             order: [['nombre', 'ASC']]
         });
 
@@ -146,10 +208,13 @@ export async function productosCatalogo(req, res) {
 export async function productosCreate(req, res) {
     const nombre = typeof req.body.nombre === "string" ? req.body.nombre.trim() : "";
     const precio = Number(req.body.precio);
-    const stock = Number(req.body.stock);
+    const stockRecibido = req.body?.stock;
+    const stock = Number(stockRecibido);
     const file = req.file;
 
-    if (!nombre || !Number.isFinite(precio) || precio < 0 || !Number.isInteger(stock) || stock < 0) {
+    if (!nombre || !Number.isFinite(precio) || precio < 0 || stockRecibido === undefined
+        || stockRecibido === null || String(stockRecibido).trim() === ""
+        || !Number.isInteger(stock) || stock < 0) {
         return res.status(400).json({
             message: "Ingresa un nombre, un precio válido y un stock entero igual o mayor a cero."
         });
@@ -183,12 +248,20 @@ export async function productosCreate(req, res) {
         await writeFile(imagePath, file.buffer, { flag: "wx" });
         imageSaved = true;
 
-        const producto = await Producto.create({
-            image: `/uploads/products/${fileName}`,
-            nombre,
-            precio,
-            stock,
-            estado: stock > 5 ? "en stock" : stock > 0 ? "stock bajo" : "sin stock"
+        const producto = await db.transaction(async (transaction) => {
+            const creado = await Producto.create({
+                image: `/uploads/products/${fileName}`,
+                nombre,
+                precio,
+                stock,
+                estado: stock > 5 ? "en stock" : stock > 0 ? "stock bajo" : "sin stock",
+                activo: true
+            }, { transaction });
+            await creado.reload({ transaction });
+            if (Number(creado.stock) !== stock) {
+                throw new Error("El stock guardado no coincide con el valor enviado.");
+            }
+            return creado;
         });
 
         return res.status(201).json({
@@ -232,7 +305,8 @@ export async function productosUpdate(req, res) {
         }
         const productos = await Producto.findOne({
             where: {
-                id: id
+                id: id,
+                activo: true
             }
         });
         if (!productos) {
@@ -247,9 +321,7 @@ export async function productosUpdate(req, res) {
             },
 
             {
-                where: {
-                    id: id
-                }
+                where: { id, activo: true }
             }
 
 
@@ -269,12 +341,12 @@ export async function descontarStockProducto(req, res) {
 
     try {
         const resultado = await db.transaction(async (transaction) => {
-            const producto = await Producto.findByPk(req.params.id, {
+            const producto = await Producto.findOne({
+                where: { id: req.params.id, activo: true },
                 transaction,
                 lock: transaction.LOCK.UPDATE
             });
-
-            if (!producto) return { error: 'El producto no existe.', status: 404 };
+            if (!producto) return { error: 'El producto no existe en el inventario activo.', status: 404 };
             if (producto.stock < cantidad) {
                 return { error: `No puedes descontar ${cantidad} unidades; solo hay ${producto.stock}.`, status: 409 };
             }
@@ -309,19 +381,14 @@ export async function productosDelete(req, res) {
     try {
         const id = req.params.id;
         const productos = await Producto.findOne({
-            where: {
-                id: id
-            },
+            where: { id, activo: true },
         });
         if (!productos) {
-            return res.status(401).json({ message: 'El producto no existe' })
+            return res.status(404).json({ message: 'El producto no existe en el inventario activo.' })
         }
-        await Producto.destroy({
-            where: {
-                id: id
-            }
-        })
-        return res.status(200).json({ message: 'Producto eliminado correctamente' })
+        productos.activo = false;
+        await productos.save();
+        return res.status(200).json({ message: 'Producto retirado del inventario. Su historial de compras se conservó.' })
     } catch (error) {
         return res.status(500).json({ message: 'Error al eliminar el producto' })
     }
@@ -343,7 +410,8 @@ export async function comprasAdmin(req, res) {
         const producto = await Producto.findOne({
             attributes: ['id', 'stock'],
             where: {
-                id: producto_id
+                id: producto_id,
+                activo: true
             }
         });
 
@@ -458,7 +526,15 @@ export async function citasFinalizadasParaPago(req, res) {
     }
     try {
         const where = { estado: 'finalizada' };
-        if (req.user.rol === 'empleado') where.empleado_id = req.user.id;
+        if (req.user.rol === 'empleado') {
+            where.empleado_id = req.user.id;
+        } else if (req.query.empleado_id !== undefined) {
+            const empleadoId = Number(req.query.empleado_id);
+            if (!Number.isInteger(empleadoId) || empleadoId <= 0) {
+                return res.status(400).json({ message: 'El perfil de empleado seleccionado no es válido.' });
+            }
+            where.empleado_id = empleadoId;
+        }
         const citas = await Cita.findAll({
             where,
             attributes: ['id', 'usuario_id', 'empleado_id', 'servicio_id', 'fecha', 'hora', 'estado', 'precio_original', 'descuento_porcentaje', 'descuento_valor', 'precio_final'],
@@ -473,17 +549,32 @@ export async function citasFinalizadasParaPago(req, res) {
         const { pagos, reservas } = await cargarMovimientosCitas(ids);
         const citasConSaldo = citas.map((cita) => {
             const item = cita.toJSON();
-            const precioOriginal = dinero(item.precio_original ?? item.Servicio?.precio);
+            const precioOriginalRegistrado = Number(item.precio_original);
+            const precioOriginal = dinero(precioOriginalRegistrado > 0
+                ? precioOriginalRegistrado
+                : item.Servicio?.precio);
             const descuento = dinero(item.descuento_valor);
-            const precioFinal = dinero(item.precio_final ?? Math.max(0, precioOriginal - descuento));
+            const precioFinalRegistrado = Number(item.precio_final);
+            const precioFinalCalculado = Math.max(0, dinero(precioOriginal - descuento));
+            const tienePrecioDefinido = precioFinalRegistrado > 0 || precioOriginal > 0;
+            const precioFinal = tienePrecioDefinido
+                ? (precioFinalRegistrado > 0 ? dinero(precioFinalRegistrado) : precioFinalCalculado)
+                : null;
             const resumen = resumirMovimientosPago(pagos, reservas, item.id);
-            const saldoPendiente = Math.max(0, dinero(precioFinal - resumen.monto_online - resumen.monto_local - resumen.credito_aplicado));
+            const saldoPendiente = tienePrecioDefinido
+                ? Math.max(0, dinero(precioFinal - resumen.monto_online - resumen.monto_local - resumen.credito_aplicado))
+                : null;
+            const pagoCompleto = tienePrecioDefinido
+                ? saldoPendiente <= 0
+                : (resumen.monto_online + resumen.monto_local + resumen.credito_aplicado) > 0;
             return {
                 ...item, precio_original: precioOriginal, descuento_valor: descuento, precio_final: precioFinal,
                 monto_online: resumen.monto_online, monto_local: saldoPendiente,
                 monto_local_recibido: resumen.monto_local,
                 credito_aplicado: resumen.credito_aplicado, saldo_pendiente: saldoPendiente,
-                pago_completo: saldoPendiente <= 0
+                servicio_sin_precio_fijo: !(Number(item.Servicio?.precio) > 0),
+                precio_pendiente_por_definir: !tienePrecioDefinido,
+                pago_completo: pagoCompleto
             };
         }).filter((cita) => !cita.pago_completo);
 
@@ -500,8 +591,15 @@ export async function registrarPago(req, res) {
     }
     const citaId = Number(req.body?.cita_id);
     const fechaEntrada = req.body?.fecha_pago;
+    const empleadoIdSolicitado = req.body?.empleado_id == null
+        ? null
+        : Number(req.body.empleado_id);
     if (!Number.isInteger(citaId) || citaId <= 0 || !fechaEntrada) {
         return res.status(400).json({ message: 'Selecciona una cita y la fecha del pago.' });
+    }
+    if (empleadoIdSolicitado !== null
+        && (!Number.isInteger(empleadoIdSolicitado) || empleadoIdSolicitado <= 0)) {
+        return res.status(400).json({ message: 'El perfil de empleado seleccionado no es válido.' });
     }
     const fecha = /^\d{4}-\d{2}-\d{2}$/.test(String(fechaEntrada))
         ? new Date(String(fechaEntrada) + 'T12:00:00')
@@ -512,41 +610,58 @@ export async function registrarPago(req, res) {
         const pago = await db.transaction(async (transaction) => {
             const whereCita = { id: citaId, estado: 'finalizada' };
             if (req.user.rol === 'empleado') whereCita.empleado_id = req.user.id;
+            else if (empleadoIdSolicitado !== null) whereCita.empleado_id = empleadoIdSolicitado;
             const cita = await Cita.findOne({ where: whereCita, transaction, lock: transaction.LOCK.UPDATE });
             if (!cita) throw Object.assign(new Error('La cita no existe, no est? finalizada o no te pertenece.'), { status: 404 });
             const servicio = await Servicio.findByPk(cita.servicio_id, { transaction });
             if (!servicio) throw Object.assign(new Error('No se encontr? el servicio asociado a la cita.'), { status: 404 });
 
-            const precioOriginal = dinero(cita.precio_original ?? servicio.precio);
+            const precioOriginalRegistrado = Number(cita.precio_original);
+            const precioOriginal = dinero(precioOriginalRegistrado > 0
+                ? precioOriginalRegistrado
+                : servicio.precio);
             const descuento = dinero(cita.descuento_valor);
-            const precioFinal = dinero(cita.precio_final ?? Math.max(0, precioOriginal - descuento));
+            const precioFinalRegistrado = Number(cita.precio_final);
+            const precioFinalCalculado = Math.max(0, dinero(precioOriginal - descuento));
+            const tienePrecioDefinido = precioFinalRegistrado > 0 || precioOriginal > 0;
+            const precioFinal = tienePrecioDefinido
+                ? (precioFinalRegistrado > 0 ? dinero(precioFinalRegistrado) : precioFinalCalculado)
+                : null;
             const { pagos, reservas } = await cargarMovimientosCitas([cita.id], transaction);
             const resumen = resumirMovimientosPago(pagos, reservas, cita.id);
-            const saldoPendiente = Math.max(0, dinero(precioFinal - resumen.monto_online - resumen.monto_local - resumen.credito_aplicado));
+            const saldoPendiente = tienePrecioDefinido
+                ? Math.max(0, dinero(precioFinal - resumen.monto_online - resumen.monto_local - resumen.credito_aplicado))
+                : null;
             const montoLocal = req.body?.monto_local == null && req.body?.total_pago == null
-                ? saldoPendiente
+                ? (tienePrecioDefinido ? saldoPendiente : 0)
                 : dinero(req.body.monto_local ?? req.body.total_pago);
 
             if (!Number.isFinite(montoLocal) || montoLocal <= 0) {
                 throw Object.assign(new Error('El monto local debe ser mayor que cero.'), { status: 400 });
             }
-            if (montoLocal > saldoPendiente) {
+            if (tienePrecioDefinido && montoLocal > saldoPendiente) {
                 throw Object.assign(new Error('El saldo pendiente es de $' + saldoPendiente.toLocaleString('es-CO') + ' COP.'), { status: 400 });
+            }
+            if (!tienePrecioDefinido && resumen.monto_online + resumen.monto_local + resumen.credito_aplicado > 0) {
+                throw Object.assign(new Error('Esta cita ya tiene un pago registrado.'), { status: 400 });
             }
             const onlineTotal = resumen.monto_online;
             const localTotal = dinero(resumen.monto_local + montoLocal);
             const pagoPrincipal = pagos.find((movimiento) =>
                 Number(movimiento.cita_id) === Number(cita.id) &&
-                (dinero(movimiento.monto_online) > 0 || movimiento.medio_pago === 'online')
+                (dinero(movimiento.monto_online) > 0 || ['online', 'mixto'].includes(movimiento.medio_pago))
             ) || pagos.find((movimiento) => Number(movimiento.cita_id) === Number(cita.id));
+            const medioPago = onlineTotal > 0
+                ? (localTotal > 0 ? 'mixto' : 'online')
+                : 'local';
             const datosPago = {
                 usuario_id: cita.usuario_id,
                 servicio_id: cita.servicio_id,
                 cita_id: cita.id,
-                total_pago: dinero(onlineTotal + localTotal),
-                monto_online: onlineTotal,
+                total_pago: tienePrecioDefinido ? precioFinal : localTotal,
+                monto_online: resumen.monto_online,
                 monto_local: localTotal,
-                medio_pago: onlineTotal > 0 ? 'online' : 'local',
+                medio_pago: medioPago,
                 fecha_pago: fecha,
                 estado_pago: 'pagada'
             };
@@ -613,7 +728,9 @@ export async function historialPagos(req, res) {
             if (online === 0 && local === 0) local = dinero(pago.total_pago);
             return {
                 ...pago, monto_online: online, monto_local: local, total_pago: dinero(pago.total_pago),
-                tipo_pago: online > 0 && local === 0 ? 'Pago online' : 'Pago local'
+                tipo_pago: online > 0 && local > 0
+                    ? 'Pago mixto'
+                    : online > 0 ? 'Pago online' : 'Pago local'
             };
             
         }));
