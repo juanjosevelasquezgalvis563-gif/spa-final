@@ -5,7 +5,7 @@ import Reprogramacion from "../models/Reprogramacion.js";
 import Servicio from "../models/servicios.js";
 import Usuario from "../models/Usuario.js";
 import PagoReserva from "../models/PagoReserva.js";
-import { puedeRealizarServicio } from "../utils/servicios.js";
+import { esPerfilEmpleado, puedeRealizarServicio, whereEmpleadoElegible } from "../utils/servicios.js";
 import { horarioAtencionValido, normalizarHoraReserva, validarFechaHoraReserva } from "../utils/fechaHora.js";
 import { enviarAvisoReprogramacion, enviarPropuestaReprogramacion, enviarReprogramacionAceptada } from "../utils/correo.js";
 
@@ -57,7 +57,7 @@ export async function solicitarReprogramacion(req, res) {
             if (Number(empleado_id) !== Number(cita.empleado_id)) {
                 return { error: "La reprogramación debe conservar el empleado asignado a esta cita.", status: 400 };
             }
-            const empleado = await Usuario.findOne({ where: { id: cita.empleado_id, rol: "empleado" }, transaction });
+            const empleado = await Usuario.findOne({ where: { id: cita.empleado_id, ...whereEmpleadoElegible() }, transaction });
             const servicio = await Servicio.findByPk(servicio_id, { transaction });
             if (!empleado || !servicio) return { error: "Selecciona un empleado y servicio válidos.", status: 400 };
             if (!puedeRealizarServicio(empleado, servicio)) return { error: "El empleado seleccionado no realiza ese servicio.", status: 400 };
@@ -120,7 +120,7 @@ export async function aceptarReprogramacion(req, res) {
             const reservaPagada = await PagoReserva.findOne({ where: { cita_id: cita.id, estado: "aprobado" }, transaction, lock: transaction.LOCK.UPDATE });
             if (reservaPagada && Number(cita.servicio_id) !== Number(solicitud.servicio_id)) return { error: "La cita tiene una reserva pagada y no puede cambiar de servicio.", status: 409 };
             const empleado = await Usuario.findByPk(solicitud.empleado_id, { transaction, lock: transaction.LOCK.UPDATE });
-            if (!empleado || empleado.rol !== "empleado") return { error: "No encontramos el empleado asignado a la solicitud.", status: 404 };
+            if (!esPerfilEmpleado(empleado)) return { error: "No encontramos el empleado asignado a la solicitud.", status: 404 };
             if (await tieneCruce({ empleadoId: solicitud.empleado_id, fecha: solicitud.fecha_solicitada, hora: solicitud.hora_solicitada, excluirCitaId: cita.id, transaction })) return { error: "El horario ya fue ocupado. Propón otra hora al cliente.", status: 409 };
             cita.fecha = solicitud.fecha_solicitada;
             cita.hora = solicitud.hora_solicitada;
@@ -207,7 +207,7 @@ export async function aceptarPropuestaCliente(req, res) {
             const reservaPagada = await PagoReserva.findOne({ where: { cita_id: cita.id, estado: "aprobado" }, transaction, lock: transaction.LOCK.UPDATE });
             if (reservaPagada && Number(cita.servicio_id) !== Number(solicitud.servicio_id)) return { error: "La cita tiene una reserva pagada y no puede cambiar de servicio.", status: 409 };
             const empleado = await Usuario.findByPk(solicitud.empleado_id, { transaction, lock: transaction.LOCK.UPDATE });
-            if (!empleado || empleado.rol !== "empleado") return { error: "No encontramos el empleado asignado a la solicitud.", status: 404 };
+            if (!esPerfilEmpleado(empleado)) return { error: "No encontramos el empleado asignado a la solicitud.", status: 404 };
             if (await tieneCruce({ empleadoId: solicitud.empleado_id, fecha: solicitud.fecha_propuesta, hora: solicitud.hora_propuesta, excluirCitaId: cita.id, transaction })) return { error: "La hora propuesta ya fue ocupada. Pide otra opción al empleado.", status: 409 };
             cita.fecha = solicitud.fecha_propuesta;
             cita.hora = solicitud.hora_propuesta;
