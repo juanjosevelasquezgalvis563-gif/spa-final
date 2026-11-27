@@ -6,6 +6,10 @@ services:
       - "3000:3000"
     env_file:
       - ./backend/.env
+    environment:
+      PRODUCT_IMAGES_DIR: /app/uploads/products
+    volumes:
+      - product_images:/app/uploads/products
 
   frontend:
     build: ./frontend
@@ -14,3 +18,6 @@ services:
       - "5173:5173"
     depends_on:
       - backend
+
+volumes:
+  product_images:
