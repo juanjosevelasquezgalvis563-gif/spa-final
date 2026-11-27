@@ -559,6 +559,38 @@
 .gestionar-citas .empleado-botones button,
 .gestionar-citas > .menu-btn { border-radius: 0; }
 
+.gestionar-citas .solicitudes-reprogramacion-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+}
+.solicitudes-reprogramacion-panel > h2 { margin: 0; }
+.gestionar-citas .solicitud-reprogramacion-card {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--panel-line);
+}
+.solicitud-reprogramacion-card .solicitud-detalle-mensaje span {
+  overflow: visible;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+.solicitud-reprogramacion-card > [role="status"],
+.solicitud-reprogramacion-card > .empleado-botones { grid-column: 1 / -1; }
+.solicitud-reprogramacion-card .empleado-botones {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+  gap: 12px;
+}
+.solicitud-reprogramacion-card .empleado-botones label { grid-column: 1 / -1; display: grid; gap: 7px; }
+.solicitud-reprogramacion-card .empleado-botones textarea { width: 100%; min-height: 84px; resize: vertical; }
+
 .admin-productos-page { background: #f5f5f5; }
 .admin-productos-form-card,
 .admin-productos-list-section {
@@ -575,20 +607,33 @@
 .admin-productos-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
 .admin-producto-card {
   display: grid;
-  grid-template-columns: 68px minmax(0, 1fr) auto;
+  grid-template-columns: 128px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 18px;
-  padding: 14px 0;
-  border: 0;
-  border-bottom: 1px solid var(--panel-line);
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
+  gap: 22px;
+  padding: 16px;
+  border: 1px solid var(--admin-line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .045);
 }
-.admin-producto-card:hover { background: #ededed; box-shadow: none; transform: none; }
-.admin-producto-card > img { width: 68px; height: 68px; border-radius: 0; }
+.admin-producto-card:hover { background: #fafafa; box-shadow: 0 14px 30px rgba(0, 0, 0, .09); transform: translateY(-2px); }
+.admin-producto-card > img { width: 128px; height: 116px; border-radius: 9px; object-fit: cover; }
 .admin-producto-card > button,
 .admin-productos-form > button { border-radius: 0; }
+.admin-producto-acciones { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.admin-producto-acciones button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; padding: 9px 12px; border: 1px solid #222; background: #222; color: #fff; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.admin-producto-acciones .admin-producto-retirar { border-color: #d4d4d8; background: #fff; color: #52525b; }
+.admin-producto-acciones button:disabled { cursor: wait; opacity: .55; }
+
+.admin-dashboard .admin-imagen { width: 92px; height: 92px; }
+.admin-dashboard .admin-th-imagen { min-width: 118px; }
+
+@media (max-width: 700px) {
+  .admin-producto-card { grid-template-columns: 96px minmax(0, 1fr); gap: 14px; padding: 12px; }
+  .admin-producto-card > img { width: 96px; height: 96px; grid-row: span 2; }
+  .admin-producto-acciones { grid-column: 2; justify-content: flex-start; }
+  .admin-dashboard .admin-imagen { width: 76px; height: 76px; }
+}
 
 .cita-pago-estado {
   max-width: 1100px;
@@ -659,7 +704,10 @@
   .empleado-dashboard .empleado-feature-grid { grid-template-columns: minmax(0, 1fr); }
   .gestionar-citas { padding: 24px 18px; }
   .gestionar-citas .empleado-card { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-  .gestionar-citas .cita-agenda-detalles { grid-template-columns: minmax(0, 1fr); }
+  .gestionar-citas .cita-agenda-detalles,
+  .gestionar-citas .solicitud-reprogramacion-card { grid-template-columns: minmax(0, 1fr); }
+  .solicitud-reprogramacion-card > [role="status"],
+  .solicitud-reprogramacion-card > .empleado-botones { grid-column: auto; }
   .gestionar-citas .empleado-botones { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .admin-productos-page { padding: 24px 18px; }
   .admin-productos-header { align-items: flex-start; flex-direction: column; }
@@ -674,6 +722,213 @@
   .admin-productos-page *, .admin-productos-page *::before, .admin-productos-page *::after {
     transition-duration: .01ms !important;
   }
+}
+
+/* Panel admin: una sola superficie de trabajo con accesos laterales a cada sección. */
+.admin-dashboard .admin-workspace {
+  display: grid;
+  grid-template-columns: 224px minmax(0, 1fr);
+  align-items: start;
+  gap: 22px;
+  width: min(100%, 1500px);
+  margin: 0 auto;
+}
+.admin-dashboard .admin-workspace-content { min-width: 0; }
+.admin-dashboard .admin-sidebar {
+  position: sticky;
+  top: 18px;
+  display: grid;
+  gap: 8px;
+  align-self: start;
+  padding: 8px 0;
+  border-right: 1px solid #dedcd7;
+}
+.admin-dashboard .admin-sidebar-kicker {
+  color: #77736d;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .16em;
+}
+.admin-dashboard .admin-sidebar-title {
+  margin: 0 0 7px;
+  color: #171717;
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 20px;
+  font-weight: 500;
+}
+.admin-dashboard .admin-sidebar-options { display: grid; gap: 4px; padding-right: 12px; }
+.admin-dashboard .admin-sidebar-options button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: #494743;
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+.admin-dashboard .admin-sidebar-options button span {
+  display: grid;
+  width: 25px;
+  height: 25px;
+  flex: 0 0 25px;
+  place-items: center;
+  border: 1px solid #dedcd7;
+  border-radius: 7px;
+  color: #292929;
+  background: #f2f1ee;
+  font-size: 14px;
+}
+.admin-dashboard .admin-sidebar-options button:hover,
+.admin-dashboard .admin-sidebar-options button:focus-visible {
+  border-color: #dedcd7;
+  color: #111;
+  background: #fff;
+  outline: none;
+}
+.admin-dashboard .admin-anchor-section,
+.admin-dashboard #admin-inventario,
+.admin-dashboard #admin-compras,
+.admin-dashboard #admin-perfiles,
+.admin-dashboard #admin-compras-recientes,
+.admin-dashboard #admin-inicio { scroll-margin-top: 18px; }
+
+@media (max-width: 900px) {
+  .admin-dashboard .admin-workspace { grid-template-columns: 190px minmax(0, 1fr); gap: 16px; }
+  .admin-dashboard .admin-sidebar-options { padding-right: 8px; }
+}
+@media (max-width: 760px) {
+  .admin-dashboard .admin-workspace { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .admin-dashboard .admin-sidebar {
+    position: sticky;
+    z-index: 5;
+    top: 0;
+    gap: 4px;
+    padding: 10px 0;
+    border: 0;
+    border-bottom: 1px solid #dedcd7;
+    background: rgba(242,241,238,.96);
+    backdrop-filter: blur(10px);
+  }
+  .admin-dashboard .admin-sidebar-kicker,
+  .admin-dashboard .admin-sidebar-title { display: none; }
+  .admin-dashboard .admin-sidebar-options {
+    display: flex;
+    gap: 6px;
+    padding: 0 0 3px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+  .admin-dashboard .admin-sidebar-options button { width: auto; min-height: 38px; flex: 0 0 auto; padding: 6px 9px; white-space: nowrap; }
+  .admin-dashboard .admin-sidebar-options button span { width: 22px; height: 22px; flex-basis: 22px; }
+}
+
+/* La caja del empleado mantiene el mismo tamaño compacto que la del administrador. */
+.empleado-dashboard .registrar-pago-cita {
+  width: 100%;
+  max-width: 1320px;
+  margin: 18px auto;
+  padding: clamp(16px, 1.7vw, 22px) !important;
+  gap: 12px !important;
+  border-radius: 15px !important;
+}
+.empleado-dashboard .registrar-pago-cita .registrar-pago-lista {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 12px;
+}
+.empleado-dashboard .registrar-pago-cita .registrar-pago-card {
+  gap: 11px;
+  padding: 14px;
+  border-radius: 11px;
+  box-shadow: 0 3px 10px rgba(20,21,24,.03);
+}
+.empleado-dashboard .registrar-pago-panel-head { padding-bottom: 9px !important; }
+.empleado-dashboard .registrar-pago-panel-head h2 { font-size: 19px !important; }
+.empleado-dashboard .registrar-pago-panel-head p { font-size: 11px !important; }
+.empleado-dashboard .registrar-pago-card-header { padding-bottom: 8px; }
+.empleado-dashboard .registrar-pago-card-header h3 { font-size: 14px; }
+.empleado-dashboard .registrar-pago-info { gap: 4px 12px; }
+.empleado-dashboard .registrar-pago-desglose { padding: 9px 0 0; }
+.empleado-dashboard .registrar-pago-desglose h4 { margin-bottom: 5px; }
+.empleado-dashboard .registrar-pago-desglose > div { gap: 7px; padding: 5px 0; font-size: 10px; }
+.empleado-dashboard .registrar-pago-accion { gap: 6px; }
+.empleado-dashboard .registrar-pago-accion > div { gap: 7px; }
+.empleado-dashboard .registrar-pago-accion input,
+.empleado-dashboard .registrar-pago-boton { min-height: 39px; }
+@media (max-width: 860px) {
+  .empleado-dashboard .registrar-pago-cita .registrar-pago-lista { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Imagen del servicio seleccionado con tamaño suficiente para identificarla. */
+.cita-container .cita-form-intro { grid-template-columns: 124px minmax(0, 1fr) !important; gap: 6px 16px !important; }
+.cita-container .cita-servicio-elegido-imagen { width: 124px !important; height: 148px !important; border-radius: 11px !important; }
+@media (max-width: 600px) {
+  .cita-container .cita-form-intro { grid-template-columns: 100px minmax(0, 1fr) !important; gap: 5px 12px !important; }
+  .cita-container .cita-servicio-elegido-imagen { width: 100px !important; height: 124px !important; }
+}
+
+/* Navegación admin oscura, pegada al borde izquierdo. */
+.admin-dashboard .admin-workspace {
+  width: min(1500px, calc(100% + 44px));
+  margin-left: -44px;
+  grid-template-columns: 246px minmax(0, 1fr);
+  gap: 24px;
+}
+.admin-dashboard .admin-sidebar {
+  top: 12px;
+  min-height: min(640px, calc(100vh - 24px));
+  padding: 22px 14px 22px 24px;
+  border: 0;
+  border-right: 1px solid #353535;
+  border-radius: 0 16px 16px 0;
+  color: #fff;
+  background: linear-gradient(180deg, #111 0%, #1d1d1d 100%);
+  box-shadow: 8px 10px 24px rgba(0,0,0,.12);
+}
+.admin-dashboard .admin-sidebar-kicker { color: #a8a8a8; }
+.admin-dashboard .admin-sidebar-title { color: #fff; }
+.admin-dashboard .admin-sidebar-options { padding-right: 0; }
+.admin-dashboard .admin-sidebar-options button { color: #dedede; }
+.admin-dashboard .admin-sidebar-options button span {
+  border-color: #484848;
+  color: #fff;
+  background: #292929;
+}
+.admin-dashboard .admin-sidebar-options button:hover,
+.admin-dashboard .admin-sidebar-options button:focus-visible {
+  border-color: #555;
+  color: #fff;
+  background: #303030;
+}
+.admin-dashboard .admin-sidebar-options button:hover span,
+.admin-dashboard .admin-sidebar-options button:focus-visible span {
+  border-color: #777;
+  background: #3b3b3b;
+}
+@media (max-width: 900px) {
+  .admin-dashboard .admin-workspace { width: min(1500px, calc(100% + 44px)); margin-left: -44px; grid-template-columns: 215px minmax(0,1fr); }
+  .admin-dashboard .admin-sidebar { padding-left: 18px; }
+}
+@media (max-width: 768px) {
+  .admin-dashboard .admin-workspace { width: calc(100% + 32px); margin-left: -16px; grid-template-columns: minmax(0,1fr); }
+  .admin-dashboard .admin-sidebar {
+    top: 0;
+    min-height: 0;
+    padding: 9px 12px;
+    border: 0;
+    border-radius: 0;
+    box-shadow: 0 5px 14px rgba(0,0,0,.16);
+  }
+  .admin-dashboard .admin-sidebar-options { padding: 0 0 2px; }
 }
 
 /* Fotografías completas en las tarjetas de servicios de la reserva */
@@ -954,11 +1209,26 @@
 }
 
 .cita-container .servicio-info .cita-seleccionar-servicio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
   margin-top: 8px;
+  padding: 7px 14px;
+  border: 1px solid #18181b;
+  border-radius: 7px;
   color: #18181b;
+  background: #fff;
   font-weight: 650;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration: none;
+  transition: color .18s ease, background-color .18s ease;
+}
+
+.cita-container .cita-service-card:hover .cita-seleccionar-servicio,
+.cita-container .cita-service-card:focus-visible .cita-seleccionar-servicio,
+.cita-container .cita-service-card.seleccionado .cita-seleccionar-servicio {
+  color: #fff;
+  background: #18181b;
 }
 
 .cita-container .cita-category-card {
@@ -2731,3 +3001,879 @@
   text-decoration: none !important;
 }
 .empleado-dashboard :is(button, [role="link"]):focus-visible { outline-color: rgba(0,0,0,.45) !important; }
+
+/* Paneles internos: acabado monocromático cálido y adaptable */
+.admin-dashboard {
+  --admin-line: #e5e3df;
+  --admin-muted: #73716d;
+  background: radial-gradient(ellipse at 8% 0%, #fff 0, transparent 34%), #f2f1ee;
+}
+.admin-dashboard .admin-topbar {
+  align-items: center;
+  max-width: 1500px;
+  margin-bottom: 30px;
+  padding: clamp(24px, 3.2vw, 42px);
+  border: 1px solid #252525;
+  border-radius: 20px;
+  background: linear-gradient(125deg, #151515, #292929);
+  color: #fff;
+  box-shadow: 0 18px 40px rgba(20, 20, 20, .12);
+}
+.admin-dashboard .admin-saludo,
+.admin-dashboard .admin-panel-title { color: inherit; }
+.admin-dashboard .admin-subtitulo { color: #d0cfcc; }
+.admin-dashboard .admin-identity { color: #fff; }
+.admin-dashboard .admin-identity-text,
+.admin-dashboard .admin-nombre,
+.admin-dashboard .admin-rol { color: inherit; }
+.admin-dashboard .admin-avatar { border: 1px solid #777; background: #f4f3f0; color: #171717; }
+.admin-dashboard .admin-home-link,
+.admin-dashboard .admin-topbar > button {
+  border-color: rgba(255,255,255,.48);
+  border-radius: 9px;
+  color: #fff;
+}
+.admin-dashboard .admin-home-link:hover,
+.admin-dashboard .admin-topbar > button:hover { border-color: #fff; background: #fff; color: #171717; }
+.admin-dashboard .admin-grid { gap: 22px; }
+.admin-dashboard .admin-panel,
+.admin-dashboard .admin-perfiles,
+.admin-dashboard .admin-historial {
+  padding: clamp(20px, 2.3vw, 30px);
+  border: 1px solid var(--admin-line);
+  border-top: 3px solid #292929;
+  border-radius: 17px;
+  background: #fff;
+  box-shadow: 0 8px 26px rgba(25, 25, 25, .045);
+}
+.admin-dashboard .admin-panel:hover,
+.admin-dashboard .admin-perfiles:hover,
+.admin-dashboard .admin-historial:hover {
+  border-color: #d2d0cb;
+  border-top-color: #292929;
+  box-shadow: 0 12px 30px rgba(25, 25, 25, .07);
+  transform: none;
+}
+.admin-dashboard .admin-panel-head { align-items: center; border-color: var(--admin-line); }
+.admin-dashboard .admin-panel-title { color: #20201f; font-weight: 600; }
+.admin-dashboard .admin-panel-icon { border: 1px solid var(--admin-line); background: #f3f2ef; color: #292929; }
+.admin-dashboard .admin-total,
+.admin-dashboard .admin-stock,
+.admin-dashboard .admin-badge { border: 1px solid #e3e1dc; background: #f5f4f1; color: #343330; }
+.admin-dashboard .admin-productos-link,
+.admin-dashboard .admin-perfiles-roles button,
+.admin-dashboard .admin-perfil-ir,
+.admin-dashboard .admin-btn-comprar,
+.admin-dashboard .admin-btn-editar,
+.admin-dashboard .admin-stock-ajuste button,
+.admin-dashboard .admin-historial-toggle {
+  border-radius: 9px;
+}
+.admin-dashboard .admin-tabla-wrap,
+.admin-dashboard .admin-historial-tabla-wrap { border: 1px solid var(--admin-line); border-radius: 12px; }
+.admin-dashboard .admin-tabla thead th,
+.admin-dashboard .admin-historial-tabla thead th { background: #242424; }
+.admin-dashboard .admin-tabla tbody td,
+.admin-dashboard .admin-historial-tabla tbody td { border-color: #eeece8; }
+.admin-dashboard .admin-fila:hover,
+.admin-dashboard .admin-historial-fila:hover td { background: #f7f6f3; }
+.admin-dashboard .admin-imagen { overflow: hidden; border-radius: 9px; }
+.admin-dashboard .admin-input,
+.admin-dashboard .admin-stock-ajuste input { border-color: #dedcd7; border-radius: 9px; }
+.admin-dashboard .admin-input:focus,
+.admin-dashboard .admin-stock-ajuste input:focus { border-color: #555; box-shadow: 0 0 0 3px rgba(30,30,30,.08); }
+.admin-dashboard .admin-compra-layout { gap: 22px; }
+.admin-dashboard .admin-compra-resumen {
+  border: 1px solid #dedcd7;
+  border-radius: 13px;
+  background: linear-gradient(150deg, #faf9f7, #f1f0ed);
+}
+.admin-dashboard .admin-perfiles,
+.admin-dashboard .admin-historial { margin-top: 22px; }
+.admin-dashboard .admin-perfil-item { border-bottom-color: var(--admin-line); }
+.admin-dashboard .admin-perfil-item:hover { border-radius: 10px; background: #f7f6f3; }
+.admin-dashboard .admin-perfil-rol { border-radius: 999px; }
+.admin-dashboard .admin-alert { border: 1px solid #dedcd7; border-left: 4px solid #383838; border-radius: 10px; background: #fff; color: #292929; }
+
+.empleado-dashboard { background: #f4f4f2; }
+.empleado-dashboard .main-content { width: min(100%, 1600px); margin-inline: auto; }
+.empleado-dashboard .empleado-welcome,
+.empleado-dashboard .empleado-next-card,
+.empleado-dashboard .empleado-quick-card,
+.empleado-dashboard .empleado-agenda-card {
+  border: 1px solid #e5e3df;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(25,25,25,.045);
+}
+.empleado-dashboard .empleado-welcome { min-height: 210px; padding: clamp(26px, 4vw, 42px); }
+.empleado-dashboard .empleado-welcome h2 { color: #1b1b1b; }
+.empleado-dashboard .empleado-welcome p,
+.empleado-dashboard .empleado-eyebrow,
+.empleado-dashboard .empleado-today { color: #696864; }
+.empleado-dashboard .empleado-stats { gap: 12px; border: 0; }
+.empleado-dashboard .empleado-stat-card {
+  border: 1px solid #e5e3df;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 6px 20px rgba(25,25,25,.04);
+}
+.empleado-dashboard .empleado-stat-card:hover { border-color: #bcbab5; background: #faf9f7; }
+.empleado-dashboard .empleado-stat-primary,
+.empleado-dashboard .empleado-stat-primary:hover { border-color: #252525; background: #252525; color: #fff; }
+.empleado-dashboard .empleado-next-card,
+.empleado-dashboard .empleado-quick-card,
+.empleado-dashboard .empleado-agenda-card { padding: 22px; }
+.empleado-dashboard .empleado-next-content { border: 1px solid #e8e6e2; border-radius: 11px; background: #f8f7f5; }
+.empleado-dashboard .empleado-agenda-row { border-color: #e8e6e2; }
+
+/* Reserva: datos y resumen de pago en un orden legible */
+.cita-container {
+  padding: clamp(34px, 5vw, 64px) clamp(16px, 5vw, 64px);
+  background: radial-gradient(ellipse at 50% 0%, #fff 0, transparent 48%), #f4f4f2;
+}
+.cita-container .cita-hero { margin-bottom: clamp(26px, 4vw, 42px); }
+.cita-container .cita-eyebrow { border-color: #dedcd7; border-radius: 999px; background: #fff; color: #454440; }
+.cita-container .cita-eyebrow-dot { background: #252525; box-shadow: 0 0 0 4px rgba(37,37,37,.1); }
+.cita-container .cita-title { color: #1c1c1b; font-family: var(--font-display); font-weight: 500; }
+.cita-container .cita-title::after { background: #272727; }
+.cita-container .cita-subtitle { color: #66645f; }
+.cita-container .servicios-panel { padding: clamp(18px, 2.5vw, 28px); border: 1px solid #e4e2dd; border-radius: 17px; background: #fff; box-shadow: 0 8px 24px rgba(25,25,25,.045); }
+.cita-container .servicios-titulo { color: #242423; }
+.cita-container .servicios-titulo::before { border-radius: 3px; background: #272727; }
+.cita-container .servicios-count { border-color: #e1dfda; border-radius: 999px; background: #f7f6f3; color: #55534f; }
+.cita-container .cita-beneficio-fidelidad { border: 1px solid #dedcd7; border-left: 4px solid #252525; border-radius: 12px; background: #f7f6f3; color: #282827; }
+.cita-container .cita-beneficio-icono { border-radius: 10px; background: #e8e7e3; color: #252525; }
+.cita-container .cita-beneficio-etiqueta,
+.cita-container .cita-beneficio-detalle { color: #67655f; }
+.cita-container .cita-beneficio-titulo { color: #242423; }
+.cita-container .servicios-grid { gap: clamp(12px, 1.8vw, 20px); }
+.cita-container .cita-service-card { border-radius: 13px; }
+.cita-container .cita-formulario { position: static; overflow: visible; border: 1px solid #e4e2dd; border-radius: 17px; background: #fff; box-shadow: 0 10px 30px rgba(25,25,25,.06); }
+.cita-container .cita-form-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, .72fr); align-items: start; gap: 12px 24px; padding: clamp(20px, 3vw, 30px); border-bottom: 1px solid #e8e6e2; background: #fff; }
+.cita-container .cita-volver-servicios { grid-column: 1; grid-row: 1; justify-self: start; border: 0; background: transparent; color: #55534f; font-weight: 600; }
+.cita-container .cita-volver-servicios:hover { color: #111; }
+.cita-container .cita-form-intro { grid-column: 1; grid-row: 2; }
+.cita-container .cita-form-kicker { color: #77746e; letter-spacing: .12em; }
+.cita-container .cita-form-titulo { color: #20201f; font-weight: 600; }
+.cita-container .cita-form-desc { color: #66645f; }
+.cita-container .cita-form-desc strong { color: #222; }
+.cita-container .cita-opcion-descuento { grid-column: 2; grid-row: 1 / span 2; align-self: stretch; padding: 16px; border: 1px solid #e2e0dc; border-radius: 12px; background: #f8f7f5; }
+.cita-container .cita-toggle-texto-principal { color: #292928; }
+.cita-container .cita-opcion-descuento select { width: 100%; min-height: 44px; border: 1px solid #d7d5d0; border-radius: 9px; background-color: #fff; color: #242423; }
+.cita-container .cita-toggle-nota { color: #66645f; }
+.cita-container .cita-form-content { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, .88fr); gap: 18px 24px; padding: clamp(18px, 2.5vw, 28px); }
+.cita-container .cita-form-content > form { display: contents; }
+.cita-container .cita-form-content .cita-fila { grid-column: 1; grid-row: 1; align-self: start; }
+.cita-container .cita-form-content form > .cita-campo { grid-column: 1; grid-row: 2; }
+.cita-container .cita-payment-panel { grid-column: 2; grid-row: 1 / span 2; align-self: stretch; padding: 20px; border: 1px solid #e2e0dc; border-radius: 13px; background: #f8f7f5; }
+.cita-container .cita-payment-kicker { color: #65635e; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.cita-container .cita-reserva-resumen { margin-top: 12px; color: #53514d; }
+.cita-container .cita-reserva-servicio,
+.cita-container .cita-reserva-pago { border-color: #dedcd7; }
+.cita-container .cita-reserva-servicio strong,
+.cita-container .cita-reserva-pago strong { color: #20201f; }
+.cita-container .cita-reserva-lineas { display: grid; gap: 12px; }
+.cita-container .cita-linea-descuento,
+.cita-container .cita-linea-precio-con-descuento,
+.cita-container .cita-reserva-lineas > div { padding-block: 8px; border-bottom: 1px solid #e5e3df; }
+.cita-container .cita-linea-descuento strong,
+.cita-container .cita-descuento-valor { color: #30302e; }
+.cita-container .cita-tipo-pago label { color: #373633; }
+.cita-container .cita-campo input,
+.cita-container .cita-campo select { border-color: #d8d6d1; border-radius: 9px; background-color: #fff; color: #262625; }
+.cita-container .cita-campo input:focus,
+.cita-container .cita-campo select:focus { border-color: #444; box-shadow: 0 0 0 3px rgba(30,30,30,.08); }
+.cita-container .cita-boton { grid-column: 1 / -1; grid-row: 3; min-height: 48px; border: 1px solid #171717; border-radius: 9px; background: #171717; box-shadow: none; }
+.cita-container .cita-boton:hover { background: #383838; color: #fff; box-shadow: none; transform: translateY(-1px); }
+.cita-container .cita-reserva-nota,
+.cita-container .cita-precio-por-definir p { color: #66645f; }
+.cita-container .cita-pago-estado { border-radius: 12px; }
+
+@media (max-width: 900px) {
+  .admin-dashboard .admin-topbar { align-items: flex-start; }
+  .admin-dashboard .admin-grid { grid-template-columns: minmax(0, 1fr); }
+  .admin-dashboard .admin-panel,
+  .admin-dashboard .admin-perfiles,
+  .admin-dashboard .admin-historial { padding: 20px; }
+  .cita-container .cita-form-content { grid-template-columns: minmax(0, 1fr) minmax(250px, .9fr); }
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard .admin-topbar { gap: 16px; padding: 22px 18px; border-radius: 15px; }
+  .admin-dashboard .admin-identity { flex: 1 1 100%; }
+  .admin-dashboard .admin-home-link,
+  .admin-dashboard .admin-topbar > button { flex: 1 1 auto; text-align: center; }
+  .admin-dashboard .admin-panel,
+  .admin-dashboard .admin-perfiles,
+  .admin-dashboard .admin-historial { padding: 16px; border-radius: 13px; }
+  .admin-dashboard .admin-panel-head { align-items: flex-start; flex-wrap: wrap; }
+  .empleado-dashboard .empleado-welcome { min-height: 0; padding: 24px 18px; }
+  .empleado-dashboard .empleado-today { align-self: flex-start; }
+  .empleado-dashboard .empleado-stats { grid-template-columns: minmax(0, 1fr); }
+  .empleado-dashboard .empleado-stat-card { border: 1px solid #e5e3df; border-radius: 12px; }
+  .cita-container .servicios-panel { padding: 16px; }
+  .cita-container .cita-form-head { grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 18px; }
+  .cita-container .cita-volver-servicios,
+  .cita-container .cita-form-intro,
+  .cita-container .cita-opcion-descuento { grid-column: 1; grid-row: auto; }
+  .cita-container .cita-opcion-descuento { margin-top: 4px; }
+  .cita-container .cita-form-content { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 16px; }
+  .cita-container .cita-form-content .cita-fila { grid-column: 1; grid-row: 1; grid-template-columns: minmax(0, 1fr); }
+  .cita-container .cita-form-content form > .cita-campo { grid-column: 1; grid-row: 2; }
+  .cita-container .cita-payment-panel { grid-column: 1; grid-row: 3; padding: 16px; }
+  .cita-container .cita-boton { grid-column: 1; grid-row: 4; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard *, .empleado-dashboard *, .cita-container * { scroll-behavior: auto; }
+}
+
+/* Formularios de cuenta y catálogo: coherencia con la paleta de acceso. */
+.actualizar-datos-page { background: radial-gradient(ellipse at 10% 10%, #fff, transparent 38%), #f1f1ef !important; }
+.actualizar-datos-layout { width: min(100%, 1040px); grid-template-columns: minmax(270px, .82fr) minmax(0, 1fr); gap: 18px; }
+.actualizar-datos-brand { min-height: 100%; border-color: #333; border-radius: 20px; background: linear-gradient(145deg, #292929, #101010 78%); box-shadow: 0 18px 44px rgba(0,0,0,.14); }
+.actualizar-datos-brand .auth-brand img { border-color: #d4d4d4; }
+.actualizar-datos-form.auth-card { align-self: stretch; width: 100%; max-width: none !important; border-color: #e0dfdc !important; border-radius: 20px; box-shadow: 0 14px 38px rgba(0,0,0,.07) !important; }
+.actualizar-datos-form .actualizar-datos-verificacion { border-color: #e0dfdc !important; border-radius: 11px; background: #f6f6f4 !important; }
+.actualizar-datos-form .actualizar-datos-enviar,
+.actualizar-datos-form .actualizar-datos-cancelar { border-color: #c9c8c4 !important; border-radius: 8px; color: #292929 !important; }
+
+.admin-productos-page {
+  background: radial-gradient(ellipse at 8% 0%, #fff, transparent 38%), #f2f1ee !important;
+  color: #20201f;
+}
+.admin-productos-header {
+  padding: clamp(22px, 3vw, 34px);
+  border: 1px solid #252525;
+  border-radius: 17px;
+  background: linear-gradient(125deg, #171717, #303030);
+  box-shadow: 0 14px 34px rgba(0,0,0,.1);
+}
+.admin-productos-header .admin-productos-kicker,
+.admin-productos-header h1,
+.admin-productos-header p { color: #fff !important; }
+.admin-productos-header p { opacity: .76; }
+.admin-productos-header .admin-productos-back { border-color: rgba(255,255,255,.55); border-radius: 9px; color: #fff; }
+.admin-productos-header .admin-productos-back:hover { background: #fff; color: #171717; }
+.admin-productos-form-card,
+.admin-productos-list-section {
+  border: 1px solid #e2e0dc;
+  border-top: 3px solid #272727;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(25,25,25,.045);
+}
+.admin-productos-section-heading > span { border: 1px solid #dedcd7; background: #f3f2ef; color: #292929; }
+.admin-productos-section-heading h2 { color: #242423; }
+.admin-productos-section-heading p { color: #6b6964; }
+.admin-productos-form label { color: #353431; }
+.admin-productos-form input:not([type="file"]),
+.admin-productos-form select,
+.admin-productos-form textarea { border-color: #d8d6d1; border-radius: 9px; background: #fafaf9; color: #242423; }
+.admin-productos-form input:focus,
+.admin-productos-form select:focus,
+.admin-productos-form textarea:focus { border-color: #494949; outline-color: rgba(30,30,30,.1); }
+.admin-productos-file input { border-color: #c9c7c2; border-radius: 9px; background: #f6f5f3; }
+.admin-productos-preview { border-color: #e2e0dc; border-radius: 10px; background: #f8f7f5; }
+.admin-productos-form > button { border-color: #171717; border-radius: 9px; background: #171717; }
+.admin-productos-form > button:hover:not(:disabled) { background: #383838; }
+.admin-producto-card { border-color: #e2e0dc; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,.035); }
+.admin-producto-card button { border-radius: 8px; background: #202020; color: #fff; }
+.admin-producto-card button:hover { background: #414141; }
+
+.actualizar-producto {
+  min-height: 100vh;
+  padding: clamp(20px, 5vw, 64px);
+  background: radial-gradient(ellipse at 10% 0%, #fff, transparent 38%), #f2f1ee;
+}
+.actualizar-producto-card {
+  border: 1px solid #e2e0dc;
+  border-top: 3px solid #262626;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 14px 36px rgba(0,0,0,.07);
+}
+.actualizar-producto-title { color: #20201f; }
+.actualizar-producto-sub { color: #696761; }
+.actualizar-producto-campo label { color: #353431; }
+.actualizar-producto-input { border-color: #d8d6d1; border-radius: 9px; background: #fafaf9; color: #20201f; }
+.actualizar-producto-input:focus { border-color: #444; outline-color: rgba(30,30,30,.1); }
+.actualizar-producto-btn { border-color: #171717; border-radius: 9px; background: #171717; color: #fff; }
+.actualizar-producto-btn:hover { background: #383838; }
+.actualizar-producto-btn.volver { border-color: #c9c7c2; background: #fff; color: #292929; }
+.actualizar-producto-btn.volver:hover { background: #f0efec; }
+.actualizar-producto-message { border-color: #d8d7d3; border-radius: 9px; background: #f2f2f0; color: #292929; }
+
+.cita-container .cita-form-intro { display: grid; grid-template-columns: 92px minmax(0, 1fr); align-items: center; gap: 5px 16px; }
+.cita-container .cita-servicio-elegido-imagen { grid-column: 1; grid-row: 1 / span 3; width: 92px; height: 108px; border: 1px solid #dedcd7; border-radius: 10px; background: #e8e7e3; object-fit: cover; }
+.cita-container .cita-form-intro .cita-form-kicker,
+.cita-container .cita-form-intro .cita-form-titulo,
+.cita-container .cita-form-intro .cita-form-desc { grid-column: 2; }
+.cita-container .cita-form-intro .cita-form-kicker { grid-row: 1; }
+.cita-container .cita-form-intro .cita-form-titulo { grid-row: 2; }
+.cita-container .cita-form-intro .cita-form-desc { grid-row: 3; }
+@media (max-width: 800px) {
+  .actualizar-datos-layout { grid-template-columns: minmax(0, 1fr); }
+  .actualizar-datos-brand { min-height: 0; }
+  .actualizar-datos-brand .auth-brand-copy { margin: 20px 0 10px; padding: 0; }
+}
+@media (max-width: 520px) {
+  .actualizar-datos-page { padding: 14px !important; }
+  .actualizar-datos-form.auth-card { padding: 23px 18px !important; }
+  .admin-productos-header { align-items: flex-start; }
+  .admin-productos-numericos { grid-template-columns: minmax(0, 1fr); }
+  .cita-container .cita-form-intro { grid-template-columns: 68px minmax(0, 1fr); gap: 4px 12px; }
+  .cita-container .cita-servicio-elegido-imagen { width: 68px; height: 84px; }
+}
+
+/* Pagos pendientes del admin: dos columnas y menos cajas anidadas. */
+.admin-dashboard .registrar-pago-cita {
+  width: min(100%, 1320px);
+  max-width: 1320px;
+  margin: 24px auto;
+  padding: clamp(18px, 2vw, 26px);
+  gap: 15px;
+  border-radius: 16px;
+}
+.admin-dashboard .registrar-pago-cita .registrar-pago-lista {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 12px;
+}
+.admin-dashboard .registrar-pago-cita .registrar-pago-card {
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(20, 21, 24, .025);
+}
+.admin-dashboard .registrar-pago-card-header { padding-bottom: 10px; }
+.admin-dashboard .registrar-pago-card-header h3 { font-size: 15px; }
+.admin-dashboard .registrar-pago-info { gap: 4px 14px; }
+.admin-dashboard .registrar-pago-info > div {
+  gap: 3px;
+  padding: 5px 0;
+  border: 0;
+  border-bottom: 1px solid #eeeeec;
+  border-radius: 0;
+  background: transparent;
+}
+.admin-dashboard .registrar-pago-info strong { font-size: 8px; }
+.admin-dashboard .registrar-pago-info span { font-size: 11px; }
+.admin-dashboard .registrar-pago-desglose {
+  padding: 10px 0 0;
+  border: 0;
+  border-top: 1px solid #e9e8e5;
+  border-radius: 0;
+  background: transparent;
+}
+.admin-dashboard .registrar-pago-desglose h4 { margin-bottom: 5px; }
+.admin-dashboard .registrar-pago-desglose > div { gap: 8px; padding: 5px 0; font-size: 10px; }
+.admin-dashboard .registrar-pago-desglose > div strong { font-size: 10px; }
+.admin-dashboard .registrar-pago-accion { gap: 6px; }
+.admin-dashboard .registrar-pago-accion > div { gap: 7px; }
+.admin-dashboard .registrar-pago-accion input { min-height: 41px; }
+.admin-dashboard .registrar-pago-boton { min-height: 41px; padding-inline: 12px; }
+
+@media (max-width: 860px) {
+  .admin-dashboard .registrar-pago-cita .registrar-pago-lista { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 600px) {
+  .admin-dashboard .registrar-pago-cita { padding: 16px; }
+}
+
+/* Agendamiento compacto: servicio, horario y pago en bloques claros. */
+.cita-container { padding: clamp(24px, 3.5vw, 42px) clamp(14px, 3vw, 38px); }
+.cita-container .cita-hero { margin-bottom: 24px; }
+.cita-container .cita-title { font-size: clamp(1.8rem, 3.5vw, 2.5rem); }
+.cita-container .cita-subtitle { margin-top: 12px; font-size: 14px; }
+.cita-container .cita-layout { gap: 18px; }
+.cita-container .servicios-panel { gap: 16px; padding: 20px; }
+.cita-container .servicios-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 13px; }
+.cita-container .cita-detail-card .cita-service-art-image { height: auto; aspect-ratio: 16 / 10; object-fit: cover; }
+.cita-container .cita-detail-card .servicio-info { gap: 7px; padding: 13px 15px 15px; }
+.cita-container .cita-detail-card .servicio-info strong { font-size: 16px; line-height: 1.3; }
+.cita-container .cita-layout.cita-layout-formulario { grid-template-columns: minmax(0, 1fr); max-width: 1060px; }
+.cita-container .cita-formulario { border-radius: 14px; box-shadow: 0 6px 18px rgba(25,25,25,.045); }
+.cita-container .cita-form-head { grid-template-columns: minmax(0, 1.15fr) minmax(240px, .85fr); gap: 9px 18px; padding: 18px 20px; }
+.cita-container .cita-form-titulo { font-size: 20px; }
+.cita-container .cita-form-intro { grid-template-columns: 72px minmax(0, 1fr); gap: 4px 12px; }
+.cita-container .cita-servicio-elegido-imagen { width: 72px; height: 88px; }
+.cita-container .cita-opcion-descuento { padding: 12px; }
+.cita-container .cita-opcion-descuento select { min-height: 40px; }
+.cita-container .cita-toggle-nota { margin: 7px 0 0; font-size: 11px; line-height: 1.45; }
+.cita-container .cita-form-content { grid-template-columns: minmax(0, 1fr) minmax(260px, .88fr); gap: 12px 16px; padding: 16px 20px 20px; }
+.cita-container .cita-form-content .cita-fila { gap: 10px; }
+.cita-container .cita-form-content .cita-campo { gap: 5px; }
+.cita-container .cita-form-content .cita-campo input,
+.cita-container .cita-form-content .cita-campo select { min-height: 41px; padding: 8px 10px; font-size: 12px; }
+.cita-container .cita-payment-panel { padding: 14px; border-radius: 11px; background: #fff; }
+.cita-container .cita-payment-kicker { display: block; padding-bottom: 8px; border-bottom: 1px solid #e8e6e2; font-size: 10px; }
+.cita-container .cita-payment-panel .cita-reserva-resumen { margin-top: 9px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; font-size: 12px; }
+.cita-container .cita-reserva-lineas { gap: 7px; }
+.cita-container .cita-reserva-servicio { padding-bottom: 8px; }
+.cita-container .cita-linea-descuento,
+.cita-container .cita-linea-precio-con-descuento,
+.cita-container .cita-reserva-lineas > div { padding-block: 6px; }
+.cita-container .cita-tipo-pago { margin-top: 5px; padding: 10px; border: 1px solid #e4e2dd; border-radius: 9px; background: #f7f6f4; }
+.cita-container .cita-tipo-pago label { font-size: 10px; }
+.cita-container .cita-tipo-pago select { min-height: 39px; font-size: 11px; }
+.cita-container .cita-reserva-pago { padding: 8px 0; border: 0; border-bottom: 1px solid #e5e3df; border-radius: 0; background: transparent; }
+.cita-container .cita-reserva-pago strong { font-size: 14px; }
+.cita-container .cita-reserva-nota { margin-top: 8px; padding-top: 8px; font-size: 10px; }
+.cita-container .cita-boton { min-height: 43px; font-size: 12px; }
+
+@media (max-width: 760px) {
+  .cita-container .cita-form-head { grid-template-columns: minmax(0, 1fr); }
+  .cita-container .cita-volver-servicios,
+  .cita-container .cita-form-intro,
+  .cita-container .cita-opcion-descuento { grid-column: 1; grid-row: auto; }
+  .cita-container .cita-form-content { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .cita-container .cita-form-content .cita-fila { grid-column: 1; grid-row: 1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cita-container .cita-form-content form > .cita-campo { grid-column: 1; grid-row: 2; }
+  .cita-container .cita-payment-panel { grid-column: 1; grid-row: 3; }
+  .cita-container .cita-boton { grid-column: 1; grid-row: 4; }
+}
+@media (max-width: 480px) {
+  .cita-container .servicios-grid { grid-template-columns: minmax(0, 1fr); }
+  .cita-container .servicios-panel { padding: 15px; }
+  .cita-container .cita-form-head,
+  .cita-container .cita-form-content { padding: 14px; }
+  .cita-container .cita-form-content .cita-fila { grid-template-columns: minmax(0, 1fr); }
+}
+
+.empleado-resenas-card {
+  min-width: 0;
+  padding: clamp(18px, 2.2vw, 26px);
+  border: 1px solid #dedfe2;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 5px 18px rgba(0,0,0,.04);
+}
+.empleado-resenas-card .empleado-section-heading { margin-bottom: 14px; }
+.empleado-resenas-card .empleado-section-heading h3 { margin: 4px 0 0; color: #171717; font-size: 20px; }
+.empleado-resenas-resumen { display: grid; justify-items: end; gap: 2px; }
+.empleado-resenas-resumen strong { color: #171717; font-size: 22px; font-variant-numeric: tabular-nums; }
+.empleado-resenas-resumen span { color: #6a6a6a; font-size: 11px; }
+.empleado-resenas-lista { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr)); gap: 10px; }
+.empleado-resena { min-width: 0; padding: 14px 15px; border: 1px solid #e6e6e6; border-radius: 11px; background: #fafafa; }
+.empleado-resena-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.empleado-resena-estrellas { color: #222; font-size: 15px; letter-spacing: .08em; white-space: nowrap; }
+.empleado-resena-estrellas span { color: #c9c9c9; }
+.empleado-resena-cabecera time { color: #737373; font-size: 10px; white-space: nowrap; }
+.empleado-resena p { margin: 10px 0; color: #373737; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.empleado-resena-servicio { display: inline-flex; padding: 5px 9px; border: 1px solid #e0e0e0; border-radius: 999px; background: #fff; color: #555; font-size: 10px; font-weight: 650; }
+.empleado-resenas-estado { margin: 0; padding: 14px 0 2px; color: #686868; font-size: 12px; }
+@media (max-width: 600px) {
+  .empleado-resenas-card { padding: 16px; }
+  .empleado-resenas-card .empleado-section-heading h3 { font-size: 18px; }
+  .empleado-resenas-lista { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Compactar la agenda y sacar el resumen de pago de la tarjeta de reserva. */
+.cita-container { padding: 22px clamp(12px, 2.5vw, 30px) 34px; }
+.cita-container .cita-hero { max-width: 1000px; margin-bottom: 18px; }
+.cita-container .cita-title { font-size: clamp(1.65rem, 3vw, 2.2rem); }
+.cita-container .cita-subtitle { max-width: 620px; margin-top: 9px; font-size: 13px; line-height: 1.5; }
+.cita-container .cita-layout { max-width: 1100px; gap: 14px; }
+.cita-container .servicios-panel { gap: 13px; padding: 16px; }
+.cita-container .servicios-titulo { font-size: 20px; }
+.cita-container .servicios-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); gap: 11px; }
+.cita-container .cita-detail-card .cita-service-art-image { height: clamp(105px, 11vw, 145px); aspect-ratio: auto; }
+.cita-container .cita-detail-card .servicio-info { gap: 6px; padding: 11px 13px 13px; }
+.cita-container .cita-detail-card .servicio-info strong { font-size: 14px; }
+.cita-container .cita-beneficio-fidelidad { padding: 12px 14px; }
+.cita-container .cita-beneficio-titulo { margin: 3px 0; font-size: 14px; }
+.cita-container .cita-beneficio-detalle { margin: 3px 0 0; font-size: 11px; }
+.cita-container .cita-layout.cita-layout-formulario {
+  grid-template-columns: minmax(0, 1.12fr) minmax(280px, .88fr);
+  align-items: start;
+  max-width: 980px;
+  gap: 14px;
+}
+.cita-container .cita-formulario,
+.cita-container .cita-payment-panel { min-width: 0; border: 1px solid #e2e0dc; border-radius: 12px; background: #fff; box-shadow: 0 5px 16px rgba(25,25,25,.04); }
+.cita-container .cita-form-head { grid-template-columns: minmax(0, 1fr); gap: 7px; padding: 14px 16px; }
+.cita-container .cita-volver-servicios { padding: 3px 0; font-size: 11px; }
+.cita-container .cita-form-intro { grid-template-columns: 58px minmax(0, 1fr); gap: 3px 10px; }
+.cita-container .cita-servicio-elegido-imagen { width: 58px; height: 70px; border-radius: 8px; }
+.cita-container .cita-form-kicker { font-size: 9px; }
+.cita-container .cita-form-titulo { font-size: 17px; }
+.cita-container .cita-form-desc { margin-top: 3px; font-size: 11px; }
+.cita-container .cita-opcion-descuento { padding: 10px; border-radius: 9px; }
+.cita-container .cita-opcion-descuento select { min-height: 37px; font-size: 11px; }
+.cita-container .cita-form-content { display: block; padding: 14px 16px 16px; }
+.cita-container .cita-form-content > form { display: grid; gap: 10px; padding: 0; }
+.cita-container .cita-form-content .cita-fila { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+.cita-container .cita-form-content .cita-campo { gap: 4px; }
+.cita-container .cita-form-content .cita-campo label { font-size: 9px; }
+.cita-container .cita-form-content .cita-campo input,
+.cita-container .cita-form-content .cita-campo select { min-height: 38px; padding: 7px 9px; font-size: 11px; }
+.cita-container .cita-payment-panel { position: static; top: auto; grid-column: auto; grid-row: auto; align-self: start; padding: 14px; border-top: 3px solid #252525; }
+.cita-container .cita-payment-kicker { font-size: 9px; }
+.cita-container .cita-payment-panel .cita-reserva-resumen { font-size: 11px; }
+.cita-container .cita-tipo-pago { padding: 8px; }
+.cita-container .cita-tipo-pago select { min-height: 36px; }
+.cita-container .cita-reserva-nota { font-size: 9px; line-height: 1.45; }
+.cita-container .cita-payment-panel .cita-boton { width: 100%; margin-top: 12px; }
+
+@media (max-width: 760px) {
+  .cita-container { padding: 18px 12px 26px; }
+  .cita-container .cita-layout.cita-layout-formulario { grid-template-columns: minmax(0, 1fr); max-width: 620px; }
+  .cita-container .cita-form-content .cita-fila { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .cita-container .cita-form-content { padding: 12px; }
+  .cita-container .cita-form-content .cita-fila { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Ajustes finales de navegación y escala para escritorio y móvil. */
+.admin-dashboard .admin-workspace {
+  display: grid;
+  grid-template-columns: 224px minmax(0, 1fr);
+  align-items: start;
+  gap: 22px;
+  width: min(100%, 1500px);
+  margin: 0 auto;
+}
+.admin-dashboard .admin-workspace-content { min-width: 0; }
+.admin-dashboard .admin-sidebar {
+  position: sticky;
+  top: 18px;
+  display: grid;
+  gap: 8px;
+  align-self: start;
+  padding: 8px 0;
+  border-right: 1px solid #dedcd7;
+}
+.admin-dashboard .admin-sidebar-kicker { color: #77736d; font-size: 9px; font-weight: 800; letter-spacing: .16em; }
+.admin-dashboard .admin-sidebar-title { margin: 0 0 7px; color: #171717; font-family: var(--font-display, Georgia, serif); font-size: 20px; font-weight: 500; }
+.admin-dashboard .admin-sidebar-options { display: grid; gap: 4px; padding-right: 12px; }
+.admin-dashboard .admin-sidebar-options button {
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 42px; padding: 8px 10px;
+  border: 1px solid transparent; border-radius: 9px; color: #494743; background: transparent;
+  font: inherit; font-size: 11px; font-weight: 650; text-align: left; cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+.admin-dashboard .admin-sidebar-options button span {
+  display: grid; width: 25px; height: 25px; flex: 0 0 25px; place-items: center;
+  border: 1px solid #dedcd7; border-radius: 7px; color: #292929; background: #f2f1ee; font-size: 14px;
+}
+.admin-dashboard .admin-sidebar-options button:hover,
+.admin-dashboard .admin-sidebar-options button:focus-visible { border-color: #dedcd7; color: #111; background: #fff; outline: none; }
+.admin-dashboard .admin-sidebar-options button.activo { border-color: #dedcd7; color: #111; background: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, .06); }
+.admin-dashboard .admin-sidebar-options button.activo span { border-color: #18181b; color: #fff; background: #18181b; }
+.admin-dashboard .admin-reportes-vista { width: 100%; min-width: 0; }
+.admin-dashboard .admin-reportes-vista .reportes-panel { margin-top: 0; }
+.admin-dashboard .admin-anchor-section,
+.admin-dashboard #admin-inventario,
+.admin-dashboard #admin-compras,
+.admin-dashboard #admin-perfiles,
+.admin-dashboard #admin-compras-recientes,
+.admin-dashboard #admin-inicio { scroll-margin-top: 18px; }
+
+.empleado-dashboard .registrar-pago-cita {
+  width: 100%; max-width: 1320px; margin: 18px auto; padding: clamp(16px, 1.7vw, 22px) !important;
+  gap: 12px !important; border-radius: 15px !important;
+}
+.empleado-dashboard .registrar-pago-cita .registrar-pago-lista { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 12px; }
+.empleado-dashboard .registrar-pago-cita .registrar-pago-card { gap: 11px; padding: 14px; border-radius: 11px; box-shadow: 0 3px 10px rgba(20,21,24,.03); }
+.empleado-dashboard .registrar-pago-panel-head { padding-bottom: 9px !important; }
+.empleado-dashboard .registrar-pago-panel-head h2 { font-size: 19px !important; }
+.empleado-dashboard .registrar-pago-panel-head p { font-size: 11px !important; }
+.empleado-dashboard .registrar-pago-card-header { padding-bottom: 8px; }
+.empleado-dashboard .registrar-pago-card-header h3 { font-size: 14px; }
+.empleado-dashboard .registrar-pago-info { gap: 4px 12px; }
+.empleado-dashboard .registrar-pago-desglose { padding: 9px 0 0; }
+.empleado-dashboard .registrar-pago-desglose h4 { margin-bottom: 5px; }
+.empleado-dashboard .registrar-pago-desglose > div { gap: 7px; padding: 5px 0; font-size: 10px; }
+.empleado-dashboard .registrar-pago-accion { gap: 6px; }
+.empleado-dashboard .registrar-pago-accion > div { gap: 7px; }
+.empleado-dashboard .registrar-pago-accion input,
+.empleado-dashboard .registrar-pago-boton { min-height: 39px; }
+
+.cita-container .cita-form-intro { grid-template-columns: 124px minmax(0, 1fr) !important; gap: 6px 16px !important; }
+.cita-container .cita-servicio-elegido-imagen { width: 124px !important; height: 148px !important; border-radius: 11px !important; }
+
+@media (max-width: 900px) {
+  .admin-dashboard .admin-workspace { grid-template-columns: 190px minmax(0, 1fr); gap: 16px; }
+  .admin-dashboard .admin-sidebar-options { padding-right: 8px; }
+}
+@media (max-width: 860px) {
+  .empleado-dashboard .registrar-pago-cita .registrar-pago-lista { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  .admin-dashboard .admin-workspace { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .admin-dashboard .admin-sidebar {
+    position: sticky; z-index: 5; top: 0; gap: 4px; padding: 10px 0;
+    border: 0; border-bottom: 1px solid #dedcd7; background: rgba(242,241,238,.96); backdrop-filter: blur(10px);
+  }
+  .admin-dashboard .admin-sidebar-kicker,
+  .admin-dashboard .admin-sidebar-title { display: none; }
+  .admin-dashboard .admin-sidebar-options { display: flex; gap: 6px; padding: 0 0 3px; overflow-x: auto; overscroll-behavior-x: contain; }
+  .admin-dashboard .admin-sidebar-options button { width: auto; min-height: 38px; flex: 0 0 auto; padding: 6px 9px; white-space: nowrap; }
+  .admin-dashboard .admin-sidebar-options button span { width: 22px; height: 22px; flex-basis: 22px; }
+}
+@media (max-width: 600px) {
+  .cita-container .cita-form-intro { grid-template-columns: 100px minmax(0, 1fr) !important; gap: 5px 12px !important; }
+  .cita-container .cita-servicio-elegido-imagen { width: 100px !important; height: 124px !important; }
+}
+
+/* Barra lateral del administrador con el mismo tratamiento negro y blanco del panel cliente. */
+.admin-dashboard .admin-workspace {
+  grid-template-columns: 276px minmax(0, 1fr);
+  align-items: start;
+  gap: 0;
+  width: min(100%, 1600px);
+  margin: 0 auto;
+}
+.admin-dashboard .admin-sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  height: 100vh;
+  min-height: 0;
+  flex-direction: column;
+  gap: 18px;
+  padding: 28px 16px 22px;
+  overflow-y: auto;
+  border: 0;
+  border-right: 1px solid #27272a;
+  border-radius: 0;
+  background: radial-gradient(440px 320px at 108% 0%, rgba(255,255,255,.08), transparent 70%), linear-gradient(180deg,#18181b 0%,#0f0f12 58%,#09090b 100%);
+  color: #fff;
+  box-shadow: none;
+}
+.admin-dashboard .admin-sidebar-kicker { color: #a1a1aa; font-size: 9px; letter-spacing: .2em; }
+.admin-dashboard .admin-sidebar-title { margin: 0 0 4px; color: #fff; font-size: 16px; }
+.admin-dashboard .admin-sidebar-options { display: flex; flex: 1 1 auto; flex-direction: column; gap: 3px; padding: 0; }
+.admin-dashboard .admin-sidebar-options button {
+  min-height: 44px;
+  gap: 11px;
+  padding: 9px 11px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  color: #d4d4d8;
+  font-size: 12px;
+  font-weight: 550;
+}
+.admin-dashboard .admin-sidebar-options button span {
+  width: 25px;
+  height: 25px;
+  flex-basis: 25px;
+  border: 0;
+  border-radius: 7px;
+  color: #a1a1aa;
+  background: transparent;
+}
+.admin-dashboard .admin-sidebar-options button span svg { width: 17px; height: 17px; }
+.admin-dashboard .admin-sidebar-options button:hover,
+.admin-dashboard .admin-sidebar-options button:focus-visible {
+  border-color: transparent;
+  color: #09090b;
+  background: #fff;
+  outline: none;
+}
+.admin-dashboard .admin-sidebar-options button:hover span,
+.admin-dashboard .admin-sidebar-options button:focus-visible span { color: #09090b; background: transparent; }
+.admin-dashboard .admin-sidebar-options button:focus-visible { outline: 2px solid #a1a1aa; outline-offset: 2px; }
+.admin-dashboard .admin-panel-icon svg { width: 17px; height: 17px; }
+.admin-dashboard .admin-productos-link {
+  min-height: 42px;
+  gap: 9px;
+  padding-inline: 15px;
+  border-color: #111;
+  border-radius: 10px;
+  background: #111;
+  box-shadow: 0 5px 14px rgba(0,0,0,.12);
+  letter-spacing: .01em;
+}
+.admin-dashboard .admin-productos-link:hover { background: #333; border-color: #333; box-shadow: 0 7px 18px rgba(0,0,0,.16); }
+
+/* Tarjetas de pago del empleado en dos columnas, con una sola columna en móvil. */
+.empleado-dashboard .registrar-pago-cita .registrar-pago-lista {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 14px;
+}
+.empleado-dashboard .registrar-pago-cita .registrar-pago-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding: 15px;
+  border: 1px solid #e2e2e5;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(0,0,0,.035);
+}
+.empleado-dashboard .registrar-pago-cita .registrar-pago-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 9px; }
+.empleado-dashboard .registrar-pago-cita .registrar-pago-info { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.empleado-dashboard .registrar-pago-cita .registrar-pago-info > div { min-width: 0; }
+.empleado-dashboard .registrar-pago-cita .registrar-pago-desglose { width: 100%; }
+.empleado-dashboard .registrar-pago-cita .registrar-pago-accion { width: 100%; }
+@media (max-width: 640px) {
+  .admin-dashboard .admin-workspace { grid-template-columns: minmax(0, 1fr); gap: 12px; width: calc(100% + 32px); margin-left: -16px; }
+  .admin-dashboard .admin-sidebar {
+    position: sticky;
+    z-index: 5;
+    top: 0;
+    height: auto;
+    min-height: 0;
+    gap: 4px;
+    padding: 10px 12px;
+    border: 0;
+    border-bottom: 1px solid #27272a;
+    background: rgba(15,15,18,.97);
+    backdrop-filter: blur(10px);
+  }
+  .admin-dashboard .admin-sidebar-kicker,
+  .admin-dashboard .admin-sidebar-title { display: none; }
+  .admin-dashboard .admin-sidebar-options { flex-direction: row; gap: 7px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+  .admin-dashboard .admin-sidebar-options::-webkit-scrollbar { display: none; }
+  .admin-dashboard .admin-sidebar-options button { width: auto; min-height: 40px; flex: 0 0 auto; padding: 7px 10px; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; white-space: nowrap; }
+  .admin-dashboard .admin-sidebar-options button span { width: 20px; height: 20px; flex-basis: 20px; }
+  .empleado-dashboard .registrar-pago-cita .registrar-pago-lista { grid-template-columns: minmax(0, 1fr); }
+}@media (min-width: 641px) and (max-width: 900px) {
+  .admin-dashboard .admin-workspace { grid-template-columns: 220px minmax(0, 1fr); }
+}
+@media (min-width: 761px) and (max-width: 900px) {
+  .admin-dashboard .admin-sidebar { padding-inline: 12px; }
+  .admin-dashboard .admin-sidebar-options button { gap: 7px; padding-inline: 8px; font-size: 11px; }
+}
+@media (max-width: 760px) {
+  .admin-dashboard .admin-workspace { grid-template-columns: minmax(0, 1fr); gap: 12px; width: calc(100% + 32px); margin-left: -16px; }
+  .admin-dashboard .admin-sidebar {
+    position: sticky;
+    z-index: 5;
+    top: 0;
+    height: auto;
+    min-height: 0;
+    gap: 4px;
+    padding: 10px 12px;
+    border: 0;
+    border-bottom: 1px solid #27272a;
+    background: rgba(15,15,18,.97);
+    backdrop-filter: blur(10px);
+  }
+  .admin-dashboard .admin-sidebar-kicker,
+  .admin-dashboard .admin-sidebar-title { display: none; }
+  .admin-dashboard .admin-sidebar-options { flex-direction: row; gap: 7px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+  .admin-dashboard .admin-sidebar-options::-webkit-scrollbar { display: none; }
+  .admin-dashboard .admin-sidebar-options button { width: auto; min-height: 40px; flex: 0 0 auto; padding: 7px 10px; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; white-space: nowrap; }
+  .admin-dashboard .admin-sidebar-options button span { width: 20px; height: 20px; flex-basis: 20px; }
+}
+.admin-dashboard .admin-cuenta-panel { scroll-margin-top: 18px; }
+.admin-dashboard .admin-cuenta-intro { margin: 8px 0 0; color: #666; font-size: 12px; }
+.admin-dashboard .admin-cuenta-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding-top: 18px;
+}
+.admin-dashboard .admin-cuenta-campo { display: grid; min-width: 0; gap: 7px; color: #333; font-size: 12px; font-weight: 650; }
+.admin-dashboard .admin-cuenta-campo input,
+.admin-dashboard .admin-cuenta-campo select {
+  width: 100%;
+  min-height: 43px;
+  padding: 10px 12px;
+  border: 1px solid #d8d8dc;
+  border-radius: 9px;
+  background: #fff;
+  color: #171717;
+  font: inherit;
+  font-weight: 450;
+}
+.admin-dashboard .admin-cuenta-campo input:focus,
+.admin-dashboard .admin-cuenta-campo select:focus { border-color: #444; outline: 3px solid rgba(30,30,30,.1); }
+.admin-dashboard .admin-cuenta-ayuda { grid-column: 1 / -1; margin: 0; color: #6b6b70; font-size: 11px; line-height: 1.5; }
+.admin-dashboard .admin-cuenta-submit {
+  display: inline-flex;
+  min-height: 44px;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 10px 16px;
+  border: 1px solid #111;
+  border-radius: 9px;
+  background: #111;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.admin-dashboard .admin-cuenta-submit:hover:not(:disabled) { background: #303030; }
+.admin-dashboard .admin-cuenta-submit:disabled { cursor: wait; opacity: .65; }
+@media (max-width: 600px) {
+  .admin-dashboard .admin-cuenta-form { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+}
+/* Marca de JC dentro de la barra del administrador, siguiendo la barra cliente. */
+.admin-dashboard .pc-rail-brand {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255,255,255,.14);
+}
+.admin-dashboard .pc-rail-logo {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.4);
+  border-radius: 50%;
+  background: #fff;
+}
+.admin-dashboard .pc-rail-logo img { width: 100%; height: 100%; padding: 5px; object-fit: contain; filter: grayscale(1); }
+.admin-dashboard .pc-rail-brand-text { min-width: 0; }
+.admin-dashboard .pc-rail-brand-text strong { display: block; overflow: hidden; color: #fff; font-family: var(--font-display); font-size: 15px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.admin-dashboard .pc-rail-brand-text span { display: block; margin-top: 3px; color: #a1a1aa; font-size: 9px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; }
+
+/* El formulario de cuentas solo aparece al pulsar su opcion de navegacion. */
+.admin-dashboard .admin-cuenta-overlay {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0,0,0,.62);
+  backdrop-filter: blur(5px);
+}
+.admin-dashboard .admin-cuenta-dialog {
+  width: min(100%, 720px);
+  max-height: min(90vh, 860px);
+  overflow-y: auto;
+  padding: clamp(20px, 4vw, 32px);
+  border: 1px solid #e4e4e7;
+  border-radius: 18px;
+  background: #fff;
+  color: #171717;
+  box-shadow: 0 24px 80px rgba(0,0,0,.28);
+}
+.admin-dashboard .admin-cuenta-dialog-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding-bottom: 16px; border-bottom: 1px solid #e4e4e7; }
+.admin-dashboard .admin-cuenta-dialog-head h2 { margin: 5px 0 0; color: #171717; font-family: var(--font-display); font-size: clamp(21px, 3vw, 28px); font-weight: 550; }
+.admin-dashboard .admin-cuenta-dialog-head p { margin: 7px 0 0; color: #68686f; font-size: 12px; }
+.admin-dashboard .admin-cuenta-kicker { color: #777; font-size: 9px; font-weight: 700; letter-spacing: .16em; }
+.admin-dashboard .admin-cuenta-close { display: grid; width: 38px; height: 38px; flex: 0 0 38px; place-items: center; border: 1px solid #dedee2; border-radius: 50%; background: #fff; color: #222; cursor: pointer; }
+.admin-dashboard .admin-cuenta-close:hover { background: #f1f1f3; }
+.admin-dashboard .admin-cuenta-dialog .admin-cuenta-form { padding-top: 18px; }
+.admin-dashboard .admin-cuenta-dialog .admin-cuenta-submit { grid-column: auto; min-width: 150px; }
+.admin-dashboard .admin-cuenta-dialog-actions { display: flex; grid-column: 1 / -1; justify-content: flex-end; gap: 9px; }
+.admin-dashboard .admin-cuenta-cancel { min-height: 44px; padding: 10px 16px; border: 1px solid #d4d4d8; border-radius: 9px; background: #fff; color: #27272a; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.admin-dashboard .admin-cuenta-cancel:hover:not(:disabled) { background: #f4f4f5; }
+.admin-dashboard .admin-cuenta-error { grid-column: 1 / -1; margin: 0; padding: 10px 12px; border: 1px solid #f2caca; border-radius: 8px; background: #fff4f4; color: #a32323; font-size: 12px; }
+@media (max-width: 600px) {
+  .admin-dashboard .pc-rail-brand { padding-bottom: 12px; }
+  .admin-dashboard .pc-rail-logo { width: 40px; height: 40px; flex-basis: 40px; }
+  .admin-dashboard .admin-cuenta-dialog { max-height: 92vh; padding: 18px; border-radius: 14px; }
+  .admin-dashboard .admin-cuenta-dialog-actions { flex-direction: column-reverse; }
+  .admin-dashboard .admin-cuenta-dialog .admin-cuenta-submit,
+  .admin-dashboard .admin-cuenta-cancel { width: 100%; }
+}
