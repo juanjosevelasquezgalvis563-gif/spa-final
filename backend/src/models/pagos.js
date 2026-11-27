@@ -56,3 +56,4 @@ const Pago = db.define('Pago', {
 export default Pago;
 
 
+
