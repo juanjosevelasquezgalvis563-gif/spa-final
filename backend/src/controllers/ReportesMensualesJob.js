@@ -51,3 +51,4 @@ export function iniciarJobReportesMensuales() {
     void procesar();
     cron.schedule("0 8 * * *", procesar, { timezone: ZONA_HORARIA });
 }
+
