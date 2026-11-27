@@ -9,6 +9,7 @@ const esc = (texto) =>
     String(texto ?? "").replace(/[&<>"']/g, (c) => (
         { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
     ));
+    
 
 function construirHtml(r) {
     const titulo = `Reporte de ${r.periodo.nombre_mes} ${r.periodo.anio}`;
