@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Trash2 } from "lucide-react";
 import { API_ROOT } from "../lib/api";
 
 function urlImagenProducto(image) {
@@ -21,6 +22,7 @@ export default function AdminProductos() {
   const [imagen, setImagen] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
+  const [productoEliminando, setProductoEliminando] = useState(null);
   const [mensaje, setMensaje] = useState("");
   const [esError, setEsError] = useState(false);
   const formularioRef = useRef(null);
@@ -34,6 +36,15 @@ export default function AdminProductos() {
   useEffect(() => () => {
     if (vistaPrevia) URL.revokeObjectURL(vistaPrevia);
   }, [vistaPrevia]);
+
+  useEffect(() => {
+    if (!mensaje) return undefined;
+    const temporizador = window.setTimeout(() => {
+      setMensaje("");
+      setEsError(false);
+    }, 4000);
+    return () => window.clearTimeout(temporizador);
+  }, [mensaje]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -109,7 +120,15 @@ export default function AdminProductos() {
     setMensaje("");
 
     try {
-      const formData = new FormData(event.currentTarget);
+      const formulario = event.currentTarget;
+      const formData = new FormData(formulario);
+      const stock = formulario.elements.namedItem("stock")?.value;
+      if (stock == null || stock.trim() === "" || !Number.isInteger(Number(stock)) || Number(stock) < 0) {
+        setMensaje("Ingresa un stock entero igual o mayor a cero.");
+        setEsError(true);
+        return;
+      }
+      formData.set("stock", String(Number(stock)));
       const response = await fetch(`${API_ROOT}/inser/administrador/productos`, {
         method: "POST",
         credentials: "include",
@@ -126,11 +145,32 @@ export default function AdminProductos() {
       setImagen(null);
       setMensaje(data.message || "Producto agregado correctamente.");
       setEsError(false);
-    } catch {
-      setMensaje("No pudimos guardar el producto. Revisa tu conexión e inténtalo de nuevo.");
+    } catch (error) {
+      setMensaje(error.message || "No pudimos guardar el producto. Revisa tu conexi\u00f3n e int\u00e9ntalo de nuevo.");
       setEsError(true);
     } finally {
       setGuardando(false);
+    }
+  }
+
+  async function retirarProducto(producto) {
+    if (productoEliminando !== null) return;
+    setProductoEliminando(producto.id);
+    try {
+      const response = await fetch(`${API_ROOT}/inser/administrador/productos/${producto.id}`, {
+        method: "DELETE",
+        credentials: "include"
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || "No se pudo retirar el producto.");
+      setProductos((actuales) => actuales.filter((item) => item.id !== producto.id));
+      setMensaje(data.message || "Producto retirado del inventario.");
+      setEsError(false);
+    } catch (error) {
+      setMensaje(error.message || "No pudimos retirar el producto. Inténtalo de nuevo.");
+      setEsError(true);
+    } finally {
+      setProductoEliminando(null);
     }
   }
 
@@ -236,13 +276,24 @@ export default function AdminProductos() {
                     <strong>{formatearPrecio(producto.precio)}</strong>
                     <span>{producto.stock} unidades · {producto.estado}</span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/actualizarProducto/${producto.id}`)}
-                    aria-label={`Editar ${producto.nombre}`}
-                  >
-                    Editar
-                  </button>
+                  <div className="admin-producto-acciones">
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/actualizarProducto/${producto.id}`)}
+                      aria-label={`Editar ${producto.nombre}`}
+                    >Editar</button>
+                    <button
+                      type="button"
+                      className="admin-producto-retirar"
+                      onClick={() => retirarProducto(producto)}
+                      disabled={productoEliminando !== null}
+                      aria-label={`Retirar ${producto.nombre} del inventario`}
+                      title="Retirar del inventario"
+                    >
+                      <Trash2 size={16} aria-hidden="true" />
+                      {productoEliminando === producto.id ? "Retirando…" : "Retirar"}
+                    </button>
+                  </div>
                 </article>
               ))}
             </div>
