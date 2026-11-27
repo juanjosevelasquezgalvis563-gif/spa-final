@@ -91,7 +91,7 @@ const datosPorRuta = (url) => {
     return {
       saldo_puntos: 145,
       descuentoDisponible: 5,
-      descuentoMaximo: 15000,
+      descuentoMaximo: 18000,
       historial: HISTORIAL_PUNTOS,
     };
   }
