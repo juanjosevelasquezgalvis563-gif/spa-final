@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API_ROOT } from "../lib/api";
 import { useSession } from "../context/useSession";
+import logo from "../assets/image.png";
 
 const CAMPOS_INICIALES = { nombre: "", telefono: "", email: "" };
 
@@ -49,6 +50,12 @@ export function ActualizarDatos() {
     const temporizador = window.setTimeout(() => setSegundos((actual) => Math.max(0, actual - 1)), 1000);
     return () => window.clearTimeout(temporizador);
   }, [segundos]);
+
+  useEffect(() => {
+    if (!message) return undefined;
+    const temporizador = window.setTimeout(() => setMessage(""), 4000);
+    return () => window.clearTimeout(temporizador);
+  }, [message]);
 
   function cambiarCampo(event) {
     setDatos((actuales) => ({ ...actuales, [event.target.name]: event.target.value }));
@@ -101,8 +108,9 @@ export function ActualizarDatos() {
       if (!response.ok) throw new Error(data.message || "No pudimos actualizar tus datos.");
 
       if (data.user) setAuthenticatedUser(data.user);
-      setDatos({ nombre: data.user?.nombre || datos.nombre, telefono: data.user?.telefono || datos.telefono, email: data.user?.email || datos.email });
+      setDatos({ ...CAMPOS_INICIALES });
       setMessage(data.message || "Tus datos se actualizaron correctamente.");
+      setEsError(false);
       setPassword("");
       setCodigo("");
       setCodigoEnviado(false);
@@ -121,7 +129,22 @@ export function ActualizarDatos() {
 
   return (
     <main className="registro-container actualizar-datos-page">
-      <form className="registro-form actualizar-datos-form" onSubmit={handleSubmit}>
+      <div className="auth-layout actualizar-datos-layout">
+        <aside className="auth-brand-panel actualizar-datos-brand">
+          <div className="auth-brand">
+            <img src={logo} alt="JC Alta Peluquería" />
+            <span>JC Alta Peluquería</span>
+          </div>
+          <div className="auth-brand-copy">
+            <span className="auth-eyebrow">BELLEZA Y BIENESTAR</span>
+            <h1>Tu cuenta, siempre al día.</h1>
+            <p>Confirma tu identidad y mantén segura la información de tu perfil.</p>
+          </div>
+          <div className="auth-brand-detail" aria-hidden="true"><span>JC</span></div>
+          <p className="auth-brand-caption">Tu belleza, nuestro arte.</p>
+        </aside>
+
+      <form className="registro-form auth-card actualizar-datos-form" onSubmit={handleSubmit}>
         <span className="actualizar-datos-eyebrow">SEGURIDAD DE LA CUENTA</span>
         <h1 className="registro-title">Actualiza tus datos</h1>
         <p className="actualizar-datos-intro">Confirma tu identidad con un código enviado a un medio de contacto que ya está registrado en tu cuenta.</p>
@@ -185,6 +208,7 @@ export function ActualizarDatos() {
 
         {message && <p className={`registro-message ${esError ? "actualizar-datos-error" : "actualizar-datos-ok"}`} role={esError ? "alert" : "status"}>{message}</p>}
       </form>
+      </div>
     </main>
   );
 }
