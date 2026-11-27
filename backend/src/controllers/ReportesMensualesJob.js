@@ -1,23 +1,26 @@
 import cron from "node-cron";
-import { Op } from "sequelize";
 import ReporteMensual from "../models/ReporteMensual.js";
-import { guardarReporte, periodoActual } from "../utils/reportesMensuales.js";
+import { guardarReporte, periodoAnterior } from "../utils/reportesMensuales.js";
 import { enviarReportePorCorreo } from "../utils/reportesCorreo.js";
 
 const ZONA_HORARIA = process.env.REPORTES_TIMEZONE || "America/Bogota";
-const INTERVALO_MS = 15 * 24 * 60 * 60 * 1000;
 
-export async function procesarReporteQuincenal() {
-    const ultimo = await ReporteMensual.findOne({
-        where: { enviado_en: { [Op.ne]: null } },
-        order: [["enviado_en", "DESC"]]
-    });
-    if (ultimo?.enviado_en && Date.now() - new Date(ultimo.enviado_en).getTime() < INTERVALO_MS) {
-        return { enviado: false, motivo: "Aún no han transcurrido 15 días." };
+export async function procesarReporteMensual() {
+    const diaLocal = Number(new Intl.DateTimeFormat("en-CA", {
+        timeZone: ZONA_HORARIA,
+        day: "2-digit"
+    }).format(new Date()));
+    if (diaLocal > 7) {
+        return { enviado: false, motivo: "El envío mensual se realiza durante la primera semana del mes." };
     }
 
-    const { anio, mes } = periodoActual();
-    const reporte = await guardarReporte(anio, mes, { forzar: true });
+    const { anio, mes } = periodoAnterior();
+    const reporte = await guardarReporte(anio, mes);
+
+    if (reporte.enviado_en) {
+        return { enviado: false, motivo: "El reporte de este mes ya fue enviado." };
+    }
+
     const enviado = await enviarReportePorCorreo(reporte.datos);
     if (!enviado) return { enviado: false, motivo: "No se pudo enviar el correo." };
 
@@ -26,21 +29,25 @@ export async function procesarReporteQuincenal() {
     return { enviado: true, reporte };
 }
 
-export function iniciarJobReportesQuincenales() {
-    if (process.env.REPORTES_QUINCENALES_ACTIVO !== "true") {
-        console.log("[reportes] Envío automático cada 15 días desactivado; usa el envío manual para pruebas.");
+export function iniciarJobReportesMensuales() {
+    if (process.env.REPORTES_MENSUALES_ACTIVO !== "true") {
+        console.log("[reportes] Envío mensual automático desactivado; los reportes se pueden solicitar manualmente.");
         return;
     }
 
-    
-    cron.schedule("0 * * * *", async () => {
+    const procesar = async () => {
         try {
-            const resultado = await procesarReporteQuincenal();
-            if (resultado.enviado) console.log("[reportes] Reporte quincenal enviado.");
+            const resultado = await procesarReporteMensual();
+            if (resultado.enviado) {
+                console.log(`[reportes] Reporte de ${resultado.reporte.datos.periodo.nombre_mes} ${resultado.reporte.anio} enviado.`);
+            }
         } catch (error) {
-            console.error("[reportes] No se pudo procesar el reporte quincenal:", error);
+            console.error("[reportes] No se pudo procesar el envío mensual:", error);
         }
-    }, { timezone: ZONA_HORARIA });
+    };
+
+    // Revisa al iniciar y cada día a las 8:00 a. m. durante la primera semana.
+    // Si falla el correo, reintenta al día siguiente; enviado_en evita duplicados.
+    void procesar();
+    cron.schedule("0 8 * * *", procesar, { timezone: ZONA_HORARIA });
 }
-
-
