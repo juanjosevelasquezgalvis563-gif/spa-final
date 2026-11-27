@@ -64,6 +64,61 @@ export async function enviarCodigoActualizacion(email, codigo) {
     });
 }
 
+export async function enviarAvisoReprogramacion({ email, nombreEmpleado, nombreCliente, servicio, fecha, hora, mensaje = "" }) {
+    const config = obtenerTransporter();
+    if (!config || !email) return false;
+    try {
+        await config.transporter.sendMail({
+            from: `"JC Alta Peluquería" <${config.user}>`,
+            to: email,
+            subject: "Solicitud para reprogramar una cita",
+            text: `Hola ${nombreEmpleado || ""}, ${nombreCliente || "Un cliente"} solicita reprogramar ${servicio || "una cita"} para el ${fecha} a las ${hora}. ${mensaje}\nIngresa al panel del empleado para aceptar la hora o proponer otra.`,
+            html: `<p>Hola ${escaparHtml(nombreEmpleado || "")},</p><p><strong>${escaparHtml(nombreCliente || "Un cliente")}</strong> solicita reprogramar <strong>${escaparHtml(servicio || "una cita")}</strong> para el ${escaparHtml(fecha)} a las ${escaparHtml(hora)}.</p>${mensaje ? `<p>Mensaje: ${escaparHtml(mensaje)}</p>` : ""}<p>Ingresa al panel del empleado para aceptar la hora o proponer otra.</p>`
+        });
+        return true;
+    } catch (error) {
+        console.error("No se pudo enviar el aviso de reprogramación:", error.message);
+        return false;
+    }
+}
+
+export async function enviarPropuestaReprogramacion({ email, nombreCliente, servicio, mensaje = "" }) {
+    const config = obtenerTransporter();
+    if (!config || !email) return false;
+    try {
+        await config.transporter.sendMail({
+            from: `"JC Alta Peluquería" <${config.user}>`,
+            to: email,
+            subject: "Recomendación sobre tu solicitud de reprogramación",
+            text: `Hola ${nombreCliente || ""}, el empleado te envió una recomendación sobre tu solicitud para ${servicio || "tu cita"}: ${mensaje}\nElige una nueva fecha y hora en tu cuenta y envía otra solicitud.`,
+            html: `<p>Hola ${escaparHtml(nombreCliente || "")},</p><p>El empleado te envió una recomendación sobre tu solicitud para <strong>${escaparHtml(servicio || "tu cita")}</strong>:</p><p>${escaparHtml(mensaje)}</p><p>Elige una nueva fecha y hora en tu cuenta y envía otra solicitud.</p>`
+        });
+        return true;
+    } catch (error) {
+        console.error("No se pudo enviar la propuesta de reprogramación:", error.message);
+        return false;
+    }
+}
+
+export async function enviarReprogramacionAceptada({ email, emailEmpleado, nombreEmpleado, nombreCliente, servicio, fecha, hora }) {
+    const config = obtenerTransporter();
+    if (!config || !email) return false;
+    try {
+        await config.transporter.sendMail({
+            from: `"JC Alta Peluquería" <${config.user}>`,
+            to: email,
+            ...(emailEmpleado ? { replyTo: emailEmpleado } : {}),
+            subject: "Actualización de tu cita: pendiente de confirmación",
+            text: `Hola ${nombreCliente || ""}, el nuevo horario de tu cita de ${servicio || "servicio"} quedó registrado. Nueva fecha: ${fecha}. Nueva hora: ${hora}. La cita está pendiente de confirmación final por el empleado.`,
+            html: `<p>Hola ${escaparHtml(nombreCliente || "")},</p><p>El nuevo horario de tu cita de <strong>${escaparHtml(servicio || "servicio")}</strong> quedó registrado y está pendiente de confirmación final por el empleado.</p><p>Nueva fecha: ${escaparHtml(fecha)}<br>Nueva hora: ${escaparHtml(hora)}</p>`
+        });
+        return true;
+    } catch (error) {
+        console.error("No se pudo enviar la confirmación de reprogramación:", error.message);
+        return false;
+    }
+}
+
 function escaparHtml(valor) {
     return String(valor ?? "").replace(/[&<>"']/g, (caracter) => ({
         "&": "&amp;",
@@ -114,6 +169,7 @@ function horaLegible(valor) {
 
 export async function enviarCorreoCitaConfirmada({
     email,
+    emailProfesional,
     nombreCliente,
     servicio,
     profesional,
@@ -176,6 +232,7 @@ export async function enviarCorreoCitaConfirmada({
             from: `"JC Alta Peluquería" <${config.user}>`,
             to: email,
             subject: "Tu cita ha sido confirmada - JC Alta Peluquería",
+            ...(emailProfesional ? { replyTo: emailProfesional } : {}),
             text: textoPlano,
             html: `
                 <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:25px;color:#222;">
