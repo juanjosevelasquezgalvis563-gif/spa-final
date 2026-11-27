@@ -31,7 +31,7 @@ const Pago = db.define('Pago', {
     },
    
     medio_pago: {
-        type: DataTypes.ENUM('online', 'local'),
+        type: DataTypes.ENUM('online', 'local', 'mixto'),
         allowNull: false
     },
     fecha_pago: {
