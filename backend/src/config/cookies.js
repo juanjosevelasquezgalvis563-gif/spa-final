@@ -1,11 +1,9 @@
-const isProduction = process.env.NODE_ENV === "production";
-
 export const SESSION_IDLE_TIMEOUT_SECONDS = 10 * 60;
 
 export const authCookieOptions = {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? "none" : "lax",
+    secure: true,
+    sameSite: "none",
     path: "/"
 };
 
