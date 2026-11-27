@@ -3,11 +3,14 @@ import Servicio from '../models/servicios.js';
 import Usuario from '../models/Usuario.js';
 import MovimientoPuntos from '../models/MovimientoPuntos.js';
 import PagoReserva from '../models/PagoReserva.js';
+import Resena from '../models/reseña.js';
 import { Op } from "sequelize";
 import db from "../config/db.js";
 import {enviarCorreoCitaConfirmada} from "../utils/correo.js";
 import { desglosarPrecioCita } from "../utils/precioCita.js";
+import { fechaActualBogota } from "../utils/fechaHora.js";
 
+const PESOS_POR_PUNTO_FIDELIZACION = 3000;
 
 const INCLUIR_RESERVA = {
     model: PagoReserva,
@@ -18,6 +21,63 @@ const INCLUIR_RESERVA = {
 
 function obtenerIdEmpleado(req) {
     return req.user?.empleadoActivoId || req.user?.id;
+}
+
+export async function resenasEmpleado(req, res) {
+    try {
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        const empleadoId = Number(obtenerIdEmpleado(req));
+        if (!Number.isInteger(empleadoId) || empleadoId <= 0) {
+            return res.status(403).json({ message: 'No se pudo identificar al empleado de estas reseñas.' });
+        }
+        
+        const citas = await Cita.findAll({
+            attributes: ['id', 'fecha', 'servicio_id', 'empleado_id'],
+            where: { empleado_id: empleadoId }
+        });
+        const citaIds = citas.map((cita) => Number(cita.id));
+        const resenasEmpleado = citaIds.length
+            ? await Resena.findAll({
+                attributes: ['id', 'cita_id', 'calificacion', 'comentario', 'fecha_creacion'],
+                where: { estado: 'visible', cita_id: { [Op.in]: citaIds } },
+                order: [['fecha_creacion', 'DESC']]
+            })
+            : [];
+        const citasPorId = new Map(citas.map((cita) => [Number(cita.id), cita]));
+        const servicioIds = [...new Set(citas
+            .filter((cita) => resenasEmpleado.some((resena) => Number(resena.cita_id) === Number(cita.id)))
+            .map((cita) => cita.servicio_id)
+            .filter(Boolean))];
+        const servicios = servicioIds.length
+            ? await Servicio.findAll({ where: { id: servicioIds }, attributes: ['id', 'nombre'] })
+            : [];
+        const nombresServicio = new Map(servicios.map((servicio) => [Number(servicio.id), servicio.nombre]));
+        const resenas = resenasEmpleado.map((resena) => {
+            const cita = citasPorId.get(Number(resena.cita_id));
+            return {
+                id: resena.id,
+                calificacion: resena.calificacion,
+                comentario: resena.comentario,
+                fecha_creacion: resena.fecha_creacion,
+                cita: {
+                    id: cita.id,
+                    fecha: cita.fecha,
+                    servicio_id: cita.servicio_id,
+                    empleado_id: Number(cita.empleado_id),
+                    Servicio: { nombre: nombresServicio.get(Number(cita.servicio_id)) || 'Servicio' }
+                }
+            };
+        });
+        const total = resenas.length;
+        const promedio = total
+            ? Number((resenas.reduce((suma, resena) => suma + Number(resena.calificacion || 0), 0) / total).toFixed(1))
+            : 0;
+
+        return res.json({ empleado_id: empleadoId, total, promedio, resenas });
+    } catch (error) {
+        console.error('Error al consultar reseñas del empleado:', error);
+        return res.status(500).json({ message: 'No se pudieron cargar las reseñas.' });
+    }
 }
 
 export async function empleado(req, res) {
@@ -57,25 +117,18 @@ export async function empleado(req, res) {
 export async function citasHoy(req, res) {
     try {
         const empleadoId = obtenerIdEmpleado(req);
-        const ahora = new Date();
-        const inicioHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 0, 0, 0);
-        const finHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() + 1, 0, 0, 0);
-
-       
+        const hoy = fechaActualBogota();
         const cantidad = await Cita.count({
             where: {
                 empleado_id: empleadoId,
                 estado: { [Op.in]: ['pendiente', 'confirmada', 'en_curso'] },
-
-                fecha: {
-                    [Op.gte]: inicioHoy,
-                    [Op.lt]: finHoy
-                }
+                fecha: hoy
             }
         });
 
         return res.json({
-            Hoy: cantidad
+            Hoy: cantidad,
+            fecha: hoy
         });
 
     } catch (error) {
@@ -120,79 +173,139 @@ export async function citasFinalizadasEmpleado(req, res) {
 
 
 
+async function enviarCorreoConfirmacionCita(cita) {
+    const reservaPagada = (cita.reservasPago || []).find(
+        (reserva) => reserva.estado === 'aprobado'
+    );
+    const desglose = desglosarPrecioCita(cita, cita.Servicio, reservaPagada);
+
+    return enviarCorreoCitaConfirmada({
+        email: cita.cliente?.email,
+        emailProfesional: cita.empleado?.email,
+        nombreCliente: cita.cliente?.nombre,
+        servicio: cita.Servicio?.nombre,
+        profesional: cita.empleado?.nombre,
+        fecha: cita.fecha,
+        hora: cita.hora,
+        descuentoPorcentaje: desglose.descuentoPorcentaje,
+        precioFinal: desglose.precioFinal,
+        reservaPagada: desglose.reservaPagada,
+        saldo: desglose.saldo
+    });
+}
+
+async function procesarCorreoConfirmacionCita(citaId) {
+    try {
+        const cita = await Cita.findByPk(citaId, {
+            include: [
+                { model: Usuario, as: 'cliente', attributes: ['id', 'nombre', 'email'] },
+                { model: Usuario, as: 'empleado', attributes: ['id', 'nombre', 'email'] },
+                { model: Servicio, attributes: ['id', 'nombre', 'precio'] },
+                INCLUIR_RESERVA
+            ]
+        });
+        if (!cita || cita.estado !== 'confirmada') return;
+        const enviado = await enviarCorreoConfirmacionCita(cita);
+        await Cita.update(
+            { correo_confirmacion_estado: enviado ? 'enviado' : 'fallido' },
+            { where: { id: citaId, estado: 'confirmada' } }
+        );
+    } catch (error) {
+        console.error('No se pudo completar el correo de confirmación:', error);
+        await Cita.update(
+            { correo_confirmacion_estado: 'fallido' },
+            { where: { id: citaId, estado: 'confirmada' } }
+        ).catch((updateError) => console.error('No se pudo guardar el estado del correo:', updateError));
+    }
+}
+
 export async function comfirmarCita(req, res) {
     try {
         const empleadoId = obtenerIdEmpleado(req);
-        const id = req.params.id;
-
         const cita = await Cita.findOne({
-            where: {
-                id: id,
-                empleado_id: empleadoId
-            },
+            where: { id: req.params.id, empleado_id: empleadoId },
             include: [
-                {
-                    model: Usuario,
-                    as: 'cliente',
-                    attributes: ['id', 'nombre', 'email']
-                },
-                {
-                    model: Usuario,
-                    as: 'empleado',
-                    attributes: ['id', 'nombre']
-                },
-                {
-                    model: Servicio,
-                    attributes: ['id', 'nombre', 'precio']
-                },
+                { model: Usuario, as: 'cliente', attributes: ['id', 'nombre', 'email'] },
+                { model: Usuario, as: 'empleado', attributes: ['id', 'nombre', 'email'] },
+                { model: Servicio, attributes: ['id', 'nombre', 'precio'] },
                 INCLUIR_RESERVA
             ]
         });
 
-        if (!cita) {
-            return res.status(404).json({ message: 'Cita no encontrada' });
+        if (!cita) return res.status(404).json({ message: 'Cita no encontrada' });
+
+        if (cita.estado === 'confirmada') {
+            if (req.body?.reenviar_correo === true) {
+                if (cita.correo_confirmacion_estado !== 'fallido') {
+                    return res.status(200).json({
+                        message: cita.correo_confirmacion_estado === 'enviado'
+                            ? 'El correo ya fue enviado al cliente.'
+                            : 'El correo ya está en proceso de envío.',
+                        correo_enviado: cita.correo_confirmacion_estado === 'enviado',
+                        correo_pendiente: cita.correo_confirmacion_estado === 'pendiente',
+                        ya_confirmada: true
+                    });
+                }
+                const [reintentoEncolado] = await Cita.update(
+                    { correo_confirmacion_estado: 'pendiente' },
+                    { where: { id: cita.id, estado: 'confirmada', correo_confirmacion_estado: 'fallido' } }
+                );
+                if (!reintentoEncolado) {
+                    return res.status(409).json({ message: 'El correo ya fue procesado. Actualiza el panel para ver su estado.' });
+                }
+                void procesarCorreoConfirmacionCita(cita.id);
+                return res.status(200).json({
+                    message: 'Cita confirmada. Se está enviando el correo al cliente.',
+                    correo_enviado: null,
+                    correo_pendiente: true,
+                    ya_confirmada: true
+                });
+            }
+            return res.status(200).json({
+                message: cita.correo_confirmacion_estado === 'pendiente'
+                    ? 'La cita está confirmada y el correo se está enviando.'
+                    : 'La cita ya estaba confirmada.',
+                correo_enviado: cita.correo_confirmacion_estado === 'enviado',
+                correo_pendiente: cita.correo_confirmacion_estado === 'pendiente',
+                ya_confirmada: true
+            });
         }
 
         if (cita.estado !== 'pendiente') {
             return res.status(400).json({ message: 'Solo se pueden confirmar citas pendientes' });
         }
 
-        cita.estado = 'confirmada';
-        await cita.save();
-
-      
-        const reservaPagada = (cita.reservasPago || []).find(
-            (reserva) => reserva.estado === 'aprobado'
+        const [actualizadas] = await Cita.update(
+            { estado: 'confirmada', correo_confirmacion_estado: 'pendiente' },
+            { where: { id: cita.id, empleado_id: empleadoId, estado: 'pendiente' } }
         );
-        const desglose = desglosarPrecioCita(cita, cita.Servicio, reservaPagada);
+        if (!actualizadas) {
+            const actual = await Cita.findOne({
+                where: { id: cita.id, empleado_id: empleadoId },
+                attributes: ['estado', 'correo_confirmacion_estado']
+            });
+            if (actual?.estado === 'confirmada') {
+                return res.status(200).json({
+                    message: 'La cita ya estaba confirmada.',
+                    correo_enviado: actual.correo_confirmacion_estado === 'enviado',
+                    correo_pendiente: actual.correo_confirmacion_estado === 'pendiente',
+                    ya_confirmada: true
+                });
+            }
+            return res.status(400).json({ message: 'Solo se pueden confirmar citas pendientes' });
+        }
 
-        const correoEnviado = await enviarCorreoCitaConfirmada({
-            email: cita.cliente?.email,
-            nombreCliente: cita.cliente?.nombre,
-            servicio: cita.Servicio?.nombre,
-            profesional: cita.empleado?.nombre,
-            fecha: cita.fecha,
-            hora: cita.hora,
-            descuentoPorcentaje: desglose.descuentoPorcentaje,
-            precioFinal: desglose.precioFinal,
-            reservaPagada: desglose.reservaPagada,
-            saldo: desglose.saldo
-        });
-
+        void procesarCorreoConfirmacionCita(cita.id);
         return res.status(200).json({
-            message: correoEnviado
-                ? 'Cita confirmada. Se envió un correo al cliente.'
-                : 'Cita confirmada, pero no se pudo enviar el correo al cliente.',
-            correo_enviado: correoEnviado
+            message: 'Cita confirmada. Se está enviando el correo al cliente.',
+            correo_enviado: null,
+            correo_pendiente: true
         });
-
     } catch (error) {
         console.error('Error al confirmar la cita:', error);
-        return res.status(500).json({ message: 'error al comfirmar la cita' });
+        return res.status(500).json({ message: 'No se pudo confirmar la cita.' });
     }
-
 }
-
 export async function comenzarCita(req, res) {
     try {
         const cita = await Cita.findOne({
@@ -281,13 +394,24 @@ export async function finalizarCita(req, res) {
                     id: citaId,
                     empleado_id: empleadoId
                 },
-                transaction
+                transaction,
+                lock: transaction.LOCK.UPDATE
             });
 
             if (!cita) {
                 return {
                     status: 404,
                     message: "Cita no encontrada o no te pertenece."
+                };
+            }
+
+            if (cita.estado === "finalizada") {
+                return {
+                    status: 200,
+                    message: "La cita ya estaba finalizada.",
+                    ya_finalizada: true,
+                    precio_original: Number(cita.precio_original) || 0,
+                    precio_final: Number(cita.precio_final) || 0
                 };
             }
 
@@ -321,13 +445,6 @@ export async function finalizarCita(req, res) {
                 },
                 transaction
             });
-
-            if (movimientoExistente) {
-                return {
-                    status: 409,
-                    message: "Esta cita ya tiene puntos acreditados."
-                };
-            }
 
             const finAtencion = new Date();
 
@@ -382,12 +499,12 @@ export async function finalizarCita(req, res) {
             await cita.save({ transaction });
 
            
-            const puntos = Math.floor(precioOriginal / 2000);
+            const puntos = Math.floor(precioOriginal / PESOS_POR_PUNTO_FIDELIZACION);
 
             let puntosAcreditados = 0;
 
           
-            if (puntos > 0 && Number.isInteger(cita.usuario_id) && cita.usuario_id > 0) {
+            if (!movimientoExistente && puntos > 0 && Number.isInteger(cita.usuario_id) && cita.usuario_id > 0) {
                 try {
                     await MovimientoPuntos.create({
                         usuario_id: cita.usuario_id,
