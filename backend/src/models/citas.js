@@ -10,7 +10,7 @@ const Cita = db.define("Cita", {
     },
 
     fecha: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: false
     },
 
@@ -77,6 +77,12 @@ const Cita = db.define("Cita", {
             "finalizada"
         ),
         allowNull: false
+    },
+
+    correo_confirmacion_estado: {
+        type: DataTypes.ENUM("pendiente", "enviado", "fallido"),
+        allowNull: true,
+        defaultValue: null
     }
 
 }, {
