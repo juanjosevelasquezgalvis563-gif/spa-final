@@ -14,6 +14,12 @@ function useTurnstile(siteKey) {
 
     const containerRef = useRef(null);
 
+    useEffect(() => {
+        if (!error) return undefined;
+        const temporizador = window.setTimeout(() => setError(null), 4000);
+        return () => window.clearTimeout(temporizador);
+    }, [error]);
+
     const loadScript = useCallback(() => {
         setError(null);
 
@@ -28,24 +34,29 @@ function useTurnstile(siteKey) {
         }
 
         let script = document.getElementById("cloudflare-turnstile");
-
-        if (!script) {
+        const esScriptNuevo = !script;
+        if (esScriptNuevo) {
             script = document.createElement("script");
             script.id = "cloudflare-turnstile";
             script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
             script.async = true;
             script.defer = true;
-            document.head.appendChild(script);
         }
 
         const handleLoad = () => {
-            setLoaded(true);
-            setError(null);
+            script.dataset.loaded = "true";
+            script.dataset.error = "false";
+            setLoaded(Boolean(window.turnstile));
+            setError(window.turnstile ? null : "No se pudo iniciar la verificación de seguridad. Inténtalo de nuevo.");
+            script.removeEventListener("error", handleError);
         };
 
         const handleError = () => {
+            script.dataset.loaded = "false";
+            script.dataset.error = "true";
             setLoaded(false);
             setError("No se pudo cargar la verificación de seguridad. Comprueba tu conexión.");
+            script.removeEventListener("load", handleLoad);
         };
 
         if (script.dataset.loaded === "true" && window.turnstile) {
@@ -55,7 +66,9 @@ function useTurnstile(siteKey) {
 
         script.addEventListener("load", handleLoad, { once: true });
         script.addEventListener("error", handleError, { once: true });
-
+        if (esScriptNuevo) {
+            document.head.appendChild(script);
+        }
     }, [siteKey]);
 
     useEffect(() => {
@@ -170,7 +183,7 @@ export function Registro() {
 
         const timer = setTimeout(() => {
             setMessage("");
-        }, 5000);
+        }, 4000);
 
         return () => clearTimeout(timer);
     }, [message]);
