@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { API_ROOT } from "../lib/api";
+import PasswordVisibilityToggle from "./PasswordVisibilityToggle";
 
 const MIN_CARACTERES = 8;
 const CARACTERES_ESPECIALES = "@#$%&*()_";
@@ -50,6 +51,8 @@ export function ResetPassword() {
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [mostrarPassword, setMostrarPassword] = useState(false);
+  const [mostrarConfirmPassword, setMostrarConfirmPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -137,27 +140,33 @@ export function ResetPassword() {
 
         <p>Ingresa tu nueva contraseña para continuar.</p>
         
-        <input
-          type="password"
-          placeholder="Nueva contraseña"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          minLength={MIN_CARACTERES}
-          maxLength={72}
-          autoComplete="new-password"
-          required
-        />
+        <div className="password-field">
+          <input
+            type={mostrarPassword ? "text" : "password"}
+            placeholder="Nueva contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            minLength={MIN_CARACTERES}
+            maxLength={72}
+            autoComplete="new-password"
+            required
+          />
+          <PasswordVisibilityToggle visible={mostrarPassword} onToggle={() => setMostrarPassword((visible) => !visible)} />
+        </div>
 
-        <input
-          type="password"
-          placeholder="Confirmar contraseña"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          minLength={MIN_CARACTERES}
-          maxLength={72}
-          autoComplete="new-password"
-          required
-        />
+        <div className="password-field">
+          <input
+            type={mostrarConfirmPassword ? "text" : "password"}
+            placeholder="Confirmar contraseña"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            minLength={MIN_CARACTERES}
+            maxLength={72}
+            autoComplete="new-password"
+            required
+          />
+          <PasswordVisibilityToggle visible={mostrarConfirmPassword} onToggle={() => setMostrarConfirmPassword((visible) => !visible)} />
+        </div>
 
         <button type="submit" disabled={loading}>
           {loading ? "Cambiando..." : "Cambiar contraseña"}
