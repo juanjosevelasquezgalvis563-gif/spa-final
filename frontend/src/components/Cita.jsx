@@ -649,8 +649,6 @@ async function obtenerEmpleados(servicioActual) {
                     <input
                       id="cita-hora"
                       type="time"
-                      min="08:00"
-                      max="17:00"
                       value={hora}
                       onChange={(e) => SetHora(e.target.value)}
                     />
