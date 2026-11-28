@@ -118,7 +118,7 @@ const captchaLimiter = rateLimit({
 
 const registroLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    limit: 5,
+    limit: 10,
     standardHeaders: true,
     message: { message: "Demasiados intentos de registro. Intenta de nuevo en 15 minutos." }
 });
@@ -162,7 +162,7 @@ const carritoActionLimiter = rateLimit({
 });
 
 
-router.post('/registrar', captchaLimiter, registroLimiter, registroCorreoLimiter, registro);
+router.post('/registrar', captchaLimiter, registroLimiter, registro);
 router.post('/registrar/verificar', registroCodigoLimiter );
 router.post('/registrar/reenviar-codigo', registroCorreoLimiter);
 router.get('/actualizar-datos',middleware,obtenerDatosActualizacion);
