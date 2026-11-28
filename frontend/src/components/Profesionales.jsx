@@ -1,6 +1,7 @@
 import empleado1 from "../assets/empleado1.jpg";
 import empleado2 from "../assets/empleado2.jpg";
-import empleado3 from "../assets/empleado3.jpg";
+import jeniferCorrea from "../assets/jenifeer.jpg";
+import evelynNino from "../assets/evelyn.jpg";
 
 
 const profesionales = [
@@ -17,7 +18,7 @@ const profesionales = [
     cargo: "ESTILISTA",
     descripcion:
       " apasionada por el mundo de la belleza y el cuidado personal. Me especializo en transformar y resaltar la belleza de cada persona, ofreciendo servicios personalizados que se adaptan a sus gustos, necesidades y estilo.",
-    imagen: empleado3,
+    imagen: evelynNino,
   },
    {
     nombre: "STIVEN PIEDRAHITA",
@@ -31,7 +32,7 @@ const profesionales = [
     cargo: "ESTILISTA",
     descripcion:
       "comprometida con el bienestar, la imagen y la satisfacción de mis clientes. Ofrezco servicios de belleza con dedicación, responsabilidad y atención personalizada, buscando siempre resaltar lo mejor de cada persona.",
-    imagen: empleado3,
+    imagen: jeniferCorrea,
   },
 ];
 
