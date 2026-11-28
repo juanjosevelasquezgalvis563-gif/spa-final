@@ -31,7 +31,10 @@ function formatearFechaSolicitud(fecha) {
 }
 
 function formatearDuracion(inicio, fin = Date.now(), mostrarSegundos = false) {
-    const inicioMs = new Date(inicio).getTime();
+    const inicioNormalizado = typeof inicio === 'string'
+        ? inicio.trim().replace(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})$/, '$1T$2')
+        : inicio;
+    const inicioMs = new Date(inicioNormalizado).getTime();
     const finMs = fin instanceof Date
         ? fin.getTime()
         : typeof fin === 'number'
@@ -169,14 +172,10 @@ export function CitasEmpleado() {
         };
     }, [hayCorreoEnProceso]);
 
-    const hayCitaEnCurso = empleado.some((cita) => cita.estado?.toLowerCase() === 'en_curso');
-
     useEffect(() => {
-        if (!hayCitaEnCurso) return undefined;
-
         const temporizador = window.setInterval(() => setAhora(Date.now()), 1000);
         return () => window.clearInterval(temporizador);
-    }, [hayCitaEnCurso]);
+    }, []);
 
     useEffect(() => {
         if (!message) return;
@@ -240,7 +239,6 @@ export function CitasEmpleado() {
                         ? { ...cita, estado: 'en_curso', inicio_atencion: inicioAtencion, fin_atencion: null }
                         : cita
                 ));
-                await obtenerEmpleado();
             } else {
                 SetMessage(data.message || 'No se pudo comenzar el servicio.');
             }
