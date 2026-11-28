@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { API_ROOT } from "../lib/api";
 import { useSession } from "../context/useSession";
 import logo from "../assets/image.png";
+import PasswordVisibilityToggle from "./PasswordVisibilityToggle";
 
 const CAMPOS_INICIALES = { nombre: "", telefono: "", email: "" };
 
@@ -11,6 +12,7 @@ export function ActualizarDatos() {
   const [datos, setDatos] = useState(CAMPOS_INICIALES);
   const [rolUsuario, setRolUsuario] = useState("");
   const [password, setPassword] = useState("");
+  const [mostrarPassword, setMostrarPassword] = useState(false);
   const [canal, setCanal] = useState("correo");
   const [codigo, setCodigo] = useState("");
   const [destino, setDestino] = useState("");
@@ -167,10 +169,13 @@ export function ActualizarDatos() {
               <input id="actualizar-email" className="registro-input" name="email" type="email" placeholder="tucorreo@ejemplo.com" autoComplete="email" value={datos.email} onChange={cambiarCampo} required />
             </label>
 
-            <label className="actualizar-datos-campo" htmlFor="actualizar-password">
-              <span>Nueva contraseña <small>(opcional)</small></span>
-              <input id="actualizar-password" className="registro-input" type="password" placeholder="Déjala vacía para conservarla" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} />
-            </label>
+            <div className="actualizar-datos-campo">
+              <label htmlFor="actualizar-password"><span>Nueva contraseña <small>(opcional)</small></span></label>
+              <div className="password-field">
+                <input id="actualizar-password" className="registro-input" type={mostrarPassword ? "text" : "password"} placeholder="Déjala vacía para conservarla" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} />
+                <PasswordVisibilityToggle visible={mostrarPassword} onToggle={() => setMostrarPassword((visible) => !visible)} />
+              </div>
+            </div>
 
             <fieldset className="actualizar-datos-verificacion">
               <legend>Verifica que eres tú</legend>
